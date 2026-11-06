@@ -1,4 +1,4 @@
-import type { EntityColumn } from './entity-grid.types';
+import type { EditableColumn } from './entity-grid.types';
 
 /**
  * One grid row: the record as edited plus what was last saved (null for a new row).
@@ -33,7 +33,7 @@ export function isNew<T extends object>(row: GridRow<T>): boolean {
 /** New rows are always unsaved; saved rows when any column value differs (ignoring surrounding spaces). */
 export function isDirty<T extends object>(
   row: GridRow<T>,
-  columns: readonly EntityColumn<T>[],
+  columns: readonly EditableColumn<T>[],
 ): boolean {
   const { original } = row;
   if (original === null) return true;
@@ -45,7 +45,7 @@ export function isDirty<T extends object>(
  */
 export function editCell<T extends object>(
   row: GridRow<T>,
-  column: EntityColumn<T>,
+  column: EditableColumn<T>,
   input: unknown,
 ): EditResult<T> {
   const parsed = parseInput(column, input);
@@ -56,7 +56,7 @@ export function editCell<T extends object>(
 /** The first problem that blocks saving, or null. Checks every column, including untouched ones. */
 export function validateRow<T extends object>(
   row: GridRow<T>,
-  columns: readonly EntityColumn<T>[],
+  columns: readonly EditableColumn<T>[],
 ): string | null {
   for (const column of columns) {
     const value: unknown = row.entity[column.field];
@@ -74,13 +74,13 @@ export function validateRow<T extends object>(
 
 export function isMissingRequired<T extends object>(
   row: GridRow<T>,
-  column: EntityColumn<T>,
+  column: EditableColumn<T>,
 ): boolean {
   return 'required' in column && column.required === true && isEmpty(row.entity[column.field]);
 }
 
 /** The record as it should be sent: text trimmed. */
-export function toPayload<T extends object>(entity: T, columns: readonly EntityColumn<T>[]): T {
+export function toPayload<T extends object>(entity: T, columns: readonly EditableColumn<T>[]): T {
   const result = { ...entity } as Record<string, unknown>;
   for (const column of columns) {
     const value = result[column.field];
@@ -92,7 +92,7 @@ export function toPayload<T extends object>(entity: T, columns: readonly EntityC
 }
 
 function parseInput<T>(
-  column: EntityColumn<T>,
+  column: EditableColumn<T>,
   input: unknown,
 ): { readonly value: unknown } | { readonly error: string } {
   switch (column.kind) {
@@ -125,7 +125,9 @@ function parseInput<T>(
     case 'toggle':
       return { value: input === true };
     case 'select': {
-      const option = column.options().find((candidate) => candidate.value === input);
+      const option = column
+        .options()
+        .find((candidate) => candidate.value === input && candidate.selectable !== false);
       if (option) return { value: option.value };
       return column.required || (input !== null && input !== undefined)
         ? { error: `Choose a valid ${column.header}.` }
@@ -134,7 +136,7 @@ function parseInput<T>(
   }
 }
 
-function textProblem<T>(column: EntityColumn<T> & { kind: 'text' }, text: string): string | null {
+function textProblem<T>(column: EditableColumn<T> & { kind: 'text' }, text: string): string | null {
   if (column.maxLength !== undefined && text.length > column.maxLength) {
     return `${column.header} must be at most ${column.maxLength} characters.`;
   }

@@ -85,8 +85,8 @@ Server text from 5xx responses is never shown to users.
 ### Configuration screens (`EntityGrid`)
 
 Simple record lists (Branches, Vehicles, Body Locations and so on) need no screen code of their
-own. `shared/grid/entity-grid` handles loading, search, sort, filter, paging, add, inline edit,
-saving each row, soft delete with confirmation, and permissions. To add one:
+own. `shared/grid/entity-grid` handles loading (newest first, as in v21), sort, filter, paging,
+add, inline edit, saving each row, soft delete with confirmation, and permissions. To add one:
 
 1. In `api/config/`, add the model and a class extending `ConfigCrudApi`, giving its path and id
    field (see `body-location.api.ts`).
@@ -94,6 +94,20 @@ saving each row, soft delete with confirmation, and permissions. To add one:
    `toggle` or `select`), validation, defaults for a new row, and the permission code (see
    `body-locations-page.ts`).
 3. Add the route with `canDeactivate: [unsavedChangesGuard]`.
+
+Optional config, used by Vehicles and Transport Operators (see `transport-operators-page.ts`):
+
+- `display` columns show read-only text worked out from the record, e.g. the branch's Province.
+- `loadLookups` loads data the columns need (e.g. `BranchLookup`) together with the rows.
+- Select options marked `selectable: false` are still shown on old records but cannot be picked.
+- `validate` adds a screen-specific check; `beforeSave` makes a last change, e.g. phone formatting.
+
+Screens edited in a popup form (v21: Claim Centre, Rating Questions, Rating Question Options) pass
+an `editor` instead of `newEntity`. The grid is then read-only with a View/Edit button, and the form
+saves. A form extends `RecordDialog` (`shared/forms/record-dialog`), which holds the save rules,
+and is opened with `RecordDialogs.open(Form, record, permission, injector)`; read-only users get the
+form disabled and no Save. Lookups shared by the grid and the form extend `RecordLookup` and are
+provided on the page (see `claim-centres-page.ts`). Phone numbers use `app-phone-field` (E.164).
 
 Grid features are added module by module in `shared/grid/grid-setup.ts`. In development, AG Grid
 logs a console error when a feature's module is missing.

@@ -1,4 +1,4 @@
-import type { EntityColumn } from './entity-grid.types';
+import type { EditableColumn } from './entity-grid.types';
 import {
   type GridRow,
   draftRow,
@@ -19,7 +19,7 @@ interface Vehicle {
   readonly IsActive: boolean;
 }
 
-const REG: EntityColumn<Vehicle> = {
+const REG: EditableColumn<Vehicle> = {
   kind: 'text',
   field: 'RegNumber',
   header: 'Reg Number',
@@ -27,14 +27,14 @@ const REG: EntityColumn<Vehicle> = {
   maxLength: 8,
   pattern: { regex: /^[A-Z0-9 ]+$/, message: 'Reg Number: capitals and numbers only.' },
 };
-const SEATS: EntityColumn<Vehicle> = {
+const SEATS: EditableColumn<Vehicle> = {
   kind: 'number',
   field: 'Seats',
   header: 'Seats',
   min: 1,
   max: 9,
 };
-const BRANCH: EntityColumn<Vehicle> = {
+const BRANCH: EditableColumn<Vehicle> = {
   kind: 'select',
   field: 'BranchId',
   header: 'Branch',
@@ -42,9 +42,10 @@ const BRANCH: EntityColumn<Vehicle> = {
   options: () => [
     { value: 1, label: 'Durban' },
     { value: 2, label: 'Cape Town' },
+    { value: 3, label: 'Pretoria (Inactive)', selectable: false },
   ],
 };
-const ACTIVE: EntityColumn<Vehicle> = { kind: 'toggle', field: 'IsActive', header: 'Active' };
+const ACTIVE: EditableColumn<Vehicle> = { kind: 'toggle', field: 'IsActive', header: 'Active' };
 const COLUMNS = [REG, SEATS, BRANCH, ACTIVE];
 
 const vehicle: Vehicle = {
@@ -57,7 +58,7 @@ const vehicle: Vehicle = {
 
 function edit(
   row: GridRow<Vehicle>,
-  column: EntityColumn<Vehicle>,
+  column: EditableColumn<Vehicle>,
   value: unknown,
 ): GridRow<Vehicle> {
   const result = editCell(row, column, value);
@@ -65,7 +66,7 @@ function edit(
   return result.row;
 }
 
-function editError(column: EntityColumn<Vehicle>, value: unknown): string {
+function editError(column: EditableColumn<Vehicle>, value: unknown): string {
   const result = editCell(savedRow(vehicle, 5), column, value);
   return 'error' in result ? result.error : 'accepted';
 }
@@ -108,7 +109,7 @@ describe('grid rows', () => {
       expect(changed.original).toBe(row.original);
     });
 
-    it.each<[string, EntityColumn<Vehicle>, unknown, string]>([
+    it.each<[string, EditableColumn<Vehicle>, unknown, string]>([
       ['an empty required text', REG, '   ', 'Reg Number is required.'],
       ['text that breaks the pattern', REG, 'nd 1', 'Reg Number: capitals and numbers only.'],
       ['text that is too long', REG, 'ABCDEFGHI', 'Reg Number must be at most 8 characters.'],
@@ -127,6 +128,11 @@ describe('grid rows', () => {
 
     it('stores the option value for a select', () => {
       expect(edit(savedRow(vehicle, 5), BRANCH, 2).entity.BranchId).toBe(2);
+    });
+
+    it('refuses a choice that can no longer be picked, e.g. an inactive branch', () => {
+      expect(editError(BRANCH, 3)).toBe('Choose a valid Branch.');
+      expect(editError(BRANCH, 99)).toBe('Choose a valid Branch.');
     });
   });
 

@@ -135,9 +135,9 @@ describe('BodyLocationsPage', () => {
     api.list.mockReturnValue(of([location(1), location(2)]));
   });
 
-  it('loads and shows the body locations', async () => {
+  it('loads the body locations, newest first (v21)', async () => {
     await render();
-    expect(codes()).toEqual(['CODE1', 'CODE2']);
+    expect(codes()).toEqual(['CODE2', 'CODE1']);
     expect(page().hasUnsavedChanges()).toBe(false);
   });
 
@@ -145,7 +145,7 @@ describe('BodyLocationsPage', () => {
     await render();
     host.querySelector<HTMLButtonElement>('.entity-grid-new')?.click();
     await settle();
-    expect(codes()).toEqual(['', 'CODE1', 'CODE2']);
+    expect(codes()).toEqual(['', 'CODE2', 'CODE1']);
     expect(page().hasUnsavedChanges()).toBe(true);
     expect(host.textContent).toContain('Unsaved changes');
   });
@@ -206,7 +206,7 @@ describe('BodyLocationsPage', () => {
     expect(notify.warning).toHaveBeenCalledWith(
       'Body Location Code may only contain letters, numbers and spaces.',
     );
-    expect(codes()[0]).toBe('CODE1');
+    expect(codes()[1]).toBe('CODE1');
     expect(page().hasUnsavedChanges()).toBe(false);
   });
 
@@ -248,7 +248,7 @@ describe('BodyLocationsPage', () => {
     (await rowButton('id:1', 'Delete'))?.click();
     await settle();
     expect(api.softDelete).not.toHaveBeenCalled();
-    expect(codes()).toEqual(['CODE1', 'CODE2']);
+    expect(codes()).toEqual(['CODE2', 'CODE1']);
   });
 
   it('removes an unsaved new row without asking the server', async () => {
@@ -259,7 +259,7 @@ describe('BodyLocationsPage', () => {
     (await rowButton(newKey, 'Delete'))?.click();
     await settle();
     expect(ask).not.toHaveBeenCalled();
-    expect(codes()).toEqual(['CODE1', 'CODE2']);
+    expect(codes()).toEqual(['CODE2', 'CODE1']);
     expect(page().hasUnsavedChanges()).toBe(false);
   });
 
@@ -287,7 +287,7 @@ describe('BodyLocationsPage', () => {
 
     [...host.querySelectorAll('button')].find((b) => b.textContent?.includes('Try again'))?.click();
     await settle();
-    expect(codes()).toEqual(['CODE1', 'CODE2']);
+    expect(codes()).toEqual(['CODE2', 'CODE1']);
     expect(host.querySelector('[role="alert"]')).toBeNull();
   });
 });

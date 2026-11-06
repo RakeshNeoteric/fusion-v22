@@ -25,14 +25,27 @@ import type {
   GridReadyEvent,
   RowClassRules,
 } from 'ag-grid-community';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin, of } from 'rxjs';
 import { PageActions } from '@core/layout/page-actions';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { APP_GRID_THEME, EDITABLE_GRID_MODULES, PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../grid-setup';
-import { DeleteCell, type EntityGridContext, SaveCell, ToggleCell } from './entity-grid-cells';
-import type { EntityColumn, EntityGridConfig, SelectColumn } from './entity-grid.types';
+import {
+  DeleteCell,
+  type EntityGridContext,
+  SaveCell,
+  ToggleCell,
+  ViewCell,
+} from './entity-grid-cells';
+import {
+  type DisplayColumn,
+  type EditableColumn,
+  type EntityColumn,
+  type EntityGridConfig,
+  type SelectColumn,
+  isEditableColumn,
+} from './entity-grid.types';
 import {
   type GridRow,
   draftRow,
@@ -87,14 +100,21 @@ export class EntityGrid<T extends object> implements OnInit {
     this.permissions.canCreate(this.config().permission),
   );
   protected readonly canEdit = computed(() => this.permissions.canEdit(this.config().permission));
+  /** True when records are edited in the screen's form, not in the grid cells. */
+  private readonly usesEditor = computed(() => this.config().editor !== undefined);
+  /** Whether the grid cells themselves can be changed. */
+  private readonly canEditCells = computed(() => this.canEdit() && !this.usesEditor());
   protected readonly canDelete = computed(() =>
     this.permissions.canDelete(this.config().permission),
   );
 
+  /** The columns bound to a field: what is edited, compared, checked and trimmed. */
+  private readonly fields = computed(() => this.config().columns.filter(isEditableColumn));
+
   /** True while any row is new or edited and not saved (used by the leave-page guard). */
   readonly hasUnsavedChanges = computed(() => {
-    const { columns } = this.config();
-    return this.rows().some((row) => isDirty(row, columns));
+    const fields = this.fields();
+    return this.rows().some((row) => isDirty(row, fields));
   });
 
   protected readonly modules = EDITABLE_GRID_MODULES;
@@ -109,27 +129,30 @@ export class EntityGrid<T extends object> implements OnInit {
   };
   protected readonly rowClassRules: RowClassRules<GridRow<T>> = {
     'row-new': ({ data }) => !!data && isNew(data),
-    'row-unsaved': ({ data }) => !!data && !isNew(data) && isDirty(data, this.config().columns),
+    'row-unsaved': ({ data }) => !!data && !isNew(data) && isDirty(data, this.fields()),
   };
 
   protected readonly context: EntityGridContext = {
-    canEdit: () => this.canEdit(),
+    canEdit: () => this.canEditCells(),
     canDelete: () => this.canDelete(),
     isDirty: (key) => {
       const row = this.find(key);
-      return !!row && isDirty(row, this.config().columns);
+      return !!row && isDirty(row, this.fields());
     },
     setValue: (key, field, value) => this.applyEdit(key, field, value),
     save: (key) => void this.save(key),
     remove: (key) => void this.remove(key),
+    open: (key) => void this.open(key),
   };
 
   protected readonly columnDefs = computed<ColDef<GridRow<T>>[]>(() => {
     const { columns } = this.config();
     return [
       ...columns.map((column) => this.columnDef(column)),
-      // v21: Save and Delete each have their own narrow column, pinned right.
-      { ...ACTION_COLUMN, colId: 'save', cellRenderer: SaveCell, hide: !this.canEdit() },
+      // v21: Save (or View/Edit for form screens) and Delete each have a narrow column, pinned right.
+      this.usesEditor()
+        ? { ...ACTION_COLUMN, colId: 'view', cellRenderer: ViewCell }
+        : { ...ACTION_COLUMN, colId: 'save', cellRenderer: SaveCell, hide: !this.canEdit() },
       { ...ACTION_COLUMN, colId: 'delete', cellRenderer: DeleteCell, hide: !this.canDelete() },
     ];
   });
@@ -154,11 +177,15 @@ export class EntityGrid<T extends object> implements OnInit {
   }
 
   protected async load(): Promise<void> {
-    const { source } = this.config();
+    const { source, loadLookups } = this.config();
     this.status.set('loading');
     try {
-      const entities = await firstValueFrom(source.list());
-      this.rows.set(entities.map((entity) => savedRow(entity, source.idOf(entity))));
+      const [entities] = await firstValueFrom(
+        forkJoin([source.list(), loadLookups ? loadLookups() : of(null)]),
+      );
+      // v21: newest first.
+      const newestFirst = [...entities].sort((a, b) => source.idOf(b) - source.idOf(a));
+      this.rows.set(newestFirst.map((entity) => savedRow(entity, source.idOf(entity))));
       this.status.set('ready');
     } catch {
       // The error interceptor has already told the user why.
@@ -178,26 +205,34 @@ export class EntityGrid<T extends object> implements OnInit {
   /** Adds an empty row at the top and starts editing its first cell. */
   protected add(): void {
     if (!this.canCreate()) return;
-    const row = draftRow(this.config().newEntity());
+    const { editor, newEntity } = this.config();
+    if (editor) {
+      void this.openEditor(null);
+      return;
+    }
+    if (!newEntity) return;
+    const row = draftRow(newEntity());
     this.rows.update((rows) => [row, ...rows]);
     afterNextRender(() => this.startEditing(row.key), { injector: this.injector });
   }
 
   protected async save(key: string): Promise<void> {
-    const { columns, source, entityName } = this.config();
+    const { source, entityName, validate, beforeSave } = this.config();
+    const fields = this.fields();
     const row = this.find(key);
     if (!row || row.saving) return;
-    if (!isDirty(row, columns)) {
+    if (!isDirty(row, fields)) {
       this.notifications.info('No changes to save.');
       return;
     }
-    const problem = validateRow(row, columns);
+    const problem = validateRow(row, fields) ?? validate?.(row.entity) ?? null;
     if (problem) {
       this.notifications.warning(problem);
       return;
     }
 
-    const payload = toPayload(row.entity, columns);
+    const trimmed = toPayload(row.entity, fields);
+    const payload = beforeSave ? beforeSave(trimmed) : trimmed;
     this.patch(key, (current) => ({ ...current, saving: true }));
     try {
       const saved = await firstValueFrom(
@@ -238,15 +273,34 @@ export class EntityGrid<T extends object> implements OnInit {
     }
   }
 
+  /** Opens a saved row in the screen's form; a saved change replaces the row. */
+  protected async open(key: string): Promise<void> {
+    const row = this.find(key);
+    if (row?.original) await this.openEditor(row);
+  }
+
+  private async openEditor(row: GridRow<T> | null): Promise<void> {
+    const { editor, source } = this.config();
+    if (!editor) return;
+    const saved = await editor(row?.original ?? null);
+    if (!saved) return;
+    const updated = savedRow(saved, source.idOf(saved));
+    if (row) {
+      this.patch(row.key, () => updated);
+    } else {
+      this.rows.update((rows) => [updated, ...rows]);
+    }
+  }
+
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.hasUnsavedChanges()) event.preventDefault();
   }
 
   private applyEdit(key: string, field: string, value: unknown): void {
-    const column = this.config().columns.find((candidate) => candidate.field === field);
+    const column = this.fields().find((candidate) => candidate.field === field);
     const row = this.find(key);
     // canEdit is checked here too, not only by the cell editors and toggles.
-    if (!column || !row || row.saving || !this.canEdit()) return;
+    if (!column || !row || row.saving || !this.canEditCells()) return;
     const result = editCell(row, column, value);
     if ('error' in result) {
       this.notifications.warning(result.error);
@@ -257,7 +311,7 @@ export class EntityGrid<T extends object> implements OnInit {
 
   private startEditing(key: string): void {
     const api = this.gridApi;
-    const firstEditable = this.config().columns.find((column) => column.kind !== 'toggle');
+    const firstEditable = this.fields().find((column) => column.kind !== 'toggle');
     const node = api?.getRowNode(key);
     if (!api || !firstEditable || node?.rowIndex === null || node?.rowIndex === undefined) return;
     api.paginationGoToPage(Math.floor(node.rowIndex / api.paginationGetPageSize()));
@@ -274,13 +328,17 @@ export class EntityGrid<T extends object> implements OnInit {
   }
 
   private columnDef(column: EntityColumn<T>): ColDef<GridRow<T>> {
+    return isEditableColumn(column) ? this.editableColumnDef(column) : displayColumnDef(column);
+  }
+
+  private editableColumnDef(column: EditableColumn<T>): ColDef<GridRow<T>> {
     const base: ColDef<GridRow<T>> = {
       colId: column.field,
       headerName: column.header,
       flex: column.flex ?? 1,
       minWidth: column.minWidth ?? 120,
       valueGetter: ({ data }) => data?.entity[column.field],
-      editable: ({ data }) => this.canEdit() && !!data && !data.saving,
+      editable: ({ data }) => this.canEditCells() && !!data && !data.saving,
       cellClass: column.align === 'center' || column.kind === 'toggle' ? 'cell-center' : undefined,
       cellClassRules: { 'cell-required': ({ data }) => !!data && isMissingRequired(data, column) },
     };
@@ -312,7 +370,12 @@ export class EntityGrid<T extends object> implements OnInit {
           ...base,
           filter: 'agTextColumnFilter',
           cellEditor: 'agSelectCellEditor',
-          cellEditorParams: { values: options.map((option) => option.value) },
+          // Only choices that can still be picked, plus the row's current value (v21).
+          cellEditorParams: ({ value }: { value: unknown }) => ({
+            values: options
+              .filter((option) => option.selectable !== false || option.value === value)
+              .map((option) => option.value),
+          }),
           valueFormatter: ({ value }) => labelOf(column, value),
           filterValueGetter: ({ data }) => labelOf(column, data?.entity[column.field]),
         };
@@ -321,6 +384,25 @@ export class EntityGrid<T extends object> implements OnInit {
   }
 }
 
+function displayColumnDef<T extends object>(column: DisplayColumn<T>): ColDef<GridRow<T>> {
+  return {
+    colId: column.id,
+    headerName: column.header,
+    flex: column.flex ?? 1,
+    minWidth: column.minWidth ?? 120,
+    editable: false,
+    filter: 'agTextColumnFilter',
+    valueGetter: ({ data }) => (data ? column.value(data.entity) : ''),
+    cellClass: column.align === 'center' ? 'cell-center' : undefined,
+  };
+}
+
+/** The option's label; a value that is not in the list is shown as it is rather than hidden. */
 function labelOf<T extends object>(column: SelectColumn<T>, value: unknown): string {
-  return column.options().find((option) => option.value === value)?.label ?? '';
+  const option = column.options().find((candidate) => candidate.value === value);
+  if (option) return option.label;
+  if (typeof value === 'string' || typeof value === 'number') {
+    return column.missingLabel ? column.missingLabel(value) : String(value);
+  }
+  return '';
 }

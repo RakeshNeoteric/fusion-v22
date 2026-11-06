@@ -1,0 +1,163 @@
+import type { ComponentType } from '@angular/cdk/portal';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Directive,
+  Injectable,
+  type Injector,
+  ViewEncapsulation,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import type { FormGroup } from '@angular/forms';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import type { CrudSource } from '@api/config/config-crud.api';
+import { NotificationService } from '@core/notifications/notification.service';
+import { PermissionService } from '@core/permissions/permission.service';
+
+/** What a record form is opened with. */
+export interface RecordDialogData<T> {
+  /** The record to show, or null to create one. */
+  readonly record: T | null;
+  /** True when the user may look but not save (v21 hides the Save button). */
+  readonly readOnly: boolean;
+}
+
+/**
+ * The v21 popup around a record form: title, close (✖), the fields, and Cancel / Save
+ * ("Update" for an existing record). Put it inside the form element so Save submits it.
+ * Read-only users get every field disabled and no Save button.
+ */
+@Component({
+  selector: 'app-record-dialog-frame',
+  imports: [MatDialogModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // Styles the projected fields and inputs, so they cannot be encapsulated; all scoped to .record-dialog.
+  encapsulation: ViewEncapsulation.None,
+  host: { class: 'record-dialog' },
+  template: `
+    <div class="rd-header">
+      <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
+      <button type="button" class="rd-close" aria-label="Close" mat-dialog-close>✖</button>
+    </div>
+    <mat-dialog-content>
+      <fieldset class="rd-fields" [disabled]="readOnly()">
+        <ng-content />
+      </fieldset>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button type="button" class="rd-button" mat-dialog-close>Cancel</button>
+      @if (!readOnly()) {
+        <button type="submit" class="rd-button" [disabled]="saving()">
+          {{ isNew() ? 'Save' : 'Update' }}
+        </button>
+      }
+    </mat-dialog-actions>
+  `,
+  styleUrl: './record-dialog.css',
+})
+export class RecordDialogFrame {
+  readonly title = input.required<string>();
+  readonly isNew = input.required<boolean>();
+  readonly readOnly = input(false);
+  readonly saving = input(false);
+}
+
+/**
+ * Base for a record form opened by {@link RecordDialogs}. Subclasses give the form, how to
+ * build the record from it, and where to save it; the save rules are the same everywhere (v21):
+ * - required fields missing: mark them and warn
+ * - an existing record with nothing changed: "No changes to save."
+ * - saved: success message, and the dialog closes with the saved record
+ * - the server refused (e.g. duplicate name): the dialog stays open; the error interceptor has
+ *   already shown why
+ */
+@Directive()
+export abstract class RecordDialog<T> {
+  protected readonly data = inject<RecordDialogData<T>>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject<MatDialogRef<RecordDialog<T>, T>>(MatDialogRef);
+  private readonly notifications = inject(NotificationService);
+
+  protected readonly isNew = this.data.record === null;
+  protected readonly readOnly = this.data.readOnly;
+  protected readonly saving = signal(false);
+
+  protected abstract readonly form: FormGroup;
+  protected abstract readonly source: CrudSource<T>;
+  /** Singular, for messages: "Claim Centre saved." */
+  protected abstract readonly entityName: string;
+
+  /** The record to send, built from the valid form (text trimmed). */
+  protected abstract toRecord(): T;
+
+  /** True when a required or invalid field should show its message. */
+  protected showError(name: string): boolean {
+    const control = this.form.get(name);
+    return !!control && control.invalid && control.touched;
+  }
+
+  protected async save(): Promise<void> {
+    if (this.readOnly || this.saving()) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.notifications.warning('Please fill in all required fields.');
+      return;
+    }
+    if (!this.isNew && this.form.pristine) {
+      this.notifications.info('No changes to save.');
+      return;
+    }
+    this.saving.set(true);
+    try {
+      const record = this.toRecord();
+      const saved = await firstValueFrom(
+        this.isNew ? this.source.create(record) : this.source.update(record),
+      );
+      this.notifications.success(`${this.entityName} saved.`);
+      this.dialogRef.close(saved);
+    } catch {
+      this.saving.set(false);
+    }
+  }
+}
+
+/** Opens record forms; whether the user may save follows their permission for the screen. */
+@Injectable({ providedIn: 'root' })
+export class RecordDialogs {
+  private readonly dialog = inject(MatDialog);
+  private readonly permissions = inject(PermissionService);
+
+  /**
+   * Resolves with the saved record, or null when closed without saving.
+   * Pass the page's injector so the form can use the page's lookups (e.g. `ClientGroupLookup`).
+   */
+  async open<T>(
+    component: ComponentType<RecordDialog<T>>,
+    record: T | null,
+    permission: string,
+    injector?: Injector,
+  ): Promise<T | null> {
+    const readOnly =
+      record === null
+        ? !this.permissions.canCreate(permission)
+        : !this.permissions.canEdit(permission);
+    const ref = this.dialog.open<RecordDialog<T>, RecordDialogData<T>, T>(component, {
+      data: { record, readOnly },
+      injector,
+      width: '800px',
+      maxWidth: '90vw',
+      // The first field, not the close button.
+      autoFocus: '.rd-fields :is(input, select, textarea):not([disabled])',
+      // Only ✖ and Cancel close it, so a stray click outside does not lose what was typed.
+      disableClose: true,
+    });
+    return (await firstValueFrom(ref.afterClosed())) ?? null;
+  }
+}

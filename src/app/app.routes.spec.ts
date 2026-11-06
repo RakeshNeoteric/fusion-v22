@@ -8,9 +8,21 @@ import { PermissionService } from '@core/permissions/permission.service';
 import { type SessionState, SessionService } from '@core/session/session.service';
 import { menu, permission, role } from '../testing/app-init.fixtures';
 import { BodyLocationApi } from '@api/config/body-location.api';
+import { BranchApi } from '@api/config/branch.api';
+import { ClaimCentreApi } from '@api/config/claim-centre.api';
+import { ClientGroupApi } from '@api/config/client-group.api';
+import { DocumentTypeApi } from '@api/config/document.api';
+import { RatingQuestionOptionApi } from '@api/config/rating-question-option.api';
+import { RatingQuestionTypeApi } from '@api/config/rating-question-type.api';
+import { RatingQuestionApi } from '@api/config/rating-question.api';
+import { TransportOperatorApi } from '@api/config/transport-operator.api';
+import { VehicleApi } from '@api/config/vehicle.api';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
+
+/** An empty backend list for any configuration screen. */
+const emptyConfigApi = { list: () => of([]), listIncludingDeleted: () => of([]), idOf: () => 0 };
 
 /** Routing end to end with the real guards, shell and pages; only the session is faked. */
 describe('app routes', () => {
@@ -40,7 +52,18 @@ describe('app routes', () => {
           },
         },
         { provide: AuthService, useValue: { email: signal(null), login: vi.fn() } },
-        { provide: BodyLocationApi, useValue: { list: () => of([]), idOf: () => 0 } },
+        ...[
+          BodyLocationApi,
+          BranchApi,
+          DocumentTypeApi,
+          VehicleApi,
+          TransportOperatorApi,
+          RatingQuestionTypeApi,
+          ClaimCentreApi,
+          ClientGroupApi,
+          RatingQuestionApi,
+          RatingQuestionOptionApi,
+        ].map((api) => ({ provide: api, useValue: emptyConfigApi })),
         { provide: ConfirmService, useValue: { ask: confirmLeave } },
       ],
     });
@@ -104,6 +127,30 @@ describe('app routes', () => {
     expect(harness.routeNativeElement?.querySelector('app-breadcrumb')?.textContent?.trim()).toBe(
       'Configuration / Body Locations',
     );
+  });
+
+  // Paths are the backend menu's MenuViewName, so they must stay exactly as in v21.
+  it.each([
+    ['/branches', 'BRANCHES', 'Configuration / Branches'],
+    ['/documents/documents', 'DOCUMENTS', 'Configuration / Documents'],
+    ['/vehicle/vehicle', 'VEH_LIST', 'Vehicle'],
+    ['/transport-operator/transport', 'TRANS_OP', 'Transport Operator'],
+    ['/types/types', 'RQT', 'Rating Questions / Types'],
+    ['/claim-centre', 'CLM_CTR', 'Configuration / Claim Centre'],
+    ['/list/list', 'RQL', 'Rating Questions / List'],
+    ['/options/options', 'RQO', 'Rating Questions / Options'],
+  ])('guards %s by the %s permission', async (path, code, breadcrumb) => {
+    signIn();
+    await harness.navigateByUrl(path);
+    expect(url()).toBe('/forbidden');
+
+    TestBed.inject(PermissionService).load([role('Viewer', [permission(code)])]);
+    await harness.navigateByUrl(path);
+    expect(url()).toBe(path);
+    expect(
+      harness.routeNativeElement?.querySelector('app-breadcrumb h1')?.textContent?.trim(),
+    ).toBe(breadcrumb);
+    expect(harness.routeNativeElement?.querySelector('app-entity-grid')).not.toBeNull();
   });
 
   it('asks before leaving a page with unsaved changes', async () => {
