@@ -4,6 +4,14 @@
     <span class="entity-grid-unsaved" role="status">Unsaved changes</span>
   }
   @if (canCreate()) {
+    @for (action of config().titleActions ?? []; track action.label) {
+      <button type="button" class="entity-grid-new" (click)="runTitleAction(action)">
+        <span class="entity-grid-new-icon" aria-hidden="true">
+          <mat-icon [svgIcon]="action.icon" />
+        </span>
+        <span>{{ action.label }}</span>
+      </button>
+    }
     <button
       type="button"
       class="entity-grid-new"

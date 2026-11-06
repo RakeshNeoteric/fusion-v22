@@ -78,15 +78,18 @@ export class ServiceProviderApi implements CrudSource<ServiceProvider> {
 
   /** Not deleted, newest first (v21). */
   list(): Observable<ServiceProvider[]> {
-    return this.http
-      .get<ServiceProvider[]>('ServiceProvider')
-      .pipe(
-        map((providers) =>
-          providers
-            .filter((provider) => provider.IsDeleted !== true)
-            .sort((a, b) => b.ServiceProviderId - a.ServiceProviderId),
-        ),
-      );
+    return this.listIncludingDeleted().pipe(
+      map((providers) =>
+        providers
+          .filter((provider) => provider.IsDeleted !== true)
+          .sort((a, b) => b.ServiceProviderId - a.ServiceProviderId),
+      ),
+    );
+  }
+
+  /** For naming providers that were deleted later (a client's linked providers). */
+  listIncludingDeleted(): Observable<ServiceProvider[]> {
+    return this.http.get<ServiceProvider[]>('ServiceProvider');
   }
 
   create(provider: ServiceProvider): Observable<ServiceProvider> {

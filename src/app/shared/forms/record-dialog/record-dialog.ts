@@ -33,6 +33,7 @@ export interface RecordDialogData<T> {
 /**
  * The v21 popup around a record form: title, close (✖), the fields, and Cancel / Save
  * ("Update" for an existing record). Put it inside the form element so Save submits it.
+ * Content marked `rdFooterStart` goes at the start of the button row (e.g. an Is Active switch).
  * Read-only users get every field disabled and no Save button.
  */
 @Component({
@@ -45,7 +46,7 @@ export interface RecordDialogData<T> {
   template: `
     <div class="rd-header">
       <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
-      <button type="button" class="rd-close" aria-label="Close" [mat-dialog-close]="undefined">
+      <button type="button" class="rd-close" aria-label="Close" [mat-dialog-close]="closeResult()">
         ✖
       </button>
     </div>
@@ -55,12 +56,15 @@ export interface RecordDialogData<T> {
       </fieldset>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button type="button" class="app-button rd-cancel" [mat-dialog-close]="undefined">
-        Cancel
-      </button>
-      @if (!readOnly()) {
+      <ng-content select="[rdFooterStart]" />
+      @if (cancelable()) {
+        <button type="button" class="app-button rd-cancel" [mat-dialog-close]="closeResult()">
+          Cancel
+        </button>
+      }
+      @if (!readOnly() && savable()) {
         <button type="submit" class="app-button" [disabled]="saving()">
-          {{ isNew() ? 'Save' : 'Update' }}
+          {{ saveLabel() ?? (isNew() ? 'Save' : 'Update') }}
         </button>
       }
     </mat-dialog-actions>
@@ -72,6 +76,14 @@ export class RecordDialogFrame {
   readonly isNew = input.required<boolean>();
   readonly readOnly = input(false);
   readonly saving = input(false);
+  /** Instead of Save / Update, e.g. "Clone (Copy) Client". */
+  readonly saveLabel = input<string>();
+  /** v21 Client popup: no Cancel, only ✖. */
+  readonly cancelable = input(true);
+  /** False hides Save for a while (v21 Client popup: only on its Details tab). */
+  readonly savable = input(true);
+  /** What ✖ / Cancel close with: a popup that saved and stayed open returns what it saved. */
+  readonly closeResult = input<unknown>(undefined);
 }
 
 /**
@@ -94,7 +106,8 @@ export abstract class RecordDialog<T> {
   protected readonly saving = signal(false);
 
   protected abstract readonly form: FormGroup;
-  protected abstract readonly source: CrudSource<T>;
+  /** Where Save goes: only create and update are used. */
+  protected abstract readonly source: Pick<CrudSource<T>, 'create' | 'update'>;
   /** Singular, for messages: "Claim Centre saved." */
   protected abstract readonly entityName: string;
 
@@ -149,7 +162,8 @@ export class RecordDialogs {
    * Pass the page's injector so the form can use the page's lookups (e.g. `ClientGroupLookup`).
    */
   async open<T>(
-    component: ComponentType<RecordDialog<T>>,
+    /** Usually a {@link RecordDialog}; any popup that reads {@link RecordDialogData} will do. */
+    component: ComponentType<object>,
     record: T | null,
     permission: string,
     injector?: Injector,
@@ -160,7 +174,7 @@ export class RecordDialogs {
       record === null
         ? !this.permissions.canCreate(permission)
         : !this.permissions.canEdit(permission);
-    const ref = this.dialog.open<RecordDialog<T>, RecordDialogData<T>, T>(component, {
+    const ref = this.dialog.open<object, RecordDialogData<T>, T>(component, {
       data: { record, readOnly },
       injector,
       width,

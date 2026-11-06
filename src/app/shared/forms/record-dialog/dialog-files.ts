@@ -11,20 +11,17 @@ import { type FileCategory, FileStorageApi } from '@api/files/file-storage.api';
  */
 export class DialogFiles {
   private readonly files = inject(FileStorageApi);
-  /** Uploaded while the popup was open. */
+  /** Uploaded since the record was last saved. */
   private readonly uploaded = new Set<string>();
-  private settled = false;
 
   constructor(
     private readonly category: FileCategory,
     /** The record's current file path, '' when none. */
-    private readonly stored: string,
+    private stored: string,
   ) {
     inject(MatDialogRef)
       .afterClosed()
-      .subscribe(() => {
-        if (!this.settled) this.delete([...this.uploaded]);
-      });
+      .subscribe(() => this.delete([...this.uploaded]));
   }
 
   /** Stores the file and returns its path. */
@@ -34,12 +31,15 @@ export class DialogFiles {
     return path;
   }
 
-  /** The record was saved pointing at `kept` ('' for none): deletes every other file. */
+  /**
+   * The record was saved pointing at `kept` ('' for none): deletes every other file. The popup
+   * may stay open (client workspace), so `kept` becomes the stored file.
+   */
   saved(kept: string): void {
-    this.settled = true;
-    const unused = [...this.uploaded];
-    if (this.stored) unused.push(this.stored);
-    this.delete(unused.filter((path) => path !== kept));
+    const unused = [...this.uploaded, this.stored].filter((path) => path && path !== kept);
+    this.uploaded.clear();
+    this.stored = kept;
+    this.delete(unused);
   }
 
   /** Best effort: a file left behind is harmless, so a failure does not stop anything. */

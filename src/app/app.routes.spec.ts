@@ -24,6 +24,7 @@ import { AppApi } from '@api/app.api';
 import { RoleApi } from '@api/security/role.api';
 import { UserApi } from '@api/security/user.api';
 import { ServiceProviderApi } from '@api/services/service-provider.api';
+import { ClientApi } from '@api/clients/client.api';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
@@ -74,6 +75,7 @@ describe('app routes', () => {
           ServiceTypeApi,
           ServiceApi,
           ServiceProviderApi,
+          ClientApi,
           UserApi,
         ].map((api) => ({ provide: api, useValue: emptyConfigApi })),
         { provide: CompanyDetailsApi, useValue: { get: () => of([]) } },
@@ -168,6 +170,7 @@ describe('app routes', () => {
     ['/claim-centre', 'CLM_CTR', 'Configuration / Claim Centre'],
     ['/list/list', 'RQL', 'Rating Questions / List'],
     ['/options/options', 'RQO', 'Rating Questions / Options'],
+    ['/client/client', 'CLIENT', 'Client'],
     ['/client/client-group', 'CLIENT_GRP', 'Client / Client Group'],
     ['/services/service-types', 'SRV_PRV_TY', 'Services / Service Types'],
     ['/services/services', 'SERVICES', 'Services'],

@@ -1,0 +1,68 @@
+/* Quill's own look comes from the quill-snow.css bundle (see LinkServiceDialog). */
+app-link-service-dialog .note-editor {
+  display: block;
+}
+app-link-service-dialog .note-editor .ql-toolbar {
+  border-radius: 10px 10px 0 0;
+}
+app-link-service-dialog .note-editor .ql-container {
+  height: 200px;
+  border-radius: 0 0 10px 10px;
+  font: inherit;
+  font-size: 14px;
+}
+app-link-service-dialog .note-editor.ng-invalid.ng-touched :is(.ql-container, .ql-toolbar) {
+  border-color: var(--app-danger);
+}
+app-link-service-dialog .ls-heading {
+  margin: 8px 0 12px;
+  color: var(--app-teal);
+  font-size: 17px;
+  font-weight: 600;
+}
+app-link-service-dialog .ls-sms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+app-link-service-dialog .ls-sms-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 200px auto 32px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #dde2eb;
+  border-radius: 10px;
+}
+app-link-service-dialog .ls-rank {
+  color: var(--app-teal);
+  font-weight: 700;
+  text-align: center;
+}
+app-link-service-dialog .ls-remove {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #888;
+  cursor: pointer;
+}
+app-link-service-dialog .ls-remove:hover {
+  color: var(--app-danger);
+}
+app-link-service-dialog .ls-remove:focus-visible {
+  outline: 2px solid var(--app-teal);
+}
+app-link-service-dialog :is(.ls-empty, .ls-tags) {
+  color: #5f6b6b;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  app-link-service-dialog .ls-sms-row {
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+  }
+}

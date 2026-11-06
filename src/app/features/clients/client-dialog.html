@@ -1,0 +1,292 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <app-record-dialog-frame
+    [title]="title()"
+    [isNew]="clientId() === 0"
+    [saving]="saving() || uploading()"
+    [cancelable]="false"
+    [savable]="!readOnly && tab() === 'details'"
+    [closeResult]="savedHere()"
+  >
+    <app-folder-tabs
+      #tabStrip
+      idPrefix="client"
+      label="Client"
+      [tabs]="tabs"
+      [selected]="tab()"
+      (choose)="choose($event)"
+    />
+
+    <section
+      role="tabpanel"
+      class="cl-panel-body"
+      [id]="tabStrip.panelId('details')"
+      [attr.aria-labelledby]="tabStrip.tabId('details')"
+      [hidden]="tab() !== 'details'"
+    >
+      <mat-accordion class="cl-sections" multi>
+        <mat-expansion-panel [expanded]="companyOpen()" (expandedChange)="companyOpen.set($event)">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Company Information</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="cl-company">
+            <div class="cl-company-fields">
+              <div class="form-field">
+                <label for="cl-name">Company Name <span class="required">*</span></label>
+                <input
+                  id="cl-name"
+                  type="text"
+                  placeholder="Enter Company Name"
+                  formControlName="ClientName"
+                />
+                @if (showError('ClientName')) {
+                  <span class="field-error">Company Name is required.</span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="cl-group">Client Group <span class="required">*</span></label>
+                <select id="cl-group" formControlName="ClientGroupId">
+                  <option [ngValue]="null" disabled>Select a client group</option>
+                  @for (group of clientGroups; track group.value) {
+                    <option [ngValue]="group.value">{{ group.label }}</option>
+                  }
+                </select>
+                @if (showError('ClientGroupId')) {
+                  <span class="field-error">Client Group is required.</span>
+                }
+              </div>
+            </div>
+            <app-image-picker
+              alt="Company logo"
+              removeLabel="Remove Logo"
+              [src]="logo.src()"
+              [canChange]="!readOnly && !uploading()"
+              [hasImage]="!!form.controls.CompanyLogoStoragePath.value"
+              (picked)="uploadLogo($event)"
+              (removed)="removeLogo()"
+            />
+          </div>
+
+          <div class="cl-contact">
+            @if (showAddress) {
+              <div class="form-field">
+                <label for="cl-address">Address</label>
+                <textarea
+                  id="cl-address"
+                  rows="5"
+                  placeholder="Enter Address"
+                  formControlName="Address"
+                ></textarea>
+              </div>
+            }
+            <div class="cl-phones">
+              <div class="form-field">
+                <label for="cl-tel">Telephone <span class="required">*</span></label>
+                <app-phone-field inputId="cl-tel" label="Telephone" formControlName="Tel" />
+                @if (showError('Tel')) {
+                  <span class="field-error">
+                    {{
+                      form.controls.Tel.hasError('required')
+                        ? 'Telephone is required.'
+                        : 'Enter a valid number.'
+                    }}
+                  </span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="cl-mobile">Mobile <span class="required">*</span></label>
+                <app-phone-field inputId="cl-mobile" label="Mobile" formControlName="Mobile" />
+                @if (showError('Mobile')) {
+                  <span class="field-error">
+                    {{
+                      form.controls.Mobile.hasError('required')
+                        ? 'Mobile is required.'
+                        : 'Enter a valid number.'
+                    }}
+                  </span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="cl-fax">Fax</label>
+                <app-phone-field inputId="cl-fax" label="Fax" formControlName="Fax" />
+                @if (showError('Fax')) {
+                  <span class="field-error">Enter a valid number.</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (showWebUrl) {
+            <div class="form-field">
+              <label for="cl-web">Web URL</label>
+              <input
+                id="cl-web"
+                type="text"
+                inputmode="url"
+                placeholder="Enter Web URL"
+                formControlName="WebURL"
+              />
+              @if (showError('WebURL')) {
+                <span class="field-error">Enter a valid URL.</span>
+              }
+            </div>
+          }
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Custom Labels</mat-panel-title>
+          </mat-expansion-panel-header>
+          <label class="switch-field cl-switch">
+            <span class="switch">
+              <input type="checkbox" role="switch" formControlName="Validate" />
+              <span class="slider"></span>
+            </span>
+            Validate
+          </label>
+          <div class="cl-grid">
+            <div class="form-field">
+              <label for="cl-policy-label">Policy Label</label>
+              <input
+                id="cl-policy-label"
+                type="text"
+                placeholder="Policy Label"
+                formControlName="PolicyLabel"
+              />
+            </div>
+          </div>
+          <div class="cl-grid">
+            @for (index of labels; track index) {
+              <div class="form-field">
+                <label [for]="'cl-label-' + index">Validation Label {{ index }}</label>
+                <input
+                  type="text"
+                  [id]="'cl-label-' + index"
+                  [placeholder]="'Validation Label ' + index"
+                  [formControlName]="labelControl(index)"
+                />
+              </div>
+            }
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Client Data</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="cl-data">
+            <div class="cl-switches">
+              @for (item of dataSwitches; track item[0]) {
+                <label class="switch-field">
+                  <span class="switch">
+                    <input type="checkbox" role="switch" [formControl]="switchControl(item[0])" />
+                    <span class="slider"></span>
+                  </span>
+                  {{ item[1] }}
+                </label>
+              }
+            </div>
+            <div class="cl-data-fields">
+              <div class="form-field">
+                <label for="cl-policy-file">Policy File</label>
+                <select id="cl-policy-file" formControlName="PolicyFile">
+                  <option [ngValue]="null">Select</option>
+                  @for (file of policyFiles; track file) {
+                    <option [ngValue]="file">{{ file }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="cl-lookup-path">Policy Lookup Path</label>
+                <input
+                  id="cl-lookup-path"
+                  type="text"
+                  placeholder="Policy Lookup Path"
+                  formControlName="PolicyLookupPath"
+                />
+              </div>
+              <div class="form-field">
+                <label for="cl-validation-url">Validation URL</label>
+                <input
+                  id="cl-validation-url"
+                  type="text"
+                  placeholder="Validation URL"
+                  formControlName="WebValidationURL"
+                />
+              </div>
+              <div class="form-field">
+                <label for="cl-notes">Notes</label>
+                <textarea
+                  id="cl-notes"
+                  rows="3"
+                  placeholder="Notes"
+                  formControlName="OtherValidationNotes"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </section>
+
+    @for (linkTab of tabs; track linkTab.id) {
+      @if (linkTab.id !== 'details' && opened().has(linkTab.id)) {
+        <section
+          role="tabpanel"
+          class="cl-panel-body"
+          [id]="tabStrip.panelId(linkTab.id)"
+          [attr.aria-labelledby]="tabStrip.tabId(linkTab.id)"
+          [hidden]="tab() !== linkTab.id"
+        >
+          @if (links(); as loaded) {
+            @switch (linkTab.id) {
+              @case ('services') {
+                <app-client-services-tab
+                  [clientId]="clientId()"
+                  [initial]="loaded.services"
+                  [canLink]="canLink"
+                />
+              }
+              @case ('ratingQuestions') {
+                <app-client-rating-questions-tab
+                  [clientId]="clientId()"
+                  [initial]="loaded.ratingQuestions"
+                  [canLink]="canLink"
+                />
+              }
+              @case ('documents') {
+                <app-client-documents-tab
+                  [clientId]="clientId()"
+                  [initial]="loaded.documents"
+                  [canLink]="canLink"
+                />
+              }
+              @case ('serviceProviders') {
+                <app-client-service-providers-tab
+                  [clientId]="clientId()"
+                  [initial]="loaded.serviceProviders"
+                  [canLink]="canLink"
+                />
+              }
+            }
+          } @else if (linksFailed()) {
+            <p class="cl-status">
+              The client's links could not be loaded. Close and open it again.
+            </p>
+          } @else {
+            <p class="cl-status">Loading…</p>
+          }
+        </section>
+      }
+    }
+
+    @if (tab() === 'details') {
+      <label rdFooterStart class="switch-field cl-active">
+        Is Active?
+        <span class="switch">
+          <input type="checkbox" role="switch" formControlName="IsActive" />
+          <span class="slider"></span>
+        </span>
+      </label>
+    }
+  </app-record-dialog-frame>
+</form>

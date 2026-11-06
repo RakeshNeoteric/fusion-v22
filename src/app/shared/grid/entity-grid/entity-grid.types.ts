@@ -1,5 +1,6 @@
 import type { Observable } from 'rxjs';
 import type { CrudSource } from '@api/config/config-crud.api';
+import type { AppIconName } from '@core/icons/app-icons';
 
 export interface SelectOption {
   /** null for an optional column's "none" choice. */
@@ -106,6 +107,18 @@ export interface EntityGridConfig<T> {
    * (v21 Roles: the eye). Shown with the eye icon; `label` is its accessible name.
    */
   readonly rowLink?: RowLink<T>;
+  /**
+   * More buttons beside "+ New" for users who may create, e.g. v21 Clients'
+   * "Clone (Copy) a Client".
+   */
+  readonly titleActions?: readonly TitleAction[];
+}
+
+export interface TitleAction {
+  readonly label: string;
+  readonly icon: AppIconName;
+  /** Resolves true when it changed the records, so the list is loaded again. */
+  readonly run: () => Promise<boolean>;
 }
 
 export interface RowLink<T> {

@@ -1,0 +1,49 @@
+/* Quill's own look comes from the quill-snow.css bundle (see ClientDocumentDialog). */
+app-client-document-dialog .note-editor {
+  display: block;
+}
+app-client-document-dialog .note-editor .ql-toolbar {
+  border-radius: 10px 10px 0 0;
+}
+app-client-document-dialog .note-editor .ql-container {
+  height: 180px;
+  border-radius: 0 0 10px 10px;
+  font: inherit;
+  font-size: 14px;
+}
+app-client-document-dialog .cd-file {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+app-client-document-dialog .cd-file-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+app-client-document-dialog .cd-hidden {
+  display: none;
+}
+app-client-document-dialog .cd-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+app-client-document-dialog .cd-none {
+  color: #5f6b6b;
+}
+app-client-document-dialog .cd-link {
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  color: var(--app-teal);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+app-client-document-dialog .cd-remove {
+  color: var(--app-danger);
+}
+app-client-document-dialog .cd-link:focus-visible {
+  outline: 2px solid var(--app-teal);
+}

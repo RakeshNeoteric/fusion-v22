@@ -20,7 +20,7 @@ import { useLazyStylesheet } from '@shared/forms/lazy-stylesheet';
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { requiredText } from '@shared/forms/validators';
 import { ServiceTypeLookup } from '../service-types/service-type-lookup';
-import { noteText } from './note-text';
+import { noteText } from '@shared/forms/note-text';
 
 /** v21 editor toolbar. */
 const NOTE_TOOLBAR = [

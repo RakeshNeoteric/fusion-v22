@@ -1,4 +1,4 @@
-import { formatInternationalPhone } from './phone';
+import { displayStoredPhone, e164ToStored, formatInternationalPhone, storedToE164 } from './phone';
 
 describe('formatInternationalPhone (v21 Transport Operator rule)', () => {
   it('writes a valid local number in international format', () => {
@@ -23,5 +23,25 @@ describe('formatInternationalPhone (v21 Transport Operator rule)', () => {
   it('treats any other or missing country as South Africa, as v21 does', () => {
     expect(formatInternationalPhone('0821234567', 'BW')).toBe('+27 82 123 4567');
     expect(formatInternationalPhone('0821234567', null)).toBe('+27 82 123 4567');
+  });
+});
+
+describe('stored phone numbers (v21: national number, read as South African)', () => {
+  it('reads v21 numbers and E.164 ones', () => {
+    expect(storedToE164('0821234567')).toBe('+27821234567');
+    expect(storedToE164('82 123 4567')).toBe('+27821234567');
+    expect(storedToE164('+91 98765 43210')).toBe('+919876543210');
+    expect(storedToE164(null)).toBe('');
+  });
+
+  it('stores South African numbers as v21 did, others with their country', () => {
+    expect(e164ToStored('+27821234567')).toBe('821234567');
+    expect(e164ToStored('+919876543210')).toBe('+919876543210');
+    expect(e164ToStored('')).toBe('');
+  });
+
+  it('shows stored numbers in international format', () => {
+    expect(displayStoredPhone('821234567')).toBe('+27 82 123 4567');
+    expect(displayStoredPhone('')).toBe('');
   });
 });

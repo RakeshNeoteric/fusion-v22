@@ -1,0 +1,66 @@
+/* Shared by the client popup's link tabs: the bar above the table (v21). */
+:host {
+  display: block;
+  padding: 16px 0;
+}
+.link-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.link-bar select {
+  flex: 0 1 380px;
+}
+.link-add,
+.link-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  background: #6c757d;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.link-new {
+  background: var(--app-teal);
+}
+.link-add:hover:not(:disabled) {
+  background: #5c636a;
+}
+.link-new:hover:not(:disabled) {
+  background: #048a91;
+}
+.link-add:disabled,
+.link-new:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.link-add:focus-visible,
+.link-new:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+.link-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #6c757d;
+  font-weight: 700;
+  line-height: 1;
+}
+.link-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentcolor;
+}

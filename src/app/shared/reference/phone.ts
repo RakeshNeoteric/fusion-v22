@@ -37,3 +37,30 @@ export function formatInternationalPhone(
   const parsed = parsePhoneNumberFromString(digits, iso);
   return parsed?.isValid() ? parsed.formatInternational() : `${dial} ${digits}`.trim();
 }
+
+/**
+ * v21 stored client and fax numbers as the national number only (`821234567`), read as South
+ * African. Numbers elsewhere are stored in E.164 (`+919876543210`) so their country is kept.
+ * Returns E.164 for the phone field, '' when empty.
+ */
+export function storedToE164(stored: string | null | undefined): string {
+  const value = (stored ?? '').trim();
+  if (!value) return '';
+  if (value.startsWith('+')) return value.replace(/[^\d+]/g, '');
+  const digits = value.replace(/\D+/g, '').replace(/^0+/, '');
+  return digits ? `+27${digits}` : '';
+}
+
+/** The reverse of {@link storedToE164}. */
+export function e164ToStored(e164: string | null | undefined): string {
+  const phone = e164 ? parsePhoneNumberFromString(e164) : undefined;
+  if (!phone) return (e164 ?? '').trim();
+  return phone.countryCallingCode === '27' ? phone.nationalNumber : phone.number;
+}
+
+/** A stored number for showing, e.g. `+27 82 123 4567`; as stored when it does not parse. */
+export function displayStoredPhone(stored: string | null | undefined): string {
+  const e164 = storedToE164(stored);
+  const phone = e164 ? parsePhoneNumberFromString(e164) : undefined;
+  return phone ? phone.formatInternational() : (stored ?? '').trim();
+}

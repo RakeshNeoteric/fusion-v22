@@ -1,0 +1,153 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <app-record-dialog-frame
+    [title]="title"
+    [isNew]="isNew"
+    [readOnly]="readOnly"
+    [saving]="saving()"
+  >
+    <div class="form-row">
+      <div class="form-field">
+        <label for="ls-service">Services <span class="required">*</span></label>
+        <select id="ls-service" formControlName="ServiceId">
+          <option [ngValue]="null" disabled>Select Service</option>
+          @for (option of services; track option.value) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        @if (showError('ServiceId')) {
+          <span class="field-error">Service is required.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="ls-transfer">Transfer Number <span class="required">*</span></label>
+        <input
+          id="ls-transfer"
+          type="text"
+          placeholder="Enter transfer number"
+          formControlName="TransferNumber"
+        />
+        @if (showError('TransferNumber')) {
+          <span class="field-error">Transfer Number is required.</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <span class="form-label" id="ls-note-label">Note <span class="required">*</span></span>
+        <quill-editor
+          class="note-editor"
+          formControlName="Note"
+          aria-labelledby="ls-note-label"
+          [modules]="editorModules"
+          [readOnly]="readOnly"
+        />
+        @if (showError('Note')) {
+          <span class="field-error">Note is required.</span>
+        }
+      </div>
+    </div>
+
+    @if (isVoucher()) {
+      <h3 class="ls-heading">Voucher Configuration</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ls-amount">Total value for vouchers <span class="required">*</span></label>
+          <input
+            id="ls-amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            [max]="maxVoucherAmount"
+            placeholder="Enter total value"
+            formControlName="VoucherAmount"
+          />
+          @if (showError('VoucherAmount')) {
+            <span class="field-error"> Enter an amount from 0.01 to {{ maxVoucherAmount }}. </span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ls-count">Maximum number of vouchers <span class="required">*</span></label>
+          <input
+            id="ls-count"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Enter max vouchers"
+            formControlName="NoOfVouchers"
+          />
+          @if (showError('NoOfVouchers')) {
+            <span class="field-error">Enter a whole number of at least 1.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ls-provider">Voucher Provider</label>
+          <input id="ls-provider" type="text" readonly [value]="service()?.VoucherProvider ?? ''" />
+        </div>
+      </div>
+    }
+
+    <div class="ls-sms" formArrayName="Sms">
+      <div class="ls-sms-head">
+        <h3 class="ls-heading">SMS Messages</h3>
+        @if (!readOnly) {
+          <button type="button" class="app-button" (click)="addSms()">+ Add SMS</button>
+        }
+      </div>
+      @for (row of smsRows; track row; let index = $index) {
+        <div class="ls-sms-row" [formGroupName]="index">
+          <span class="ls-rank" [attr.aria-label]="'Rank ' + (index + 1)">{{ index + 1 }}</span>
+          <div class="form-field">
+            <label [for]="'ls-sms-' + index">SMS Message</label>
+            <textarea
+              rows="2"
+              placeholder="Enter SMS message"
+              [id]="'ls-sms-' + index"
+              formControlName="SMSMessage"
+            ></textarea>
+            @if (row.controls.SMSMessage.invalid && row.controls.SMSMessage.touched) {
+              <span class="field-error">SMS Message is required.</span>
+            }
+          </div>
+          <div class="form-field ls-type">
+            <label [for]="'ls-sms-type-' + index">SMS Type</label>
+            <select [id]="'ls-sms-type-' + index" formControlName="Type">
+              @for (type of smsTypes(); track type) {
+                <option [ngValue]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+          <label class="switch-field">
+            <span class="switch">
+              <input type="checkbox" role="switch" formControlName="IsActive" />
+              <span class="slider"></span>
+            </span>
+            Active
+          </label>
+          @if (!readOnly) {
+            <button
+              type="button"
+              class="ls-remove"
+              [attr.aria-label]="'Remove SMS ' + (index + 1)"
+              (click)="removeSms(index)"
+            >
+              ✖
+            </button>
+          }
+        </div>
+      } @empty {
+        <p class="ls-empty">No SMS messages.</p>
+      }
+    </div>
+
+    @if (isVoucher()) {
+      <p class="ls-tags">
+        <strong>Message Tags</strong><br />
+        [ttval] - Total value of vouchers allowed<br />
+        [value] - Value of the individual voucher (e.g., R250, R500)<br />
+        [vouchercde] - The voucher unique code<br />
+        [expridte] - The voucher expiration date
+      </p>
+    }
+  </app-record-dialog-frame>
+</form>

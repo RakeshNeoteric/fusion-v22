@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type { ProviderContact } from '@api/services/service-provider.api';
+import { e164ToStored, storedToE164 } from '@shared/reference/phone';
 
 /** One contact row as the popup edits it; phone numbers are E.164 (`+27821234567`). */
 export interface ContactRow {
@@ -22,26 +23,11 @@ function joinPhone(code: string | null | undefined, national: string | null | un
   return `${dial.startsWith('+') ? dial : `+${dial}`}${digits}`;
 }
 
-/**
- * v21 stores a fax as the national number only, read as South African. Numbers in other
- * countries are stored in international format, which v22 reads back as is.
- */
-function readFax(fax: string | null | undefined): string {
-  const value = (fax ?? '').trim();
-  return value.startsWith('+') ? value.replace(/\s+/g, '') : joinPhone(SOUTH_AFRICA, value);
-}
-
-function writeFax(fax: string): string {
-  const phone = parsePhoneNumberFromString(fax);
-  if (!phone) return '';
-  return phone.countryCallingCode === '27' ? phone.nationalNumber : phone.number;
-}
-
 export function toContactRow(contact: ProviderContact): ContactRow {
   return {
     telephone: joinPhone(contact.Code, contact.Value),
     name: contact.Name ?? '',
-    fax: readFax(contact.Fax),
+    fax: storedToE164(contact.Fax),
     email: contact.Email ?? '',
     comments: contact.Comments ?? '',
   };
@@ -60,7 +46,7 @@ export function toContact(row: ContactRow): ProviderContact {
     Value: phone?.nationalNumber ?? '',
     Mobile: phone?.formatInternational() ?? '',
     Name: row.name.trim(),
-    Fax: row.fax ? writeFax(row.fax) : '',
+    Fax: e164ToStored(row.fax),
     Email: row.email.trim(),
     Comments: row.comments.trim(),
   };

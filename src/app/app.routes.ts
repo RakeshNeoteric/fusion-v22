@@ -92,6 +92,13 @@ export const routes: Routes = [
           import('@features/company/company-details-page').then((m) => m.CompanyDetailsPage),
       },
       {
+        path: 'client/client',
+        title: 'Clients',
+        data: { breadcrumb: 'Client' },
+        canMatch: [canAccess('CLIENT')],
+        loadComponent: () => import('@features/clients/clients-page').then((m) => m.ClientsPage),
+      },
+      {
         path: 'client/client-group',
         title: 'Client Groups',
         data: { breadcrumb: 'Client / Client Group' },

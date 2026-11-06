@@ -44,6 +44,7 @@ import {
   type EntityColumn,
   type EntityGridConfig,
   type SelectColumn,
+  type TitleAction,
   isEditableColumn,
 } from './entity-grid.types';
 import {
@@ -215,6 +216,10 @@ export class EntityGrid<T extends object> implements OnInit {
   }
 
   /** Adds an empty row at the top and starts editing its first cell. */
+  protected async runTitleAction(action: TitleAction): Promise<void> {
+    if (await action.run()) await this.load();
+  }
+
   protected add(): void {
     if (!this.canCreate()) return;
     const { editor, newEntity } = this.config();

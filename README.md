@@ -103,6 +103,8 @@ Optional config, used by Vehicles and Transport Operators (see `transport-operat
 - `validate` adds a screen-specific check (it also gets the other saved records, e.g. for a
   "must be unique" rule); `beforeSave` makes a last change, e.g. phone formatting.
 - `rowLink` adds an eye button on saved rows that leads to another page (Roles → Permissions).
+- `titleActions` adds buttons beside "+ New" for users who may create (Clients: Clone); when
+  one resolves `true` the list is loaded again.
 
 Screens edited in a popup form (v21: Claim Centre, Rating Questions, Rating Question Options) pass
 an `editor` instead of `newEntity`. The grid is then read-only with a View/Edit button, and the form
@@ -116,6 +118,18 @@ a new file is uploaded when chosen, the replaced one is deleted only after Save,
 deleted when the form is cancelled. Pictures kept in file storage (company logo, user photo) use
 `app-image-picker` (`size`, `round`) with a `StoredImage` for the preview (`shared/ui/image-picker`).
 `RecordDialogs.open` takes an optional width for long forms (Service Provider: 1150px).
+
+The frame (`app-record-dialog-frame`) also takes `cancelable`, `savable`, `closeResult` and
+content marked `rdFooterStart` (shown left of the buttons).
+
+Workspace popups with several tabs (v21 Client) use `app-folder-tabs` (`shared/ui/folder-tabs`)
+for the slanted v21 tabs; the page decides whether a chosen tab opens, so a new client is saved
+before its link tabs. Each link tab (`features/clients/tabs`) extends `ClientLinkTab`, which saves
+every link or unlink at once through `ClientLinksApi`; linked records are listed with
+`app-link-table` (`shared/ui/link-table`, optional View and Delete, custom cells via
+`<ng-template appLinkCell="Header">`). Link popups get their tab's data through the
+`CLIENT_LINK_CONTEXT` token in the injector passed to `RecordDialogs.open`. Stored files are
+previewed or downloaded with `FileViewer` (`shared/files`).
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
