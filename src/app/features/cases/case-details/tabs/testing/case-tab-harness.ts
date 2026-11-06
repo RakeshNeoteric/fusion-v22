@@ -1,0 +1,200 @@
+import { signal } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import {
+  CaseApi,
+  type CaseDeceasedRecord,
+  type CaseDetails,
+  type CaseInit,
+  type CaseValidationRecord,
+} from '@api/cases/case.api';
+import type { DirectoryUser } from '@api/models/app.models';
+import { provideAppIcons } from '@core/icons/app-icons';
+import { NotificationService } from '@core/notifications/notification.service';
+import { SessionService } from '@core/session/session.service';
+import { UserDirectoryService } from '@core/session/user-directory.service';
+import { CASE_INIT, caseDetails } from '../../../../../../testing/case.fixtures';
+import { CaseDetailsPage } from '../../case-details-page';
+
+const user = (id: number, first: string, last: string, email: string): DirectoryUser => ({
+  AspNetUserId: id,
+  UserName: null,
+  UserEmail: email,
+  Firstname: first,
+  Lastname: last,
+  IsActive: true,
+  IsDeleted: false,
+});
+
+const INIT: CaseInit = {
+  ...CASE_INIT,
+  ServiceTypeBasedTabs: [
+    { ServiceTypeCode: 'FUN', TabNames: 'caller,policy-details,validation' },
+    { ServiceTypeCode: 'AVS', TabNames: 'caller,validation,deceased-info' },
+  ],
+};
+
+/** An open case held by Jane (the signed-in user), on Zulu Insure's Funeral service. */
+export const held = (extra: Partial<CaseDetails> = {}): CaseDetails =>
+  caseDetails({
+    CaseDetailId: 4,
+    CaseStatus: 'Pending',
+    CaseOpenedBy: 'jane@example.com',
+    CaseNumber: '0000004',
+    CaseControllerUserId: 3,
+    AgentId: 7,
+    PreferredLanguage: 'Zulu',
+    ContactDetails: [
+      {
+        Id: 1,
+        FirstName: 'Ann',
+        LastName: 'Lee',
+        Email: null,
+        ContactNumber: '821234567',
+        Relationship: 'AUNT',
+      },
+    ],
+    ...extra,
+  });
+
+/**
+ * Case Details with a fake backend, for testing its tabs through the page as a user would:
+ * Jane (user 7, an Agent) has the case open; Carl (3) is a case controller. Call it inside a
+ * `describe`: it sets up and tears down each test.
+ */
+export function caseTabHarness() {
+  const api = {
+    open: vi.fn(),
+    init: vi.fn(),
+    exit: vi.fn(),
+    update: vi.fn(),
+    saveValidation: vi.fn(),
+    saveDeceased: vi.fn(),
+    fetchPolicy: vi.fn(),
+  };
+  const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
+  let fixture: ComponentFixture<CaseDetailsPage> | undefined;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    api.init.mockReturnValue(of(INIT));
+    api.exit.mockReturnValue(of('ok'));
+    // The backend echoes the case without its included records.
+    api.update.mockImplementation((details: CaseDetails, changes: object) =>
+      of({ ...details, ...changes, CaseValidation: null, CaseDeceasedInfo: null }),
+    );
+    api.saveValidation.mockImplementation((record: CaseValidationRecord) =>
+      of({ ...record, CaseValidationId: record.CaseValidationId || 99 }),
+    );
+    api.saveDeceased.mockImplementation((record: CaseDeceasedRecord) =>
+      of({ ...record, CaseDeceasedInfoId: record.CaseDeceasedInfoId || 77 }),
+    );
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideAppIcons(),
+        { provide: CaseApi, useValue: api },
+        { provide: NotificationService, useValue: notify },
+        {
+          provide: SessionService,
+          useValue: { user: signal({ id: 7, email: 'jane@example.com', displayName: 'Jane' }) },
+        },
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+      ],
+    });
+    TestBed.inject(UserDirectoryService).load([
+      { RoleId: 1, RoleName: 'Agent', Users: [user(7, 'Jane', 'Doe', 'jane@example.com')] },
+      { RoleId: 2, RoleName: 'CaseController', Users: [user(3, 'Carl', 'Ng', 'carl@x.com')] },
+    ]);
+  });
+
+  afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+  async function show(details: CaseDetails): Promise<void> {
+    api.open.mockReturnValue(of(details));
+    fixture = TestBed.createComponent(CaseDetailsPage);
+    fixture.componentRef.setInput('id', details.CaseDetailId);
+    await settle();
+  }
+
+  async function settle(): Promise<void> {
+    await fixture?.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture?.whenStable();
+  }
+
+  function element<E extends HTMLElement>(selector: string): E {
+    const found = document.querySelector<E>(selector);
+    if (!found) throw new Error(`not found: ${selector}`);
+    return found;
+  }
+
+  async function type(id: string, value: string): Promise<void> {
+    const input = element<HTMLInputElement>(`#${id}`);
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    await settle();
+  }
+
+  async function choose(id: string, label: string): Promise<void> {
+    const select = element<HTMLSelectElement>(`#${id}`);
+    select.selectedIndex = [...select.options].findIndex((o) => o.text.trim() === label);
+    select.dispatchEvent(new Event('change'));
+    await settle();
+  }
+
+  async function answer(question: string, label: string): Promise<void> {
+    const group = element(`[role="radiogroup"][aria-label="${question}"]`);
+    const button = [...group.querySelectorAll<HTMLButtonElement>('button')].find(
+      (candidate) => candidate.textContent?.trim() === label,
+    );
+    if (!button) throw new Error(`no ${label} in ${question}`);
+    button.click();
+    await settle();
+  }
+
+  async function press(text: string): Promise<void> {
+    const button = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
+      (candidate) => candidate.textContent?.trim() === text,
+    );
+    if (!button) throw new Error(`no button ${text}`);
+    button.click();
+    await settle();
+  }
+
+  async function openTab(label: string): Promise<void> {
+    const tab = [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+      (candidate) => candidate.textContent?.trim() === label,
+    );
+    if (!tab) throw new Error(`no tab ${label}`);
+    tab.click();
+    await settle();
+  }
+
+  const selectedTab = () =>
+    document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim();
+  const value = (id: string) => element<HTMLInputElement | HTMLSelectElement>(`#${id}`).value;
+  const disabled = (id: string) => element<HTMLInputElement>(`#${id}`).disabled;
+  const text = () => document.body.textContent ?? '';
+
+  return {
+    api,
+    notify,
+    show,
+    settle,
+    element,
+    type,
+    choose,
+    answer,
+    press,
+    openTab,
+    selectedTab,
+    value,
+    disabled,
+    text,
+  };
+}

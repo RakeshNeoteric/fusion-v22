@@ -44,7 +44,7 @@ import {
   DEFAULT_GROUPING,
   groupCases,
 } from './case-grouping';
-import { CaseDirectory, callerName, deceasedName } from './case-setup';
+import { CaseDirectory, callerName, deceasedName } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
 
 const PERMISSION = 'CASES';

@@ -22,7 +22,7 @@ const bob: DirectoryUser = {
 };
 
 describe('CaseDetailsPage', () => {
-  const api = { open: vi.fn(), init: vi.fn(), exit: vi.fn() };
+  const api = { open: vi.fn(), init: vi.fn(), exit: vi.fn(), update: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage>;
 
   beforeEach(() => {
@@ -39,9 +39,9 @@ describe('CaseDetailsPage', () => {
           useValue: { user: signal({ id: 7, email: 'jane@example.com', displayName: 'Jane' }) },
         },
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
-        { provide: UserDirectoryService, useValue: { users: signal([bob]) } },
       ],
     });
+    TestBed.inject(UserDirectoryService).load([{ RoleId: 1, RoleName: 'Agent', Users: [bob] }]);
   });
 
   async function show(
@@ -94,7 +94,7 @@ describe('CaseDetailsPage', () => {
     expect(api.exit).not.toHaveBeenCalled();
   });
 
-  it('lets go of the case on Exit and goes back to the list', async () => {
+  it('goes back to the list on Exit, saving nothing unchanged, and lets go of the case', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await show(
       caseDetails({ CaseDetailId: 4, CaseStatus: 'Pending', CaseOpenedBy: 'JANE@example.com' }),
@@ -104,10 +104,11 @@ describe('CaseDetailsPage', () => {
     );
     exit?.click();
     await fixture.whenStable();
-    expect(api.exit).toHaveBeenCalledWith(4, 'Pending');
     expect(navigate).toHaveBeenCalledWith(['/cases']);
+    expect(api.update).not.toHaveBeenCalled();
     fixture.destroy();
     expect(api.exit).toHaveBeenCalledTimes(1);
+    expect(api.exit).toHaveBeenCalledWith(4, 'Pending');
   });
 
   it('lets go of the case when the page is left another way', async () => {

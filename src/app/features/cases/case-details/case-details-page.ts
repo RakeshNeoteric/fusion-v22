@@ -9,24 +9,26 @@ import {
   numberAttribute,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
-import { CaseApi, type CaseDetails } from '@api/cases/case.api';
-import { SessionService } from '@core/session/session.service';
-import { UserDirectoryService, displayNameOf } from '@core/session/user-directory.service';
+import { CaseApi } from '@api/cases/case.api';
+import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
-import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs, isFinished } from '../case-setup';
+import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs } from '../case-setup';
+import { CallerTab } from './tabs/caller/caller-tab';
+import { PolicyDetailsTab } from './tabs/policy-details/policy-details-tab';
+import { ValidationTab } from './tabs/validation/validation-tab';
+import { CaseTabForm } from './tabs/case-tab-form';
+import { CaseWorkspace } from './case-workspace';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /** Which sub-phase of the migration builds each tab (shown until it is built). */
-const BUILT_IN: Record<CaseTabKey, string> = {
-  caller: '7b',
-  'policy-details': '7b',
-  validation: '7b',
+const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
   'deceased-info': '7c',
   'cause-of-death': '7c',
   'final-funeral': '7c',
@@ -42,20 +44,29 @@ const BUILT_IN: Record<CaseTabKey, string> = {
 /**
  * v21 Call Centre / Case Details: the case header and the tabs its service type allows.
  * Loading a case opens it for the user (backend); whoever has it open keeps it until they
- * exit, and others, like everyone on a closed or aborted case, can only look.
+ * leave, and others, like everyone on a closed or aborted case, can only look. A tab's changes
+ * are saved before another tab opens or the case is left (v21 saved on tab change).
  */
 @Component({
   selector: 'app-case-details-page',
-  imports: [FolderTabs, RouterLink, MatIconModule, MatTooltip],
+  imports: [
+    FolderTabs,
+    RouterLink,
+    MatIconModule,
+    MatTooltip,
+    CallerTab,
+    PolicyDetailsTab,
+    ValidationTab,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [CaseWorkspace],
   templateUrl: './case-details-page.html',
   styleUrl: './case-details-page.css',
 })
-export class CaseDetailsPage {
+export class CaseDetailsPage implements HasUnsavedChanges {
   private readonly api = inject(CaseApi);
   private readonly router = inject(Router);
-  private readonly session = inject(SessionService);
-  private readonly users = inject(UserDirectoryService);
+  protected readonly workspace = inject(CaseWorkspace);
 
   /** `?id=` (v21 also used `?caseDetailId=` right after creating a case). */
   readonly id = input(0, { transform: numberAttribute });
@@ -63,44 +74,17 @@ export class CaseDetailsPage {
   private readonly caseId = computed(() => this.id() || this.caseDetailId());
 
   protected readonly status = signal<LoadStatus>('loading');
-  protected readonly details = signal<CaseDetails | null>(null);
-  private readonly directory = signal<CaseDirectory | null>(null);
+  protected readonly details = this.workspace.details;
   protected readonly tab = signal<CaseTabKey>('caller');
-  /** Set once the user has let go of the case, so leaving does not do it twice. */
-  private exited = false;
+  /** The open tab's form, when it has one. */
+  private readonly tabForm = viewChild(CaseTabForm);
 
-  protected readonly tabs = computed<readonly CaseTab[]>(() => {
-    const details = this.details();
-    const directory = this.directory();
-    if (!details || !directory) return [];
-    return caseTabs(directory.allowedTabs(details), details.CasePhaseDetails ?? []);
-  });
+  protected readonly tabs = computed<readonly CaseTab[]>(() =>
+    caseTabs(this.workspace.allowedTabs(), this.details()?.CasePhaseDetails ?? []),
+  );
   protected readonly currentTab = computed(
     () => this.tabs().find((tab) => tab.id === this.tab()) ?? this.tabs()[0] ?? null,
   );
-
-  /** The case is open for someone else (they keep it until they exit). */
-  protected readonly heldByOther = computed(() => {
-    const holder = this.details()?.CaseOpenedBy?.trim().toLowerCase();
-    const me = this.session.user()?.email.trim().toLowerCase();
-    return !!holder && holder !== me;
-  });
-  private readonly heldByMe = computed(() => {
-    const holder = this.details()?.CaseOpenedBy?.trim().toLowerCase();
-    return !!holder && holder === this.session.user()?.email.trim().toLowerCase();
-  });
-  protected readonly holderName = computed(() => {
-    const email = this.details()?.CaseOpenedBy?.trim() ?? '';
-    const user = this.users
-      .users()
-      .find((candidate) => candidate.UserEmail.toLowerCase() === email.toLowerCase());
-    return user ? displayNameOf(user) : email;
-  });
-  /** Closed or aborted, or open for someone else (v21). The tabs follow this from phase 7b. */
-  protected readonly readOnly = computed(() => {
-    const details = this.details();
-    return !!details && (isFinished(details) || this.heldByOther());
-  });
 
   protected readonly builtIn = BUILT_IN;
 
@@ -109,10 +93,8 @@ export class CaseDetailsPage {
       const id = this.caseId();
       untracked(() => void this.load(id));
     });
-    // Leaving the page any other way still lets go of the case, so others can work on it.
-    inject(DestroyRef).onDestroy(() => {
-      if (!this.exited) void this.release();
-    });
+    // Leaving the page lets go of the case, so others can work on it.
+    inject(DestroyRef).onDestroy(() => void this.release());
   }
 
   protected async load(id: number): Promise<void> {
@@ -127,8 +109,7 @@ export class CaseDetailsPage {
       const { details, init } = await firstValueFrom(
         forkJoin({ details: this.api.open(id), init: this.api.init() }),
       );
-      this.directory.set(new CaseDirectory(init));
-      this.details.set(details);
+      this.workspace.show(details, new CaseDirectory(init));
       this.tab.set(this.tabs()[0]?.id ?? 'caller');
       this.status.set('ready');
     } catch {
@@ -136,22 +117,33 @@ export class CaseDetailsPage {
     }
   }
 
-  protected choose(id: string): void {
+  /** Opens the tab once the open one is saved (v21). */
+  protected async choose(id: string): Promise<void> {
     const tab = this.tabs().find((candidate) => candidate.id === id);
-    if (tab) this.tab.set(tab.id);
+    if (!tab || tab.id === this.currentTab()?.id) return;
+    if (!(await this.saveTab())) return;
+    this.tab.set(tab.id);
   }
 
-  /** v21 Exit, without closing the call (the "Is the call complete?" question comes in 7f). */
+  /** v21 Exit: saves the open tab and goes back to the cases (the call questions come in 7f). */
   protected async exit(): Promise<void> {
-    this.exited = true;
-    await this.release();
+    await this.saveTab();
     await this.router.navigate(['/cases']);
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.tabForm()?.hasChanges() ?? false;
+  }
+
+  private async saveTab(): Promise<boolean> {
+    const form = this.tabForm();
+    return !form?.hasChanges() || form.save();
   }
 
   /** Lets go of the case if this user has it open, keeping its status. Best effort. */
   private async release(): Promise<void> {
     const details = this.details();
-    if (!details || !this.heldByMe()) return;
+    if (!details || !this.workspace.heldByMe()) return;
     try {
       await firstValueFrom(this.api.exit(details.CaseDetailId, details.CaseStatus));
     } catch {

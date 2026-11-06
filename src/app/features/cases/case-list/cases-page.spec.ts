@@ -4,7 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { CaseApi } from '@api/cases/case.api';
 import { PageActions } from '@core/layout/page-actions';
-import { CASE_INIT, caseDetails } from '../../../testing/case.fixtures';
+import { CASE_INIT, caseDetails, caseDeceased } from '../../../../testing/case.fixtures';
 import { CasesPage } from './cases-page';
 
 describe('CasesPage', () => {
@@ -20,7 +20,7 @@ describe('CasesPage', () => {
           CaseReferenceNumber: 'FES-0009',
           CaseStatus: 'Closed',
           CaseClientServiceId: 6,
-          CaseDeceasedInfo: { Initials: 'J', FirstName: 'John', LastName: 'Doe' },
+          CaseDeceasedInfo: caseDeceased({ Initials: 'J', FirstName: 'John', LastName: 'Doe' }),
         }),
         caseDetails({
           CaseDetailId: 4,

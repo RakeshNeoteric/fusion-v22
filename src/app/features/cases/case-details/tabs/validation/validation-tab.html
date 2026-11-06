@@ -1,0 +1,185 @@
+<form class="tab-panel app-form" novalidate>
+  <fieldset class="tab-section" [formGroup]="holder">
+    <legend class="tab-heading">Policy Holder Information</legend>
+    @if (holderIsDeceased()) {
+      <p class="val-note">The policy holder is the deceased: their details are taken from below.</p>
+    }
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="val-policy">Policy Number <span class="required">*</span></label>
+        <input id="val-policy" type="text" formControlName="policyNumber" />
+        @if (showError(holder.controls.policyNumber)) {
+          <span class="field-error">Policy Number is required.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="val-holder-first">First Name</label>
+        <input id="val-holder-first" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="val-holder-surname">Surname</label>
+        <input id="val-holder-surname" type="text" formControlName="surname" />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <span class="form-label">Do you have any ID Number?</span>
+        <app-choice-toggle
+          formControlName="hasId"
+          label="Policy holder: do you have any ID Number?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="form-field">
+        <label for="val-holder-id">
+          ID Number
+          @if (holder.controls.hasId.value === true) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input
+          id="val-holder-id"
+          type="text"
+          inputmode="numeric"
+          maxlength="13"
+          formControlName="idNumber"
+        />
+        @if (showError(holder.controls.idNumber)) {
+          <span class="field-error">{{ idMessage(holder.controls.idNumber) }}</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="val-holder-passport">
+          Passport Number
+          @if (holder.controls.hasId.value === false) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input id="val-holder-passport" type="text" formControlName="passport" />
+        @if (showError(holder.controls.passport)) {
+          <span class="field-error">Passport Number is required when there is no ID number.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="val-holder-birth">Date Of Birth</label>
+        <input id="val-holder-birth" type="date" formControlName="dateOfBirth" />
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="tab-section" [formGroup]="deceased">
+    <legend class="tab-heading">Deceased Information</legend>
+    @if (deceasedLocked() && !readOnly()) {
+      <p class="val-note">Change these on the Deceased Info tab.</p>
+    }
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="val-deceased-first">First Name</label>
+        <input id="val-deceased-first" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="val-deceased-surname">Surname</label>
+        <input id="val-deceased-surname" type="text" formControlName="surname" />
+      </div>
+      <div class="form-field">
+        <label for="val-deceased-id">ID Number</label>
+        <input
+          id="val-deceased-id"
+          type="text"
+          inputmode="numeric"
+          maxlength="13"
+          formControlName="idNumber"
+        />
+      </div>
+      <div class="form-field">
+        <label for="val-deceased-passport">Passport Number</label>
+        <input id="val-deceased-passport" type="text" formControlName="passport" />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="val-deceased-birth">Date Of Birth</label>
+        <input id="val-deceased-birth" type="date" readonly [value]="deceasedBirth()" />
+      </div>
+      <div class="form-field">
+        <label for="val-relationship">Relationship to Policyholder</label>
+        <select id="val-relationship" formControlName="relationship">
+          <option [ngValue]="null">Select Relationship</option>
+          @for (relationship of relationships; track relationship.value) {
+            <option [ngValue]="relationship.value">{{ relationship.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field val-fetch">
+        <button type="button" class="app-button" [disabled]="readOnly()" (click)="fetchPolicy()">
+          Fetch Policy Details
+        </button>
+      </div>
+    </div>
+  </fieldset>
+</form>
+
+<div class="val-columns">
+  <form class="tab-panel app-form val-check" [formGroup]="check" novalidate (ngSubmit)="validate()">
+    <h3 class="tab-heading val-title">Validation</h3>
+    <div class="form-field">
+      <span class="form-label">Validation Method <span class="required">*</span></span>
+      <app-choice-toggle formControlName="method" label="Validation Method" [choices]="methods" />
+    </div>
+    @if (check.controls.method.value === 'other') {
+      <div class="form-field">
+        <label for="val-other">Specify Other <span class="required">*</span></label>
+        <input
+          id="val-other"
+          type="text"
+          placeholder="Enter other validation method"
+          formControlName="other"
+        />
+        @if (showError(check.controls.other)) {
+          <span class="field-error">Specify the validation method.</span>
+        }
+      </div>
+    }
+    <div class="tab-grid val-grid">
+      <div class="form-field">
+        <label for="val-date">Date of Validation</label>
+        <input id="val-date" type="text" readonly [value]="today" />
+      </div>
+      <div class="form-field">
+        <label for="val-by">Validated By</label>
+        <select id="val-by" formControlName="validatedBy">
+          @for (user of userOptions(); track user.id) {
+            <option [ngValue]="user.id">{{ user.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <label class="switch-field">
+      <span class="switch">
+        <input type="checkbox" role="switch" formControlName="benefitValid" />
+        <span class="slider"></span>
+      </span>
+      Benefit Valid
+    </label>
+    <div>
+      <button type="submit" class="app-button" [disabled]="readOnly() || validating()">
+        Validate
+      </button>
+    </div>
+  </form>
+
+  <section class="tab-panel val-history" aria-labelledby="val-history-title">
+    <h3 id="val-history-title" class="tab-heading val-title">Previous Validation</h3>
+    @if (history().length) {
+      <app-link-table
+        caption="Previous validations"
+        [rows]="history()"
+        [columns]="historyColumns"
+        [rowKey]="historyKey"
+        [nameOf]="historyName"
+      />
+    } @else {
+      <p>No validations yet.</p>
+    }
+  </section>
+</div>

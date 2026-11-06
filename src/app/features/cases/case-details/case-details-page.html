@@ -17,8 +17,8 @@
             <span class="cd-status" [attr.data-status]="current.CaseStatus"
               >({{ current.CaseStatus }})</span
             >
-            @if (heldByOther()) {
-              <span class="cd-opened-by"> — Already opened by {{ holderName() }}</span>
+            @if (workspace.heldByOther()) {
+              <span class="cd-opened-by"> — Already opened by {{ workspace.holderName() }}</span>
             }
           </h1>
           <div class="cd-actions">
@@ -51,7 +51,20 @@
             [id]="tabStrip.panelId(tab.id)"
             [attr.aria-labelledby]="tabStrip.tabId(tab.id)"
           >
-            <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>
+            @switch (tab.id) {
+              @case ('caller') {
+                <app-caller-tab />
+              }
+              @case ('policy-details') {
+                <app-policy-details-tab />
+              }
+              @case ('validation') {
+                <app-validation-tab />
+              }
+              @default {
+                <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>
+              }
+            }
           </section>
         }
       </div>

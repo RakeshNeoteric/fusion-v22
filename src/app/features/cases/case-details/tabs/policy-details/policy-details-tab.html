@@ -1,0 +1,125 @@
+<form class="tab-panel app-form" novalidate>
+  <fieldset class="tab-section" [formGroup]="holder">
+    <legend class="tab-heading">Policy Holder Information</legend>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="pd-policy">Policy Number <span class="required">*</span></label>
+        <input
+          id="pd-policy"
+          type="text"
+          placeholder="Enter policy number"
+          formControlName="policyNumber"
+        />
+        @if (showError(holder.controls.policyNumber)) {
+          <span class="field-error">Policy Number is required.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="pd-membership">Membership Number</label>
+        <input id="pd-membership" type="text" formControlName="membershipNumber" />
+      </div>
+      <div class="form-field">
+        <label for="pd-holder-first">First Name</label>
+        <input id="pd-holder-first" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="pd-holder-surname">Surname</label>
+        <input id="pd-holder-surname" type="text" formControlName="surname" />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <span class="form-label">Do you have any ID Number?</span>
+        <app-choice-toggle
+          formControlName="hasId"
+          label="Policy holder: do you have any ID Number?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="form-field">
+        <label for="pd-holder-id">
+          ID Number
+          @if (holder.controls.hasId.value === true) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input
+          id="pd-holder-id"
+          type="text"
+          inputmode="numeric"
+          maxlength="13"
+          formControlName="idNumber"
+        />
+        @if (showError(holder.controls.idNumber)) {
+          <span class="field-error">{{ idMessage(holder.controls.idNumber) }}</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="pd-holder-passport">
+          Passport Number
+          @if (holder.controls.hasId.value === false) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input id="pd-holder-passport" type="text" formControlName="passport" />
+        @if (showError(holder.controls.passport)) {
+          <span class="field-error">Passport Number is required when there is no ID number.</span>
+        }
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="tab-section" [formGroup]="deceased">
+    <legend class="tab-heading">Deceased Information</legend>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="pd-deceased-first">First Name</label>
+        <input id="pd-deceased-first" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="pd-deceased-surname">Surname</label>
+        <input id="pd-deceased-surname" type="text" formControlName="surname" />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <span class="form-label">Do you have any ID Number?</span>
+        <app-choice-toggle
+          formControlName="hasId"
+          label="Deceased: do you have any ID Number?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="form-field">
+        <label for="pd-deceased-id">
+          ID Number
+          @if (deceased.controls.hasId.value === true) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input
+          id="pd-deceased-id"
+          type="text"
+          inputmode="numeric"
+          maxlength="13"
+          formControlName="idNumber"
+        />
+        @if (showError(deceased.controls.idNumber)) {
+          <span class="field-error">{{ idMessage(deceased.controls.idNumber) }}</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="pd-deceased-passport">
+          Passport Number
+          @if (deceased.controls.hasId.value === false) {
+            <span class="required">*</span>
+          }
+        </label>
+        <input id="pd-deceased-passport" type="text" formControlName="passport" />
+        @if (showError(deceased.controls.passport)) {
+          <span class="field-error">Passport Number is required when there is no ID number.</span>
+        }
+      </div>
+    </div>
+  </fieldset>
+</form>

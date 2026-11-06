@@ -1,0 +1,206 @@
+<form class="tab-panel app-form" [formGroup]="form" novalidate>
+  <div class="tab-grid tab-grid-3">
+    <div class="form-field">
+      <label for="caller-client">Client <span class="required">*</span></label>
+      <select id="caller-client" formControlName="clientId" (change)="clientChanged()">
+        <option [ngValue]="null" disabled>Select Client</option>
+        @for (client of clientOptions(); track client.id) {
+          <option [ngValue]="client.id">{{ client.name }}</option>
+        }
+      </select>
+      @if (showError(form.controls.clientId)) {
+        <span class="field-error">Client is required.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="caller-service">Service <span class="required">*</span></label>
+      <select id="caller-service" formControlName="serviceId">
+        <option [ngValue]="null" disabled>
+          {{ serviceOptions().length ? 'Select Service' : 'No services for this client' }}
+        </option>
+        @for (service of serviceOptions(); track service.id) {
+          <option [ngValue]="service.id">{{ service.name }}</option>
+        }
+      </select>
+      @if (showError(form.controls.serviceId)) {
+        <span class="field-error">Service is required.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="caller-language">Preferred Language</label>
+      <select id="caller-language" formControlName="language">
+        @for (language of languages; track language) {
+          <option [ngValue]="language">{{ language }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <fieldset class="tab-callers" formArrayName="callers">
+    <legend class="tab-heading">Caller Details:</legend>
+    @for (row of callers.controls; track row; let i = $index) {
+      <div class="tab-caller" [formGroupName]="i">
+        <div class="form-field">
+          <label [for]="'caller-first-' + i">First Name</label>
+          <input
+            type="text"
+            placeholder="First Name"
+            formControlName="firstName"
+            [id]="'caller-first-' + i"
+          />
+        </div>
+        <div class="form-field">
+          <label [for]="'caller-surname-' + i">Surname</label>
+          <input
+            type="text"
+            placeholder="Surname"
+            formControlName="surname"
+            [id]="'caller-surname-' + i"
+          />
+        </div>
+        <div class="form-field">
+          <label [for]="'caller-phone-' + i">Contact Number</label>
+          <app-phone-field
+            formControlName="phone"
+            [inputId]="'caller-phone-' + i"
+            [label]="'Contact Number, caller ' + (i + 1)"
+          />
+          @if (showError(row.controls.phone)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label [for]="'caller-email-' + i">Email</label>
+          <input
+            type="email"
+            placeholder="Email"
+            formControlName="email"
+            [id]="'caller-email-' + i"
+          />
+          @if (showError(row.controls.email)) {
+            <span class="field-error">Enter a valid email address.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label [for]="'caller-relationship-' + i">Relationship</label>
+          <select formControlName="relationship" [id]="'caller-relationship-' + i">
+            <option [ngValue]="null">Select Relationship</option>
+            @for (relationship of relationships; track relationship.value) {
+              <option [ngValue]="relationship.value">{{ relationship.label }}</option>
+            }
+          </select>
+        </div>
+        @if (i === 0) {
+          <button
+            type="button"
+            class="tab-icon-button"
+            aria-label="Add a caller"
+            [disabled]="!canAddCaller()"
+            (click)="addCaller()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="tab-icon-button tab-icon-danger"
+            [attr.aria-label]="'Remove caller ' + (i + 1)"
+            [disabled]="readOnly()"
+            (click)="removeCaller(i)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+              />
+            </svg>
+          </button>
+        }
+      </div>
+    }
+  </fieldset>
+
+  <div class="tab-grid tab-grid-4">
+    <div class="form-field">
+      <label for="caller-case-number">Case Number</label>
+      <input id="caller-case-number" type="text" readonly [value]="caseNumber()" />
+    </div>
+    <div class="form-field">
+      <label for="caller-controller">Case Controller</label>
+      <select id="caller-controller" formControlName="controllerId">
+        <option [ngValue]="null">Select Case Controller</option>
+        @for (user of controllerOptions(); track user.id) {
+          <option [ngValue]="user.id">{{ user.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="caller-agent">Agent</label>
+      <select id="caller-agent" formControlName="agentId">
+        <option [ngValue]="null">Select Agent</option>
+        @for (user of agentOptions(); track user.id) {
+          <option [ngValue]="user.id">{{ user.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="caller-open-date">Call Open Date</label>
+      <input id="caller-open-date" type="text" readonly [value]="openDate()" />
+    </div>
+  </div>
+
+  <div class="tab-questions">
+    <div class="tab-question">
+      <span
+        >Did you get consent to obtain the caller's personal information and explained what it will
+        be used for?</span
+      >
+      <app-choice-toggle
+        formControlName="consent"
+        label="Consent to obtain the caller's personal information explained"
+        [choices]="yesNoNa"
+      />
+    </div>
+    <div class="tab-question">
+      <span>Caller is Policy Holder</span>
+      <app-choice-toggle
+        formControlName="isPolicyHolder"
+        label="Caller is Policy Holder"
+        [choices]="yesNo"
+      />
+    </div>
+    <div class="tab-question">
+      <span>Case Reference Number Given To Caller?</span>
+      <app-choice-toggle
+        formControlName="refGiven"
+        label="Case Reference Number Given To Caller?"
+        [choices]="yesNo"
+      />
+    </div>
+  </div>
+</form>
+
+<mat-accordion class="tab-service">
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>Selected Service</mat-panel-title>
+    </mat-expansion-panel-header>
+    @if (selectedService()?.ServiceDto; as service) {
+      <div class="tab-service-card">
+        <h3>{{ service.ServiceName }}</h3>
+        <p>
+          Type: {{ service.ServiceTypeCode || 'N/A' }}&nbsp;&nbsp;Active:
+          {{ service.IsActive ? 'Yes' : 'No' }}
+        </p>
+        @if (selectedService()?.Note?.trim()) {
+          <h3>Note</h3>
+          <!-- Sanitized by Angular. -->
+          <div class="tab-service-note" [innerHTML]="selectedService()?.Note"></div>
+        }
+      </div>
+    } @else {
+      <p>No service selected yet.</p>
+    }
+  </mat-expansion-panel>
+</mat-accordion>

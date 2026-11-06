@@ -1,0 +1,26 @@
+.val-note {
+  margin: 0;
+  color: #5f6b6b;
+}
+.val-fetch {
+  justify-content: flex-end;
+}
+.val-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+.val-title {
+  margin: 0;
+  color: var(--app-navy);
+  font-size: 18px;
+  font-weight: 600;
+}
+.val-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+@media (width <= 1100px) {
+  .val-columns {
+    grid-template-columns: 1fr;
+  }
+}

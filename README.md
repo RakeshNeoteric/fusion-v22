@@ -131,13 +131,22 @@ every link or unlink at once through `ClientLinksApi`; linked records are listed
 `CLIENT_LINK_CONTEXT` token in the injector passed to `RecordDialogs.open`. Stored files are
 previewed or downloaded with `FileViewer` (`shared/files`).
 
-The case list (`features/cases`) groups by client, service and status like v21, without AG Grid
+The case list (`features/cases/case-list`) groups by client, service and status like v21, without AG Grid
 Enterprise: `case-grouping.ts` turns the cases into group headings and case rows, sorted within
 their groups, and `app-case-group-bar` changes the grouping (drag, remove, add back). Opening a case
 (`GET CaseDetails/{id}`) makes the user its holder (`CaseOpenedBy`); others and everyone on
 a closed or aborted case only look. The holder lets go with `CaseExit` on Exit, and also when
 leaving the page any other way. The tabs a case shows come from its service type's
 `ServiceTypeBasedTabs` rule (`case-setup.ts`); phase tabs appear only once the case has them.
+
+Case tabs (`features/cases/case-details/tabs`, one folder per tab with its template, popups and
+spec) share the open case through `CaseWorkspace`, which the page
+provides. A tab with a form extends `CaseTabForm` (`hasChanges`, `save`): the page saves it
+before another tab opens and before Exit, and stays on the tab when the form has errors. The
+backend replaces whole rows, so saves always send the full record with the tab's changes
+(`CaseApi.update`, `tabs/case-records.ts`). Tab specs drive the real page through
+`tabs/testing/case-tab-harness.ts`; `testing/` folders are left out of the app build. The policy holder lives on the newest `CaseValidation`
+row; a row with a validation method is never changed, so later edits add a new row.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

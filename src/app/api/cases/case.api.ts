@@ -16,11 +16,90 @@ export interface CaseContact {
   readonly Relationship: string | null;
 }
 
-/** The parts of the deceased's details the case list and header show (more in phase 7c). */
-export interface CaseDeceasedSummary {
+/**
+ * Backend `CaseDeceasedInfo`: one per case. Policy Details and Validation edit its names, ID and
+ * date of birth; Deceased Info (phase 7c) edits the rest. Saves send the whole record back.
+ */
+export interface CaseDeceasedRecord {
+  readonly CaseDeceasedInfoId: number;
+  readonly CaseDetailId: number;
+  readonly PolicyNumber: string | null;
   readonly Initials: string | null;
   readonly FirstName: string | null;
   readonly LastName: string | null;
+  readonly RelationshipToPolicyHolder: string | null;
+  readonly IsIdNumberAvailable: boolean | null;
+  readonly IdNumber: string | null;
+  readonly PassportNumber: string | null;
+  readonly Gender: string | null;
+  readonly DeceasedDateOfBirth: string | null;
+  readonly DeceasedDateOfDeath: string | null;
+  readonly PlaceOfDeath: string | null;
+  readonly DeathProvince: string | null;
+  readonly BodyLocation: string | null;
+  readonly BodyLocationProvince: string | null;
+  readonly LocationType: string | null;
+  readonly TelephoneNumber: string | null;
+  readonly BurialTown: string | null;
+  readonly BurialTownProvince: string | null;
+  readonly Country: string | null;
+}
+
+/** The parts of the deceased's details the case list shows. */
+export type CaseDeceasedSummary = Pick<CaseDeceasedRecord, 'Initials' | 'FirstName' | 'LastName'>;
+
+/**
+ * Backend `CaseValidation`: the policy holder's details, and one row per validation done
+ * (method, by whom, when). Rows without a method only hold the policy holder.
+ */
+export interface CaseValidationRecord {
+  readonly CaseValidationId: number;
+  readonly CaseDetailId: number;
+  readonly ClientId: number | null;
+  readonly PolicyNumber: string | null;
+  readonly MembershipNumber: string | null;
+  readonly PolicyHolderFirstName: string | null;
+  readonly PolicyHolderSurName: string | null;
+  readonly IsIDNumberAvbl: boolean | null;
+  readonly PolicyHolderIdNumber: string | null;
+  readonly PassportNumber: string | null;
+  readonly RelationshipToPolicyHolder: string | null;
+  /** `DateOnly`, never null: `0001-01-01` means not known. Leave it out to keep that. */
+  readonly PolicyHolderDOB?: string;
+  readonly ValidationMethod: string | null;
+  readonly ValidationOther: string | null;
+  readonly IsWebSiteVerification: boolean | null;
+  readonly IsMemberCertificate: boolean | null;
+  readonly IsTelephonically: boolean | null;
+  readonly IsBenefitValid: boolean | null;
+  readonly ValidatedOn: string | null;
+  readonly DateOfDeath: string | null;
+  /** The user's AspNetUserId, as text. */
+  readonly ValidatedBy: string | null;
+  readonly DeceaseId: string | null;
+}
+
+/** What the client's policy system says about the deceased (`FetchPolicyDetails`). */
+export interface PolicyMatch {
+  readonly FullName: string | null;
+  readonly IdNumber: string | null;
+  /** `yyyyMMdd` as a number. */
+  readonly DateOfBirth: number | null;
+  readonly PolicyNo: string | null;
+  readonly PolicyStatus: string | null;
+  readonly RoleType: string | null;
+  readonly RoleStatus: string | null;
+  readonly CoverAmount: number | null;
+  readonly EligibleForRepat: string | null;
+}
+
+/** Search for {@link PolicyMatch}es: by the deceased's ID, and optionally a policy number. */
+export interface PolicySearch {
+  readonly clientId: number;
+  readonly deceasedId: string;
+  readonly policyNumber: string | null;
+  /** `yyyy-MM-dd` */
+  readonly dateOfDeath: string | null;
 }
 
 /** The parts of the final funeral the case list shows (more in phase 7c). */
@@ -54,14 +133,37 @@ export interface CaseDetails {
   readonly AgentId: number | null;
   /** Email of whoever has the case open: only they may change it until they exit. */
   readonly CaseOpenedBy: string | null;
+  /** Set by the backend when the case is first opened. */
   readonly CaseOpenDate: string | null;
   readonly CreatedDate: string;
   readonly CaseClosedDate?: string | null;
+  readonly PreferredLanguage?: string | null;
+  /** Yes, No or (null) not asked / not applicable. */
+  readonly IsConsentExplained?: boolean | null;
+  readonly IsPolicyHolder?: boolean | null;
+  readonly CaseReferenceGivenToCaller?: boolean | null;
   readonly ContactDetails: readonly CaseContact[] | null;
-  readonly CaseDeceasedInfo: CaseDeceasedSummary | null;
+  readonly CaseDeceasedInfo: CaseDeceasedRecord | null;
   readonly CaseFinalFuneral: CaseFuneralSummary | null;
+  readonly CaseValidation?: readonly CaseValidationRecord[] | null;
   readonly CasePhaseDetails?: readonly CasePhaseSummary[] | null;
 }
+
+/** The case fields a tab changes; everything else is sent back as loaded. */
+export type CaseChanges = Partial<
+  Pick<
+    CaseDetails,
+    | 'CaseClientId'
+    | 'CaseClientServiceId'
+    | 'CaseControllerUserId'
+    | 'AgentId'
+    | 'PreferredLanguage'
+    | 'IsConsentExplained'
+    | 'IsPolicyHolder'
+    | 'CaseReferenceGivenToCaller'
+    | 'ContactDetails'
+  >
+>;
 
 /** A service as `CaseInit` lists it under a client. */
 export interface CaseInitService {
@@ -77,6 +179,8 @@ export interface CaseInitClientService {
   readonly ClientServiceId: number;
   readonly ServiceId: number;
   readonly IsDeleted: boolean | null;
+  /** HTML: what the agent should know about this service for this client. */
+  readonly Note?: string | null;
   readonly ServiceDto: CaseInitService | null;
 }
 
@@ -109,6 +213,11 @@ export interface CaseInit {
  *   backend); `POST CaseDetails/{id}` replaces it
  * - `GET CaseExit/{id}?status=` lets go of the case, setting its status (only for its holder)
  * - `GET CaseInit` lists clients with their services, and the tabs per service type
+ *
+ * `POST CaseValidation[/{id}]` and `POST CaseDeceasedInfo[/{id}]` create or replace a case's
+ * validation and deceased records; `POST CaseValidation/FetchPolicyDetails/{caseId}` asks the
+ * client's policy system (only clients with an integration). Every replace overwrites the whole
+ * row, so the record is always sent back complete.
  */
 @Injectable({ providedIn: 'root' })
 export class CaseApi {
@@ -144,4 +253,50 @@ export class CaseApi {
   init(): Observable<CaseInit> {
     return this.http.get<CaseInit>('CaseInit');
   }
+
+  /** Saves the case as loaded with `changes` (the backend replaces every column). */
+  update(details: CaseDetails, changes: CaseChanges): Observable<CaseDetails> {
+    return this.http.post<CaseDetails>(`CaseDetails/${details.CaseDetailId}`, {
+      ...columnsOf(details),
+      ...changes,
+    });
+  }
+
+  saveValidation(record: CaseValidationRecord): Observable<CaseValidationRecord> {
+    const id = record.CaseValidationId;
+    return this.http.post<CaseValidationRecord>(
+      id ? `CaseValidation/${id}` : 'CaseValidation',
+      columnsOf(record),
+    );
+  }
+
+  saveDeceased(record: CaseDeceasedRecord): Observable<CaseDeceasedRecord> {
+    const id = record.CaseDeceasedInfoId;
+    return this.http.post<CaseDeceasedRecord>(
+      id ? `CaseDeceasedInfo/${id}` : 'CaseDeceasedInfo',
+      columnsOf(record),
+    );
+  }
+
+  fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {
+    return this.http.post<PolicyMatch[]>(`CaseValidation/FetchPolicyDetails/${caseId}`, {
+      CaseDetailId: caseId,
+      ClientId: search.clientId,
+      DeceaseId: search.deceasedId,
+      PolicyNumber: search.policyNumber,
+      DateOfDeath: search.dateOfDeath,
+    });
+  }
+}
+
+/**
+ * The record's own columns: what the backend copies onto the row. Included records (the case's
+ * deceased, validations, …) are left out; `ContactDetails` is a column stored as JSON.
+ */
+function columnsOf<T extends object>(record: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(record).filter(
+      ([key, value]) => key === 'ContactDetails' || value === null || typeof value !== 'object',
+    ),
+  ) as Partial<T>;
 }

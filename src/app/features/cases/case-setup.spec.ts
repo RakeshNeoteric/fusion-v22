@@ -1,4 +1,8 @@
-import { CASE_INIT as INIT, caseDetails as details } from '../../../testing/case.fixtures';
+import {
+  CASE_INIT as INIT,
+  caseDetails as details,
+  caseDeceased,
+} from '../../../testing/case.fixtures';
 import { CaseDirectory, allowedTabs, callerName, caseTabs, deceasedName } from './case-setup';
 
 describe('case tabs', () => {
@@ -71,12 +75,16 @@ describe('case names', () => {
     ).toBe('Ann Lee');
     expect(
       deceasedName(
-        details({ CaseDeceasedInfo: { Initials: 'J', FirstName: null, LastName: 'Doe' } }),
+        details({
+          CaseDeceasedInfo: caseDeceased({ Initials: 'J', FirstName: null, LastName: 'Doe' }),
+        }),
       ),
     ).toBe('Doe');
     expect(
       deceasedName(
-        details({ CaseDeceasedInfo: { Initials: 'J', FirstName: null, LastName: null } }),
+        details({
+          CaseDeceasedInfo: caseDeceased({ Initials: 'J', FirstName: null, LastName: null }),
+        }),
       ),
     ).toBe('J');
   });

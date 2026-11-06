@@ -5,8 +5,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { CaseApi, type CaseDetails } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
-import { CASE_INIT, caseDetails } from '../../../testing/case.fixtures';
-import { CaseDirectory } from './case-setup';
+import { CASE_INIT, caseDetails } from '../../../../testing/case.fixtures';
+import { CaseDirectory } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
 
 describe('NewCaseDialog', () => {

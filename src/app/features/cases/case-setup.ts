@@ -1,6 +1,7 @@
 import type {
   CaseDetails,
   CaseInit,
+  CaseInitClientService,
   CaseInitService,
   CasePhaseSummary,
   ServiceTypeTabs,
@@ -79,12 +80,17 @@ export function caseTabs(
   );
 }
 
+export interface CaseOption {
+  readonly id: number;
+  readonly name: string;
+}
+
 /** Names of clients and services from `CaseInit`, as the case screens show them. */
 export class CaseDirectory {
   constructor(private readonly init: CaseInit) {}
 
   /** Active clients, by name, for a new case. */
-  clientsForNewCase(): { readonly id: number; readonly name: string }[] {
+  clientsForNewCase(): CaseOption[] {
     return (this.init.ClientDto ?? [])
       .filter((client) => client.IsActive && client.IsDeleted !== true)
       .map((client) => ({ id: client.ClientId, name: client.ClientName }))
@@ -100,6 +106,33 @@ export class CaseDirectory {
         (service): service is CaseInitService =>
           !!service && service.IsActive && service.IsDeleted !== true,
       );
+  }
+
+  /** Clients to pick on a case: the active ones, and the case's own client whatever its state. */
+  clientOptions(selectedClientId: number | null): CaseOption[] {
+    const options = this.clientsForNewCase();
+    if (selectedClientId !== null && !options.some((option) => option.id === selectedClientId)) {
+      const name = this.clientName(selectedClientId);
+      if (name) options.unshift({ id: selectedClientId, name });
+    }
+    return options;
+  }
+
+  /** The client's active services, and the case's own service whatever its state (v21). */
+  serviceOptions(clientId: number | null, selectedServiceId: number | null): CaseOption[] {
+    const options = (clientId === null ? [] : this.servicesForNewCase(clientId))
+      .map((service) => ({ id: service.ServiceId, name: service.ServiceName }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (selectedServiceId !== null && !options.some((option) => option.id === selectedServiceId)) {
+      const name = this.serviceName(clientId, selectedServiceId);
+      if (name) options.unshift({ id: selectedServiceId, name });
+    }
+    return options;
+  }
+
+  /** The client's link to the service, with its note for agents. */
+  clientService(clientId: number | null, serviceId: number | null): CaseInitClientService | null {
+    return this.links(clientId).find((link) => link.ServiceId === serviceId) ?? null;
   }
 
   clientName(clientId: number | null): string {

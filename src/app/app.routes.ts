@@ -96,13 +96,15 @@ export const routes: Routes = [
         title: 'Cases',
         data: { breadcrumb: 'Call Centre / Cases' },
         canMatch: [canAccess('CASES')],
-        loadComponent: () => import('@features/cases/cases-page').then((m) => m.CasesPage),
+        loadComponent: () =>
+          import('@features/cases/case-list/cases-page').then((m) => m.CasesPage),
       },
       {
         path: 'cases/case-details',
         title: 'Case Details',
         data: { breadcrumb: 'Call Centre / Case Details' },
         canMatch: [canAccess('CASES')],
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('@features/cases/case-details/case-details-page').then((m) => m.CaseDetailsPage),
       },

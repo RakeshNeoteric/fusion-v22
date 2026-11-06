@@ -1,4 +1,10 @@
-import type { CaseDetails, CaseInit, CaseInitService } from '@api/cases/case.api';
+import type {
+  CaseDeceasedRecord,
+  CaseDetails,
+  CaseInit,
+  CaseInitService,
+  CaseValidationRecord,
+} from '@api/cases/case.api';
 
 export const caseService = (
   id: number,
@@ -73,5 +79,59 @@ export const caseDetails = (extra: Partial<CaseDetails> = {}): CaseDetails => ({
   ContactDetails: null,
   CaseDeceasedInfo: null,
   CaseFinalFuneral: null,
+  ...extra,
+});
+
+export const caseDeceased = (extra: Partial<CaseDeceasedRecord> = {}): CaseDeceasedRecord => ({
+  CaseDeceasedInfoId: 30,
+  CaseDetailId: 1,
+  PolicyNumber: null,
+  Initials: null,
+  FirstName: null,
+  LastName: null,
+  RelationshipToPolicyHolder: null,
+  IsIdNumberAvailable: null,
+  IdNumber: null,
+  PassportNumber: null,
+  Gender: null,
+  DeceasedDateOfBirth: null,
+  DeceasedDateOfDeath: null,
+  PlaceOfDeath: null,
+  DeathProvince: null,
+  BodyLocation: null,
+  BodyLocationProvince: null,
+  LocationType: null,
+  TelephoneNumber: null,
+  BurialTown: null,
+  BurialTownProvince: null,
+  Country: 'ZA',
+  ...extra,
+});
+
+export const caseValidation = (
+  extra: Partial<CaseValidationRecord> = {},
+): CaseValidationRecord => ({
+  CaseValidationId: 40,
+  CaseDetailId: 1,
+  ClientId: 1,
+  PolicyNumber: 'POL-1',
+  MembershipNumber: null,
+  PolicyHolderFirstName: 'Mary',
+  PolicyHolderSurName: 'Moyo',
+  IsIDNumberAvbl: null,
+  PolicyHolderIdNumber: null,
+  PassportNumber: null,
+  RelationshipToPolicyHolder: null,
+  PolicyHolderDOB: '0001-01-01',
+  ValidationMethod: null,
+  ValidationOther: null,
+  IsWebSiteVerification: null,
+  IsMemberCertificate: null,
+  IsTelephonically: null,
+  IsBenefitValid: null,
+  ValidatedOn: null,
+  DateOfDeath: null,
+  ValidatedBy: null,
+  DeceaseId: null,
   ...extra,
 });

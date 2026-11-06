@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { CaseApi, type CaseDetails } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
-import type { CaseDirectory } from './case-setup';
+import type { CaseDirectory } from '../case-setup';
 
 /**
  * v21 "Create a New Call": pick a client, then one of its services; Next creates the case.

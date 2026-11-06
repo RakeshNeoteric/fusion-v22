@@ -1,0 +1,122 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+/* v21: the tab's fields on a light teal panel. */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 32px 40px;
+  border-radius: 16px;
+  background: #e8f6f6;
+}
+.tab-heading {
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+.tab-grid {
+  display: grid;
+  gap: 16px 28px;
+}
+.tab-grid-3 {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  max-width: 1500px;
+}
+.tab-grid-4 {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.tab-callers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.tab-caller {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr)) 48px;
+  align-items: end;
+  gap: 16px 28px;
+}
+.tab-icon-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: var(--app-teal);
+  color: #fff;
+  cursor: pointer;
+}
+.tab-icon-button.tab-icon-danger {
+  background: var(--app-danger);
+}
+.tab-icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.tab-icon-button:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}
+.tab-icon-button svg {
+  width: 24px;
+  height: 24px;
+  fill: currentcolor;
+}
+.tab-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tab-question {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 40px;
+}
+.tab-service {
+  --mat-expansion-container-background-color: #e8f6f6;
+}
+.tab-service mat-panel-title {
+  color: var(--app-teal);
+  font-size: 18px;
+}
+.tab-service-card {
+  padding: 16px 24px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
+}
+.tab-service-card h3 {
+  margin: 8px 0;
+  color: var(--app-teal);
+}
+@media (width <= 900px) {
+  .tab-panel {
+    padding: 20px 16px;
+  }
+  .tab-caller {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.tab-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.tab-section .tab-heading {
+  margin-bottom: 8px;
+  color: var(--app-navy);
+  font-size: 18px;
+  font-weight: 600;
+}

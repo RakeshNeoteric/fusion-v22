@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { caseDetails } from '../../../testing/case.fixtures';
+import { caseDeceased, caseDetails, caseValidation } from '../../../testing/case.fixtures';
 import { CaseApi } from './case.api';
 
 describe('CaseApi', () => {
@@ -57,5 +57,59 @@ describe('CaseApi', () => {
       .expectOne({ method: 'GET', url: 'CaseInit' })
       .flush({ ClientDto: [], ServiceTypeBasedTabs: [] });
     expect(await init).toEqual({ ClientDto: [], ServiceTypeBasedTabs: [] });
+  });
+
+  it('saves the case with its changes, without the records it includes', async () => {
+    const details = caseDetails({
+      CaseDetailId: 4,
+      CaseStatus: 'Pending',
+      CaseDeceasedInfo: caseDeceased(),
+      CaseValidation: [caseValidation()],
+      ContactDetails: [],
+    });
+    const saved = firstValueFrom(api.update(details, { AgentId: 9 }));
+    const request = backend.expectOne({ method: 'POST', url: 'CaseDetails/4' });
+    expect(request.request.body).toMatchObject({
+      CaseStatus: 'Pending',
+      AgentId: 9,
+      ContactDetails: [],
+    });
+    expect(request.request.body).not.toHaveProperty('CaseDeceasedInfo');
+    expect(request.request.body).not.toHaveProperty('CaseValidation');
+    request.flush(details);
+    await saved;
+  });
+
+  it('creates or replaces validation and deceased records', async () => {
+    const created = firstValueFrom(api.saveValidation(caseValidation({ CaseValidationId: 0 })));
+    backend.expectOne({ method: 'POST', url: 'CaseValidation' }).flush(caseValidation());
+    await created;
+    const updated = firstValueFrom(api.saveDeceased(caseDeceased({ CaseDeceasedInfoId: 30 })));
+    backend.expectOne({ method: 'POST', url: 'CaseDeceasedInfo/30' }).flush(caseDeceased());
+    await updated;
+  });
+
+  it("asks the client's policy system", async () => {
+    const matches = firstValueFrom(
+      api.fetchPolicy(4, {
+        clientId: 1,
+        deceasedId: 'X1',
+        policyNumber: null,
+        dateOfDeath: '2026-11-01',
+      }),
+    );
+    const request = backend.expectOne({
+      method: 'POST',
+      url: 'CaseValidation/FetchPolicyDetails/4',
+    });
+    expect(request.request.body).toEqual({
+      CaseDetailId: 4,
+      ClientId: 1,
+      DeceaseId: 'X1',
+      PolicyNumber: null,
+      DateOfDeath: '2026-11-01',
+    });
+    request.flush([]);
+    expect(await matches).toEqual([]);
   });
 });
