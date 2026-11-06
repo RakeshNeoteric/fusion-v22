@@ -26,8 +26,27 @@ describe('PhoneField', () => {
     return (fixture.nativeElement as HTMLElement).querySelector('input[type="tel"]')!;
   }
 
-  function countrySelect(): HTMLSelectElement {
-    return (fixture.nativeElement as HTMLElement).querySelector('select')!;
+  function countryButton(): HTMLButtonElement {
+    return (fixture.nativeElement as HTMLElement).querySelector('button.phone-country')!;
+  }
+
+  /** The open country list (CDK overlay, outside the component). */
+  function listedCountries(): string[] {
+    return [...document.querySelectorAll('.phone-option')].map(
+      (option) => option.getAttribute('data-country') ?? '',
+    );
+  }
+
+  async function openList(): Promise<void> {
+    countryButton().click();
+    await fixture.whenStable();
+  }
+
+  async function search(text: string): Promise<void> {
+    const box = document.querySelector<HTMLInputElement>('.phone-search')!;
+    box.value = text;
+    box.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
   }
 
   async function type(text: string): Promise<void> {
@@ -37,22 +56,47 @@ describe('PhoneField', () => {
   }
 
   async function chooseCountry(code: string): Promise<void> {
-    countrySelect().value = code;
-    countrySelect().dispatchEvent(new Event('change'));
+    await openList();
+    document.querySelector<HTMLElement>(`.phone-option[data-country="${code}"]`)!.click();
     await fixture.whenStable();
   }
 
+  afterEach(() => {
+    // Close a list a test left open, so it does not leak into the next test.
+    document
+      .querySelector('.phone-search')
+      ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  });
+
   it('shows a stored number in national form with its country', async () => {
     await render('+919876543210');
-    expect(countrySelect().value).toBe('IN');
+    expect(countryButton().dataset['country']).toBe('IN');
+    expect(countryButton().textContent).toContain('+91');
     expect(numberInput().value.replace(/\D/g, '')).toContain('9876543210');
   });
 
-  it('starts on South Africa, with South Africa and India listed first (v21)', async () => {
+  it('starts on South Africa, showing its flag and +27', async () => {
     await render('');
-    const options = [...countrySelect().options].map((option) => option.value);
-    expect(countrySelect().value).toBe('ZA');
-    expect(options.slice(0, 2)).toEqual(['ZA', 'IN']);
+    expect(countryButton().textContent).toContain('+27');
+    expect(countryButton().querySelector('img')?.getAttribute('src')).toBe('flags/za.svg');
+  });
+
+  it('lists South Africa and India first, each with its flag (v21)', async () => {
+    await render('');
+    await openList();
+    expect(listedCountries().slice(0, 2)).toEqual(['ZA', 'IN']);
+    expect(
+      document.querySelector('.phone-option[data-country="IN"] img')?.getAttribute('src'),
+    ).toBe('flags/in.svg');
+  });
+
+  it('finds a country by name or dial code', async () => {
+    await render('');
+    await openList();
+    await search('botsw');
+    expect(listedCountries()).toEqual(['BW']);
+    await search('+44');
+    expect(listedCountries()).toContain('GB');
   });
 
   it('gives the form E.164, as v21 sends it', async () => {
@@ -67,6 +111,8 @@ describe('PhoneField', () => {
     await chooseCountry('GB');
     await type('020 7946 0958');
     expect(phone.value).toBe('+442079460958');
+    expect(countryButton().textContent).toContain('+44');
+    expect(listedCountries()).toEqual([]);
   });
 
   it('marks a typed number that is not valid', async () => {
@@ -93,6 +139,6 @@ describe('PhoneField', () => {
     phone.disable();
     await fixture.whenStable();
     expect(numberInput().disabled).toBe(true);
-    expect(countrySelect().disabled).toBe(true);
+    expect(countryButton().disabled).toBe(true);
   });
 });
