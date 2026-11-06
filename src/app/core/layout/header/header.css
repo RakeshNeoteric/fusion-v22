@@ -1,0 +1,98 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 20px 0 12px;
+  background-color: var(--app-navy);
+  color: #fff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle,
+.sign-out {
+  color: #fff;
+}
+
+.logo-mark,
+.logo-text {
+  object-fit: contain;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  max-width: 360px;
+  padding: 4px 8px 4px 6px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f2f2f2;
+  color: #333;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.user-chip:focus-visible {
+  outline: 2px solid var(--app-teal);
+  outline-offset: 2px;
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--app-teal);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.welcome {
+  color: var(--app-teal);
+}
+
+.user-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.user-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 280px;
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-email,
+.user-roles {
+  color: #666;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .welcome,
+  .logo-text {
+    display: none;
+  }
+}

@@ -43,16 +43,44 @@ Runtime settings (API URL, Azure AD, AG Grid licence key) are typed by `AppConfi
 `inject(APP_CONFIG)`. Only `core/config` may import from `src/environments`; ESLint blocks it
 everywhere else.
 
-| File                                          | Used by                     |
-| --------------------------------------------- | --------------------------- |
-| `src/environments/environment.ts`             | Production build            |
-| `src/environments/environment.development.ts` | `ng serve` and unit tests   |
+| File                                          | Used by                   |
+| --------------------------------------------- | ------------------------- |
+| `src/environments/environment.ts`             | Production build          |
+| `src/environments/environment.development.ts` | `ng serve` and unit tests |
 
 ### Backend contract
 
 - JSON property names are **PascalCase** (the API disables camelCase), so DTOs use PascalCase too.
 - Enums are sent as **strings**; model them as string-literal unions.
 - No component injects `HttpClient`; it goes through a typed client in `api/`.
+- API clients use **relative URLs** (`'Client'`). `core/http` adds the API base URL and the bearer
+  token. The token is only sent to the API host.
+
+### Sign-in and startup
+
+Before the first route is chosen, `SessionService.start()` (the app initializer) runs:
+
+1. MSAL completes the Microsoft redirect, or restores the cached account.
+2. `GET App/UserValidation` checks that the account is a registered, active Fusion user.
+3. `GET App/AppInit` loads menus, the user's roles and permissions, and users by role.
+
+The result is the session state: `signed-out`, `ready`, `denied` (with the reason, shown on the login
+page) or `error` (retryable). `signedInGuard` protects the app shell, and `signedOutGuard` protects
+the login page.
+
+### HTTP errors
+
+Every failed request becomes an `ApiError` with a user-safe `message`. `errorInterceptor` shows that
+message as a notification. Pass `{ context: silentErrors() }` when the screen shows the error itself.
+Server text from 5xx responses is never shown to users.
+
+### Adding a screen
+
+1. Use the same path as v21: the sidebar links to `'/' + MenuViewName.toLowerCase()`.
+2. Protect it with `canMatch: [canAccess('<MENU_CODE>')]`. v21 only hid the menu item, so any URL
+   could be opened directly.
+3. Set `data: { breadcrumb: 'Section / Name' }` for the page title bar.
+4. Inside the screen, use `PermissionService` (`canCreate`, `canEdit`, `canDelete`, `isReadOnly`).
 
 ## Conventions
 

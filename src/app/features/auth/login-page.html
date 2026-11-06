@@ -1,0 +1,48 @@
+<main class="login">
+  <section class="card" aria-labelledby="login-title">
+    <img class="logo" src="/icons/logo-text.png" alt="Fusion Edge" height="28" />
+    <h1 id="login-title">Sign In</h1>
+
+    @if (problem(); as problem) {
+      <div class="problem" role="alert">
+        <p>{{ problem.reason }}</p>
+        @if (problem.status === 'denied') {
+          @if (signedInAs(); as account) {
+            <p class="account">Signed in to Microsoft as {{ account }}</p>
+          }
+          <button mat-stroked-button type="button" [disabled]="redirecting()" (click)="signOut()">
+            Sign out of Microsoft
+          </button>
+        } @else {
+          <button mat-stroked-button type="button" [disabled]="redirecting()" (click)="retry()">
+            Try again
+          </button>
+        }
+      </div>
+    }
+
+    @if (problem()?.status !== 'denied') {
+      <form [formGroup]="form" (ngSubmit)="signIn()">
+        <mat-form-field appearance="outline" class="email-field">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" autocomplete="username" formControlName="email" required />
+          <mat-icon matSuffix svgIcon="mail" />
+          @if (email.hasError('email')) {
+            <mat-error>Enter a valid email address</mat-error>
+          } @else if (email.hasError('required')) {
+            <mat-error>Email is required</mat-error>
+          }
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          type="submit"
+          class="sign-in"
+          [disabled]="redirecting() || !email.value.trim()"
+        >
+          {{ redirecting() ? 'Opening Microsoft sign-in…' : 'Sign in with Microsoft' }}
+        </button>
+      </form>
+    }
+  </section>
+</main>

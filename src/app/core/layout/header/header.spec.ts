@@ -1,0 +1,80 @@
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideAppIcons } from '@core/icons/app-icons';
+import { type SessionUser, SessionService } from '@core/session/session.service';
+import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { Header, initialsOf } from './header';
+
+describe('initialsOf', () => {
+  it.each([
+    ['Jane Doe', 'JD'],
+    ['Jane van der Berg', 'JB'],
+    ['jane', 'J'],
+    ['jane.doe@example.com', 'JD'],
+    ['', '?'],
+  ])('%s → %s', (name, expected) => {
+    expect(initialsOf(name)).toBe(expected);
+  });
+});
+
+describe('Header', () => {
+  const user: SessionUser = {
+    id: 7,
+    email: 'jane.doe@example.com',
+    displayName: 'Jane Doe',
+    roles: ['Case Controller', 'Admin'],
+  };
+  const signOut = vi.fn<() => Promise<void>>();
+  const ask = vi.fn<() => Promise<boolean>>();
+
+  async function render() {
+    signOut.mockReset().mockResolvedValue();
+    TestBed.configureTestingModule({
+      providers: [
+        provideAppIcons(),
+        { provide: SessionService, useValue: { user: signal(user), signOut } },
+        { provide: ConfirmService, useValue: { ask } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Header);
+    await fixture.whenStable();
+    return { fixture, host: fixture.nativeElement as HTMLElement };
+  }
+
+  function signOutButton(host: HTMLElement): HTMLButtonElement {
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Sign out"]');
+    if (!button) throw new Error('sign-out button not rendered');
+    return button;
+  }
+
+  it('welcomes the signed-in user', async () => {
+    const { host } = await render();
+    expect(host.querySelector('.user-chip')?.textContent).toContain('Jane Doe');
+    expect(host.querySelector('.avatar')?.textContent?.trim()).toBe('JD');
+  });
+
+  it('signs out after confirmation', async () => {
+    ask.mockResolvedValue(true);
+    const { fixture, host } = await render();
+    signOutButton(host).click();
+    await fixture.whenStable();
+    await vi.waitFor(() => expect(signOut).toHaveBeenCalledOnce());
+  });
+
+  it('stays signed in when the user cancels', async () => {
+    ask.mockResolvedValue(false);
+    const { fixture, host } = await render();
+    signOutButton(host).click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalled();
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it('asks the shell to toggle the sidebar', async () => {
+    const { fixture, host } = await render();
+    const toggled = vi.fn();
+    fixture.componentInstance.menuToggle.subscribe(toggled);
+    host.querySelector<HTMLButtonElement>('button[aria-label="Toggle navigation"]')?.click();
+    expect(toggled).toHaveBeenCalledOnce();
+  });
+});

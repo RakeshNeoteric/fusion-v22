@@ -1,0 +1,41 @@
+<nav
+  class="sidebar"
+  [class.collapsed]="collapsed()"
+  aria-label="Main navigation"
+  (mouseenter)="setHovered(true)"
+  (mouseleave)="setHovered(false)"
+  (focusin)="setHovered(true)"
+  (focusout)="setHovered(false)"
+>
+  @for (item of model().topLevel; track item.id) {
+    <a
+      class="menu-item"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [attr.title]="collapsed() ? item.label : null"
+    >
+      <img class="menu-icon" [src]="item.iconUrl" alt="" width="24" height="24" />
+      <span class="menu-label">{{ item.label }}</span>
+    </a>
+  }
+
+  @for (section of model().sections; track section.title) {
+    <hr class="divider" />
+    <div class="section-title">{{ section.title }}</div>
+    @for (item of section.items; track item.id) {
+      <a
+        class="menu-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }"
+        [attr.title]="collapsed() ? item.label : null"
+      >
+        <img class="menu-icon" [src]="item.iconUrl" alt="" width="24" height="24" />
+        <span class="menu-label">{{ item.label }}</span>
+      </a>
+    }
+  }
+</nav>

@@ -1,0 +1,101 @@
+:host {
+  display: flex;
+  height: 100%;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  height: 100%;
+  padding-top: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: var(--app-navy);
+  color: #fff;
+  transition: width 0.4s ease-in-out;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 30%);
+  border-radius: 10px;
+}
+
+.section-title {
+  padding: 10px 16px 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.collapsed .section-title {
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.divider {
+  height: 1px;
+  margin: 2px 0;
+  border: none;
+  background-color: #fff;
+  opacity: 0.4;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: 44px;
+  margin: 2px 0;
+  padding: 7px 27px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background 0.5s ease-in-out,
+    border-radius 0.5s ease-in-out;
+}
+
+.menu-item:focus-visible {
+  outline: 2px solid var(--app-teal);
+  outline-offset: -2px;
+}
+
+.menu-item.active {
+  background-color: var(--app-teal);
+  border-radius: 40px;
+}
+
+.menu-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.menu-item:hover .menu-icon {
+  transform: scale(1.1);
+}
+
+.menu-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.collapsed .menu-label {
+  width: 0;
+  opacity: 0;
+}

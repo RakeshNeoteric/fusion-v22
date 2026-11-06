@@ -1,1 +1,54 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles. Component styles live with their components; keep this file small. */
+
+:root {
+  /* Fusion Edge brand */
+  --app-navy: #003572;
+  --app-teal: #05b9bc;
+  --app-danger: #b3261e;
+  --app-success: #2e7d32;
+  --app-warning: #b26a00;
+  --app-page-background: #f1f1f1;
+
+  /* Material (azure-blue prebuilt theme) tuned to the brand */
+  --mat-button-filled-container-color: var(--app-navy);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #1f1f1f;
+  background-color: var(--app-page-background);
+}
+
+/* Notifications (NotificationService) */
+.app-notification--success {
+  --mat-snack-bar-container-color: var(--app-success);
+}
+
+.app-notification--info {
+  --mat-snack-bar-container-color: var(--app-navy);
+}
+
+.app-notification--warning {
+  --mat-snack-bar-container-color: var(--app-warning);
+}
+
+.app-notification--error {
+  --mat-snack-bar-container-color: var(--app-danger);
+}
+
+.app-notification {
+  --mat-snack-bar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}

@@ -1,0 +1,51 @@
+<header class="topbar">
+  <div class="brand">
+    <button
+      mat-icon-button
+      type="button"
+      class="menu-toggle"
+      aria-label="Toggle navigation"
+      (click)="menuToggle.emit()"
+    >
+      <mat-icon svgIcon="menu" />
+    </button>
+    <img class="logo-mark" src="/icons/logo-mark.png" alt="" height="28" />
+    <img class="logo-text" src="/icons/logo-text.png" alt="Fusion Edge" height="20" />
+  </div>
+
+  @if (user(); as user) {
+    <div class="actions">
+      <button type="button" class="user-chip" [matMenuTriggerFor]="userMenu">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="welcome">Welcome</span>
+        <strong class="user-name">{{ user.displayName }}</strong>
+        <mat-icon svgIcon="expand-more" />
+      </button>
+
+      <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="user-card">
+          <strong>{{ user.displayName }}</strong>
+          <span class="user-email">{{ user.email }}</span>
+          @if (user.roles.length) {
+            <span class="user-roles">{{ user.roles.join(', ') }}</span>
+          }
+        </div>
+        <button mat-menu-item type="button" (click)="signOut()">
+          <mat-icon svgIcon="logout" />
+          <span>Sign out</span>
+        </button>
+      </mat-menu>
+
+      <button
+        mat-icon-button
+        type="button"
+        class="sign-out"
+        aria-label="Sign out"
+        matTooltip="Sign out"
+        (click)="signOut()"
+      >
+        <mat-icon svgIcon="logout" />
+      </button>
+    </div>
+  }
+</header>
