@@ -13,9 +13,14 @@ export interface EntityGridContext {
   readonly remove: (key: string) => void;
   /** Opens the row in the screen's form (screens edited in a dialog). */
   readonly open: (key: string) => void;
+  /** Follows the screen's row link (e.g. a role's permissions). */
+  readonly follow: (key: string) => void;
 }
 
-type CellParams = ICellRendererParams<GridRow<object>, unknown, EntityGridContext>;
+type CellParams = ICellRendererParams<GridRow<object>, unknown, EntityGridContext> & {
+  /** ViewCell only: set for a row link instead of opening the row's form. */
+  readonly link?: string;
+};
 
 /** Base for the renderers: keeps the latest AG Grid params in a signal. */
 abstract class EntityCell implements ICellRendererAngularComp {
@@ -175,7 +180,10 @@ export class ToggleCell extends EntityCell {
 })
 export class SaveCell extends EntityCell {}
 
-/** v21's green eye: opens the row's form, to view it or (with permission) edit it. */
+/**
+ * v21's green eye: opens the row's form, to view it or (with permission) edit it; or, as a
+ * row link (`link` param), goes to the row's page, which needs the row saved first.
+ */
 @Component({
   selector: 'app-view-cell',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -185,10 +193,10 @@ export class SaveCell extends EntityCell {}
         <button
           type="button"
           class="cell-button"
-          title="View/Edit"
-          aria-label="View/Edit"
-          [disabled]="r.saving"
-          (click)="p.context.open(r.key)"
+          [title]="p.link ?? 'View/Edit'"
+          [attr.aria-label]="p.link ?? 'View/Edit'"
+          [disabled]="r.saving || (!!p.link && !r.original)"
+          (click)="p.link ? p.context.follow(r.key) : p.context.open(r.key)"
         >
           <!-- Font Awesome Free "eye" (CC BY 4.0), as in v21. -->
           <svg class="view-icon" viewBox="0 0 576 512" aria-hidden="true">

@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   type OnInit,
   computed,
   inject,
@@ -10,7 +9,6 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatMenuModule } from '@angular/material/menu';
 import { firstValueFrom } from 'rxjs';
 import {
   type CompanyAddress,
@@ -21,15 +19,16 @@ import { FileStorageApi } from '@api/files/file-storage.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
+import { EMAIL_PATTERN } from '@shared/forms/validators';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { COUNTRIES } from '@shared/reference/countries';
 import { PROVINCES } from '@shared/reference/provinces';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { ImagePicker } from '@shared/ui/image-picker/image-picker';
+import { StoredImage } from '@shared/ui/image-picker/stored-image';
 
 const PERMISSION = 'CMP';
 const DEFAULT_LOGO = '/images/building.jpg';
-/** v21 email rule. */
-const EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
@@ -52,7 +51,7 @@ type AddressForm = ReturnType<typeof addressGroup>;
  */
 @Component({
   selector: 'app-company-details-page',
-  imports: [ReactiveFormsModule, MatButtonToggleModule, MatMenuModule, PhoneField],
+  imports: [ReactiveFormsModule, MatButtonToggleModule, PhoneField, ImagePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './company-details-page.html',
   styleUrl: './company-details-page.css',
@@ -75,9 +74,7 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
   private readonly postal = signal<CompanyAddress | null>(null);
 
   private readonly logoPath = computed(() => this.physical()?.LogoStoragePath ?? null);
-  /** Object URL of the logo being shown, or null for the default picture. */
-  private readonly logoUrl = signal<string | null>(null);
-  protected readonly logoSrc = computed(() => this.logoUrl() ?? DEFAULT_LOGO);
+  protected readonly logo = new StoredImage(DEFAULT_LOGO);
   protected readonly hasLogo = computed(() => this.logoPath() !== null);
   /** The logo is stored on the physical address, so that must be saved first (v21). */
   protected readonly canChangeLogo = computed(
@@ -93,7 +90,10 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
     fax: new FormControl('', { nonNullable: true }),
     vatNumber: new FormControl('', { nonNullable: true }),
     companyRegNo: new FormControl('', { nonNullable: true }),
-    email: new FormControl('', { nonNullable: true, validators: Validators.pattern(EMAIL) }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: Validators.pattern(EMAIL_PATTERN),
+    }),
   });
 
   constructor() {
@@ -107,7 +107,6 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
     physical.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       if (sameAsPhysical.value) postal.setValue(physical.getRawValue(), { emitEvent: false });
     });
-    inject(DestroyRef).onDestroy(() => this.showLogo(null));
   }
 
   ngOnInit(): void {
@@ -133,7 +132,7 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
       this.postal.set(postal);
       this.fillForm(physical, postal);
       this.status.set('ready');
-      void this.loadLogo();
+      void this.logo.load(this.logoPath());
     } catch {
       // The error interceptor has already told the user why.
       this.status.set('failed');
@@ -165,20 +164,13 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
     }
   }
 
-  protected async uploadLogo(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
+  protected async uploadLogo(file: File): Promise<void> {
     const saved = this.physical();
-    if (!file || !saved || !this.canChangeLogo()) return;
-    if (!file.type.startsWith('image/')) {
-      this.notifications.warning('Choose an image file for the logo.');
-      return;
-    }
+    if (!saved || !this.canChangeLogo()) return;
     try {
       const path = await firstValueFrom(this.files.upload(file, 'CompanyDetails'));
       await this.storeLogoPath(saved, path);
-      this.showLogo(file);
+      this.logo.show(file);
       this.notifications.success('Logo uploaded.');
     } catch {
       // The error interceptor has already told the user why.
@@ -200,7 +192,7 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
       await firstValueFrom(this.files.delete(path));
       // v21 left the deleted file's path on the address; clear it so the record stays consistent.
       await this.storeLogoPath(saved, null);
-      this.showLogo(null);
+      this.logo.show(null);
       this.notifications.success('Logo removed.');
     } catch {
       // The error interceptor has already told the user why.
@@ -216,25 +208,6 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
     const updated = { ...saved, LogoStoragePath: path };
     await firstValueFrom(this.api.save([updated]));
     this.physical.set(updated);
-  }
-
-  private async loadLogo(): Promise<void> {
-    const path = this.logoPath();
-    if (!path) {
-      this.showLogo(null);
-      return;
-    }
-    try {
-      this.showLogo(await firstValueFrom(this.files.preview(path)));
-    } catch {
-      this.showLogo(null);
-    }
-  }
-
-  private showLogo(image: Blob | null): void {
-    const previous = this.logoUrl();
-    if (previous) URL.revokeObjectURL(previous);
-    this.logoUrl.set(image ? URL.createObjectURL(image) : null);
   }
 
   private fillForm(physical: CompanyAddress | null, postal: CompanyAddress | null): void {

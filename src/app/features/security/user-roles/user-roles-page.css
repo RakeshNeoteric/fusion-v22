@@ -1,0 +1,144 @@
+/* v21 User Role Mapping: three tall lists with teal titles, arrows between the role lists. */
+:host {
+  display: block;
+  padding: 20px;
+}
+.ur-columns {
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgb(16 24 40 / 6%);
+}
+.ur-box {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  height: 612px;
+  border: 1px solid #d9e3ec;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 4px 8px rgb(0 0 0 / 8%),
+    0 8px 20px rgb(0 0 0 / 12%);
+}
+.ur-title {
+  margin: 0 0 5px;
+  padding: 10px;
+  overflow: hidden;
+  border-radius: 10px 10px 0 0;
+  background: var(--app-teal);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ur-search {
+  padding: 6px 10px;
+}
+.ur-search input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+}
+.ur-search input:focus {
+  border-color: #000;
+  outline: none;
+}
+.ur-list {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+.ur-item {
+  width: 100%;
+  margin-bottom: 5px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #1e2d3b;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.ur-item:hover:not(:disabled) {
+  background: #deecec;
+}
+.ur-item.selected {
+  border-color: var(--app-teal);
+  background: #75e9e9;
+  font-weight: 500;
+}
+.ur-item:disabled {
+  cursor: default;
+}
+.ur-item:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: -2px;
+}
+.ur-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 12px;
+  color: #666;
+  font-size: 14px;
+}
+.ur-moves {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-self: center;
+  gap: 12px;
+}
+.ur-move {
+  width: 45px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+  color: #34495e;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.ur-move:hover:not(:disabled) {
+  background: #337e80;
+  color: #fff;
+}
+.ur-move:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ur-move:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .ur-columns {
+    flex-direction: column;
+  }
+  .ur-box {
+    height: 360px;
+  }
+  .ur-moves {
+    flex-direction: row;
+  }
+}

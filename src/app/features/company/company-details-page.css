@@ -30,45 +30,8 @@
   margin: 24px 0;
 }
 
-/* Logo: rounded square with a dark camera button on its corner. */
 .logo {
-  position: relative;
-  width: 130px;
   margin-bottom: 24px;
-}
-.logo-image {
-  box-sizing: border-box;
-  display: block;
-  width: 130px;
-  height: 130px;
-  border: 2px solid #ccc;
-  border-radius: 15%;
-  background: #fff;
-  object-fit: contain;
-}
-.logo-change {
-  position: absolute;
-  top: 98px;
-  left: 98px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 60%);
-  cursor: pointer;
-}
-.logo-change svg {
-  width: 14px;
-  height: 14px;
-  fill: #fff;
-}
-.logo-change:focus-visible {
-  outline: 2px solid #000;
-  outline-offset: 2px;
 }
 .logo-hint {
   width: max-content;

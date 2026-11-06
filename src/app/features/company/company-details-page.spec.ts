@@ -205,7 +205,7 @@ describe('CompanyDetailsPage', () => {
     ask.mockResolvedValue(true);
     await render();
     // Open the logo menu (the camera button), then choose Remove Logo.
-    host.querySelector<HTMLButtonElement>('.logo-change')?.click();
+    host.querySelector<HTMLButtonElement>('.picture-change')?.click();
     await settle();
     await clickText('Remove Logo');
     expect(files.delete).toHaveBeenCalledWith('CompanyDetails/old.png');
@@ -218,7 +218,7 @@ describe('CompanyDetailsPage', () => {
     expect([...host.querySelectorAll('button')].some((b) => b.textContent?.trim() === 'Save')).toBe(
       false,
     );
-    expect(host.querySelector('.logo-change')).toBeNull();
+    expect(host.querySelector('.picture-change')).toBeNull();
   });
 
   it('offers a retry when loading fails', async () => {

@@ -163,6 +163,39 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'users',
+        title: 'Users',
+        data: { breadcrumb: 'Security / Users' },
+        canMatch: [canAccess('USR')],
+        loadComponent: () => import('@features/security/users/users-page').then((m) => m.UsersPage),
+      },
+      {
+        path: 'roles',
+        title: 'Roles',
+        data: { breadcrumb: 'Security / Roles' },
+        canMatch: [canAccess('ROLES')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () => import('@features/security/roles/roles-page').then((m) => m.RolesPage),
+      },
+      {
+        // Opened from Roles; maintaining permissions is part of maintaining roles (v21).
+        path: 'permissions/:roleId',
+        title: 'Permissions',
+        data: { breadcrumb: 'Security / Permissions' },
+        canMatch: [canAccess('ROLES')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('@features/security/permissions/permissions-page').then((m) => m.PermissionsPage),
+      },
+      {
+        path: 'userrolemap',
+        title: 'User Roles Mapping',
+        data: { breadcrumb: 'Security / User Roles Mapping' },
+        canMatch: [canAccess('USRROLEMAP')],
+        loadComponent: () =>
+          import('@features/security/user-roles/user-roles-page').then((m) => m.UserRolesPage),
+      },
+      {
         path: 'forbidden',
         title: 'Access denied',
         data: { breadcrumb: 'Access denied' },

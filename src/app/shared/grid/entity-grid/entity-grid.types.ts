@@ -2,7 +2,8 @@ import type { Observable } from 'rxjs';
 import type { CrudSource } from '@api/config/config-crud.api';
 
 export interface SelectOption {
-  readonly value: string | number;
+  /** null for an optional column's "none" choice. */
+  readonly value: string | number | null;
   readonly label: string;
   /**
    * False for choices that may still appear on old records but can no longer be picked,
@@ -87,8 +88,11 @@ export interface EntityGridConfig<T> {
    * so lookups are ready before rows are shown. A failure fails the whole load.
    */
   readonly loadLookups?: () => Observable<unknown>;
-  /** Screen-specific check run after the column checks; returns the problem or null. */
-  readonly validate?: (entity: T) => string | null;
+  /**
+   * Screen-specific check run after the column checks; returns the problem or null.
+   * `others` are the other records as last saved, e.g. for a "must be unique" rule.
+   */
+  readonly validate?: (entity: T, others: readonly T[]) => string | null;
   /** Last change before sending, e.g. formatting a phone number (v21 Transport Operators). */
   readonly beforeSave?: (entity: T) => T;
   /**
@@ -97,6 +101,16 @@ export interface EntityGridConfig<T> {
    * without saving. The form does the saving. Grid cells are then read-only.
    */
   readonly editor?: RecordEditor<T>;
+  /**
+   * An extra button on each saved row that leads elsewhere, e.g. a role's permissions
+   * (v21 Roles: the eye). Shown with the eye icon; `label` is its accessible name.
+   */
+  readonly rowLink?: RowLink<T>;
+}
+
+export interface RowLink<T> {
+  readonly label: string;
+  readonly open: (entity: T) => void;
 }
 
 export type RecordEditor<T> = (record: T | null) => Promise<T | null>;

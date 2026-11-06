@@ -143,16 +143,28 @@ export class EntityGrid<T extends object> implements OnInit {
     save: (key) => void this.save(key),
     remove: (key) => void this.remove(key),
     open: (key) => void this.open(key),
+    follow: (key) => this.follow(key),
   };
 
   protected readonly columnDefs = computed<ColDef<GridRow<T>>[]>(() => {
-    const { columns } = this.config();
+    const { columns, rowLink } = this.config();
+    const link: ColDef<GridRow<T>>[] = rowLink
+      ? [
+          {
+            ...ACTION_COLUMN,
+            colId: 'link',
+            cellRenderer: ViewCell,
+            cellRendererParams: { link: rowLink.label },
+          },
+        ]
+      : [];
     return [
       ...columns.map((column) => this.columnDef(column)),
       // v21: Save (or View/Edit for form screens) and Delete each have a narrow column, pinned right.
       this.usesEditor()
         ? { ...ACTION_COLUMN, colId: 'view', cellRenderer: ViewCell }
         : { ...ACTION_COLUMN, colId: 'save', cellRenderer: SaveCell, hide: !this.canEdit() },
+      ...link,
       { ...ACTION_COLUMN, colId: 'delete', cellRenderer: DeleteCell, hide: !this.canDelete() },
     ];
   });
@@ -225,7 +237,10 @@ export class EntityGrid<T extends object> implements OnInit {
       this.notifications.info('No changes to save.');
       return;
     }
-    const problem = validateRow(row, fields) ?? validate?.(row.entity) ?? null;
+    const others = this.rows()
+      .filter((candidate) => candidate.key !== key && candidate.original !== null)
+      .map((candidate) => candidate.original as T);
+    const problem = validateRow(row, fields) ?? validate?.(row.entity, others) ?? null;
     if (problem) {
       this.notifications.warning(problem);
       return;
@@ -277,6 +292,12 @@ export class EntityGrid<T extends object> implements OnInit {
   protected async open(key: string): Promise<void> {
     const row = this.find(key);
     if (row?.original) await this.openEditor(row);
+  }
+
+  /** Follows the screen's row link for a saved row. */
+  private follow(key: string): void {
+    const row = this.find(key);
+    if (row?.original) this.config().rowLink?.open(row.original);
   }
 
   private async openEditor(row: GridRow<T> | null): Promise<void> {

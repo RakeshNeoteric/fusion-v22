@@ -100,7 +100,9 @@ Optional config, used by Vehicles and Transport Operators (see `transport-operat
 - `display` columns show read-only text worked out from the record, e.g. the branch's Province.
 - `loadLookups` loads data the columns need (e.g. `BranchLookup`) together with the rows.
 - Select options marked `selectable: false` are still shown on old records but cannot be picked.
-- `validate` adds a screen-specific check; `beforeSave` makes a last change, e.g. phone formatting.
+- `validate` adds a screen-specific check (it also gets the other saved records, e.g. for a
+  "must be unique" rule); `beforeSave` makes a last change, e.g. phone formatting.
+- `rowLink` adds an eye button on saved rows that leads to another page (Roles → Permissions).
 
 Screens edited in a popup form (v21: Claim Centre, Rating Questions, Rating Question Options) pass
 an `editor` instead of `newEntity`. The grid is then read-only with a View/Edit button, and the form
@@ -108,6 +110,9 @@ saves. A form extends `RecordDialog` (`shared/forms/record-dialog`), which holds
 and is opened with `RecordDialogs.open(Form, record, permission, injector)`; read-only users get the
 form disabled and no Save. Lookups shared by the grid and the form extend `RecordLookup` and are
 provided on the page (see `claim-centres-page.ts`). Phone numbers use `app-phone-field` (E.164).
+A form can override `afterSave` to tidy up once the record is stored (the user form deletes
+replaced photos). Pictures kept in file storage (company logo, user photo) use `app-image-picker`
+with a `StoredImage` for the preview (`shared/ui/image-picker`).
 
 Forms share the v21 look from `src/form-styles.css` (put `class="app-form"` on the container,
 `app-button` on buttons). Large third-party styles are built as separate bundles in

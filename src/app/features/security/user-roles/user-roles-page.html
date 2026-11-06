@@ -1,0 +1,153 @@
+<div class="ur-columns">
+  <section class="ur-box" aria-labelledby="ur-users-title">
+    <h2 id="ur-users-title" class="ur-title">User List ({{ filteredUsers().length }}) :</h2>
+    <div class="ur-search">
+      <input
+        type="search"
+        placeholder="Search..."
+        aria-label="Search users"
+        [value]="search()"
+        (input)="setSearch($event)"
+      />
+    </div>
+    @switch (usersStatus()) {
+      @case ('loading') {
+        <p class="ur-note" role="status">Loading users…</p>
+      }
+      @case ('failed') {
+        <div class="ur-note" role="alert">
+          <span>Could not load the users.</span>
+          <button type="button" class="app-button" (click)="loadUsers()">Try again</button>
+        </div>
+      }
+      @default {
+        <ul class="ur-list">
+          @for (user of filteredUsers(); track user.id) {
+            <li>
+              <button
+                type="button"
+                class="ur-item"
+                [class.selected]="user.id === selectedUser()?.id"
+                [attr.aria-current]="user.id === selectedUser()?.id ? 'true' : null"
+                (click)="selectUser(user)"
+              >
+                {{ user.name }}
+              </button>
+            </li>
+          } @empty {
+            <li class="ur-note">No users found.</li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
+  <section class="ur-box" aria-labelledby="ur-assigned-title">
+    <h2 id="ur-assigned-title" class="ur-title">Allocated Roles ({{ assigned().length }}) :</h2>
+    @switch (rolesStatus()) {
+      @case ('idle') {
+        <p class="ur-note">Select a user to see their roles.</p>
+      }
+      @case ('loading') {
+        <p class="ur-note" role="status">Loading roles…</p>
+      }
+      @case ('failed') {
+        <div class="ur-note" role="alert">
+          <span>Could not load the user's roles.</span>
+          <button type="button" class="app-button" (click)="loadRoles()">Try again</button>
+        </div>
+      }
+      @default {
+        <ul class="ur-list">
+          @for (role of assigned(); track role.RoleId) {
+            <li>
+              <button
+                type="button"
+                class="ur-item"
+                [class.selected]="pickedAssigned().has(role.RoleId)"
+                [attr.aria-pressed]="pickedAssigned().has(role.RoleId)"
+                [disabled]="!canMove()"
+                (click)="toggleAssigned(role.RoleId)"
+                (dblclick)="remove([role.RoleId])"
+              >
+                {{ role.RoleName }}
+              </button>
+            </li>
+          } @empty {
+            <li class="ur-note">No roles allocated.</li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
+  @if (canEdit) {
+    <div class="ur-moves" role="group" aria-label="Move roles">
+      <button
+        type="button"
+        class="ur-move"
+        title="Remove the selected roles"
+        aria-label="Remove the selected roles"
+        [disabled]="!canMove() || pickedAssigned().size === 0"
+        (click)="removePicked()"
+      >
+        &gt;
+      </button>
+      <button
+        type="button"
+        class="ur-move"
+        title="Remove all roles"
+        aria-label="Remove all roles"
+        [disabled]="!canMove() || assigned().length === 0"
+        (click)="removeAll()"
+      >
+        &gt;&gt;
+      </button>
+      <button
+        type="button"
+        class="ur-move"
+        title="Allocate the selected roles"
+        aria-label="Allocate the selected roles"
+        [disabled]="!canMove() || pickedAvailable().size === 0"
+        (click)="assignPicked()"
+      >
+        &lt;
+      </button>
+      <button
+        type="button"
+        class="ur-move"
+        title="Allocate all roles"
+        aria-label="Allocate all roles"
+        [disabled]="!canMove() || available().length === 0"
+        (click)="assignAll()"
+      >
+        &lt;&lt;
+      </button>
+    </div>
+  }
+
+  <section class="ur-box" aria-labelledby="ur-available-title">
+    <h2 id="ur-available-title" class="ur-title">Available Roles ({{ available().length }}) :</h2>
+    @if (rolesStatus() === 'ready') {
+      <ul class="ur-list">
+        @for (role of available(); track role.RoleId) {
+          <li>
+            <button
+              type="button"
+              class="ur-item"
+              [class.selected]="pickedAvailable().has(role.RoleId)"
+              [attr.aria-pressed]="pickedAvailable().has(role.RoleId)"
+              [disabled]="!canMove()"
+              (click)="toggleAvailable(role.RoleId)"
+              (dblclick)="assign([role.RoleId])"
+            >
+              {{ role.RoleName }}
+            </button>
+          </li>
+        } @empty {
+          <li class="ur-note">No other roles.</li>
+        }
+      </ul>
+    }
+  </section>
+</div>

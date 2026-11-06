@@ -1,0 +1,268 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { FileStorageApi } from '@api/files/file-storage.api';
+import { type AppUser, UserApi } from '@api/security/user.api';
+import { PhoneField } from '@shared/forms/phone-field/phone-field';
+import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
+import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
+import { ImagePicker } from '@shared/ui/image-picker/image-picker';
+import { StoredImage } from '@shared/ui/image-picker/stored-image';
+
+const DEFAULT_PHOTO = '/images/profile.png';
+
+/**
+ * v21 user popup: profile photo, name, email, employee id, phone numbers and Is Active.
+ * A new photo is uploaded when chosen, but the user record only changes on Update; the
+ * photo it replaces (or one uploaded and then not used) is deleted afterwards, so
+ * cancelling never leaves the record pointing at a deleted file (v21 deleted at once).
+ */
+@Component({
+  selector: 'app-user-dialog',
+  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, ImagePicker],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <app-record-dialog-frame
+        [title]="title"
+        [isNew]="isNew"
+        [readOnly]="readOnly"
+        [saving]="saving() || uploading()"
+      >
+        <div class="user-photo">
+          <app-image-picker
+            alt="Profile photo"
+            removeLabel="Remove Photo"
+            [src]="photo.src()"
+            [canChange]="!readOnly && !uploading()"
+            [hasImage]="!!form.controls.ProfileImage.value"
+            (picked)="uploadPhoto($event)"
+            (removed)="removePhoto()"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="usr-first">First Name <span class="required">*</span></label>
+            <input
+              id="usr-first"
+              type="text"
+              placeholder="Enter First Name"
+              formControlName="Firstname"
+            />
+            @if (showError('Firstname')) {
+              <span class="field-error">First Name is required.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="usr-last">Last Name <span class="required">*</span></label>
+            <input
+              id="usr-last"
+              type="text"
+              placeholder="Enter Last Name"
+              formControlName="Lastname"
+            />
+            @if (showError('Lastname')) {
+              <span class="field-error">Last Name is required.</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="usr-email">Email <span class="required">*</span></label>
+            <input
+              id="usr-email"
+              type="email"
+              placeholder="Enter Email"
+              formControlName="UserEmail"
+            />
+            @if (showError('UserEmail')) {
+              <span class="field-error">
+                {{
+                  form.controls.UserEmail.hasError('pattern')
+                    ? 'Enter a valid email address.'
+                    : 'Email is required.'
+                }}
+              </span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="usr-employee">Employee ID</label>
+            <input
+              id="usr-employee"
+              type="text"
+              placeholder="Enter Employee ID"
+              formControlName="EmployeeId"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="usr-phone">Phone Number</label>
+            <app-phone-field
+              inputId="usr-phone"
+              label="Phone Number"
+              formControlName="PhoneNumber"
+            />
+            @if (showError('PhoneNumber')) {
+              <span class="field-error">Enter a valid phone number.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="usr-mobile">Mobile Number <span class="required">*</span></label>
+            <app-phone-field
+              inputId="usr-mobile"
+              label="Mobile Number"
+              formControlName="MobileNumber"
+            />
+            @if (showError('MobileNumber')) {
+              <span class="field-error">
+                {{
+                  form.controls.MobileNumber.hasError('required')
+                    ? 'Mobile Number is required.'
+                    : 'Enter a valid mobile number.'
+                }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <label class="switch-field">
+          <span class="switch">
+            <input type="checkbox" role="switch" formControlName="IsActive" />
+            <span class="slider"></span>
+          </span>
+          Is Active?
+        </label>
+      </app-record-dialog-frame>
+    </form>
+  `,
+  styles: `
+    .user-photo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+  `,
+})
+export class UserDialog extends RecordDialog<AppUser> {
+  protected readonly source = inject(UserApi);
+  protected readonly entityName = 'User';
+
+  private readonly files = inject(FileStorageApi);
+  private readonly record = this.data.record;
+  private readonly storedPhoto = this.record?.ProfileImage || '';
+  /** Photos uploaded while the popup was open; those not kept are deleted at the end. */
+  private readonly uploaded = new Set<string>();
+  private saved = false;
+
+  protected readonly title = this.isNew
+    ? 'Create New User'
+    : this.readOnly
+      ? 'View User'
+      : 'Edit User';
+
+  protected readonly uploading = signal(false);
+  protected readonly photo = new StoredImage(DEFAULT_PHOTO);
+
+  protected readonly form = new FormGroup({
+    ProfileImage: new FormControl(this.storedPhoto, { nonNullable: true }),
+    Firstname: new FormControl(this.record?.Firstname ?? '', {
+      nonNullable: true,
+      validators: requiredText,
+    }),
+    Lastname: new FormControl(this.record?.Lastname ?? '', {
+      nonNullable: true,
+      validators: requiredText,
+    }),
+    UserEmail: new FormControl(this.record?.UserEmail ?? '', {
+      nonNullable: true,
+      validators: [requiredText, Validators.pattern(EMAIL_PATTERN)],
+    }),
+    EmployeeId: new FormControl(this.record?.EmployeeId ?? '', { nonNullable: true }),
+    PhoneNumber: new FormControl(this.record?.PhoneNumber ?? '', { nonNullable: true }),
+    MobileNumber: new FormControl(this.record?.MobileNumber ?? '', {
+      nonNullable: true,
+      validators: requiredText,
+    }),
+    IsActive: new FormControl(this.record?.IsActive ?? true, { nonNullable: true }),
+  });
+
+  constructor() {
+    super();
+    void this.photo.load(this.storedPhoto);
+    // Closed without saving: photos uploaded meanwhile are not used by anything.
+    inject(MatDialogRef)
+      .afterClosed()
+      .subscribe(() => {
+        if (!this.saved) this.deletePhotos([...this.uploaded]);
+      });
+  }
+
+  protected async uploadPhoto(file: File): Promise<void> {
+    if (this.readOnly || this.uploading()) return;
+    this.uploading.set(true);
+    try {
+      const path = await firstValueFrom(this.files.upload(file, 'UserProfile'));
+      this.uploaded.add(path);
+      this.setPhoto(path);
+      this.photo.show(file);
+    } catch {
+      // The error interceptor has already told the user why.
+    } finally {
+      this.uploading.set(false);
+    }
+  }
+
+  protected removePhoto(): void {
+    if (this.readOnly) return;
+    this.setPhoto('');
+    this.photo.show(null);
+  }
+
+  protected toRecord(): AppUser {
+    const value = this.form.getRawValue();
+    const email = value.UserEmail.trim();
+    return {
+      // Keeps sign-in data and any other field this form does not show.
+      ...(this.record ?? { IsDeleted: false, EmailConfirmed: true }),
+      AspNetUserId: this.record?.AspNetUserId ?? 0,
+      // v21: the user name is the email address.
+      UserName: email,
+      UserEmail: email,
+      Firstname: value.Firstname.trim(),
+      Lastname: value.Lastname.trim(),
+      EmployeeId: value.EmployeeId.trim(),
+      PhoneNumber: value.PhoneNumber,
+      MobileNumber: value.MobileNumber,
+      ProfileImage: value.ProfileImage,
+      IsActive: value.IsActive,
+      EmailConfirmed: true,
+    };
+  }
+
+  /** Deletes the photo that was replaced or removed, and uploads that were not kept. */
+  protected override afterSave(saved: AppUser): void {
+    this.saved = true;
+    const kept = saved.ProfileImage || this.form.controls.ProfileImage.value;
+    const unused = [...this.uploaded];
+    if (this.storedPhoto) unused.push(this.storedPhoto);
+    this.deletePhotos(unused.filter((path) => path !== kept));
+  }
+
+  private setPhoto(path: string): void {
+    const control = this.form.controls.ProfileImage;
+    control.setValue(path);
+    control.markAsDirty();
+  }
+
+  /** Best effort: a file left behind is harmless, so a failure does not stop anything. */
+  private deletePhotos(paths: readonly string[]): void {
+    for (const path of new Set(paths)) {
+      this.files.delete(path).subscribe({ error: () => undefined });
+    }
+  }
+}

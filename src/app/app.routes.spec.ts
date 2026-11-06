@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { AuthService } from '@core/auth/auth.service';
 import { provideAppIcons } from '@core/icons/app-icons';
@@ -20,6 +20,9 @@ import { ServiceTypeApi } from '@api/config/service-type.api';
 import { ServiceApi } from '@api/config/service.api';
 import { TransportOperatorApi } from '@api/config/transport-operator.api';
 import { VehicleApi } from '@api/config/vehicle.api';
+import { AppApi } from '@api/app.api';
+import { RoleApi } from '@api/security/role.api';
+import { UserApi } from '@api/security/user.api';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
@@ -37,7 +40,8 @@ describe('app routes', () => {
     state.set({ status: 'signed-out' });
     TestBed.configureTestingModule({
       providers: [
-        provideRouter(routes),
+        // As in app.config.ts: route parameters reach page inputs (e.g. Permissions' roleId).
+        provideRouter(routes, withComponentInputBinding()),
         provideAppIcons(),
         {
           provide: SessionService,
@@ -68,8 +72,25 @@ describe('app routes', () => {
           RatingQuestionOptionApi,
           ServiceTypeApi,
           ServiceApi,
+          UserApi,
         ].map((api) => ({ provide: api, useValue: emptyConfigApi })),
         { provide: CompanyDetailsApi, useValue: { get: () => of([]) } },
+        {
+          provide: RoleApi,
+          useValue: {
+            ...emptyConfigApi,
+            withPermissions: () =>
+              of({
+                RoleId: 3,
+                RoleName: 'Agent',
+                RoleType: null,
+                RoleDescription: '',
+                IsDeleted: false,
+                RolesPermissions: [],
+              }),
+          },
+        },
+        { provide: AppApi, useValue: { menus: () => of([]) } },
         { provide: ConfirmService, useValue: { ask: confirmLeave } },
       ],
     });
@@ -148,6 +169,8 @@ describe('app routes', () => {
     ['/client/client-group', 'CLIENT_GRP', 'Client / Client Group'],
     ['/services/service-types', 'SRV_PRV_TY', 'Services / Service Types'],
     ['/services/services', 'SERVICES', 'Services'],
+    ['/users', 'USR', 'Security / Users'],
+    ['/roles', 'ROLES', 'Security / Roles'],
   ])('guards %s by the %s permission', async (path, code, breadcrumb) => {
     signIn();
     await harness.navigateByUrl(path);
@@ -174,6 +197,23 @@ describe('app routes', () => {
       harness.routeNativeElement?.querySelector('app-breadcrumb h1')?.textContent?.trim(),
     ).toBe('Company / Company Details');
     expect(harness.routeNativeElement?.querySelector('app-company-details-page')).not.toBeNull();
+  });
+
+  it.each([
+    ['/permissions/3', 'ROLES', 'Security / Permissions', 'app-permissions-page'],
+    ['/userrolemap', 'USRROLEMAP', 'Security / User Roles Mapping', 'app-user-roles-page'],
+  ])('guards %s by the %s permission', async (path, code, breadcrumb, page) => {
+    signIn();
+    await harness.navigateByUrl(path);
+    expect(url()).toBe('/forbidden');
+
+    TestBed.inject(PermissionService).load([role('Viewer', [permission(code)])]);
+    await harness.navigateByUrl(path);
+    expect(url()).toBe(path);
+    expect(
+      harness.routeNativeElement?.querySelector('app-breadcrumb h1')?.textContent?.trim(),
+    ).toBe(breadcrumb);
+    expect(harness.routeNativeElement?.querySelector(page)).not.toBeNull();
   });
 
   it('asks before leaving a page with unsaved changes', async () => {

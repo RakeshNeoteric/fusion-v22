@@ -45,7 +45,9 @@ export interface RecordDialogData<T> {
   template: `
     <div class="rd-header">
       <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
-      <button type="button" class="rd-close" aria-label="Close" mat-dialog-close>✖</button>
+      <button type="button" class="rd-close" aria-label="Close" [mat-dialog-close]="undefined">
+        ✖
+      </button>
     </div>
     <mat-dialog-content>
       <fieldset class="rd-fields" [disabled]="readOnly()">
@@ -53,7 +55,7 @@ export interface RecordDialogData<T> {
       </fieldset>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button type="button" class="app-button" mat-dialog-close>Cancel</button>
+      <button type="button" class="app-button" [mat-dialog-close]="undefined">Cancel</button>
       @if (!readOnly()) {
         <button type="submit" class="app-button" [disabled]="saving()">
           {{ isNew() ? 'Save' : 'Update' }}
@@ -97,6 +99,11 @@ export abstract class RecordDialog<T> {
   /** The record to send, built from the valid form (text trimmed). */
   protected abstract toRecord(): T;
 
+  /** Runs once the record is stored, just before the dialog closes (e.g. tidying up files). */
+  protected afterSave(_saved: T): void {
+    // Nothing by default.
+  }
+
   /** True when a required or invalid field should show its message. */
   protected showError(name: string): boolean {
     const control = this.form.get(name);
@@ -121,6 +128,7 @@ export abstract class RecordDialog<T> {
         this.isNew ? this.source.create(record) : this.source.update(record),
       );
       this.notifications.success(`${this.entityName} saved.`);
+      this.afterSave(saved);
       this.dialogRef.close(saved);
     } catch {
       this.saving.set(false);
