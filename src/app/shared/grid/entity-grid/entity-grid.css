@@ -1,0 +1,95 @@
+/* Not encapsulated (see component): selectors are scoped under app-entity-grid, or prefixed
+   entity-grid- for the title-bar buttons, which are rendered in the breadcrumb bar. */
+
+app-entity-grid {
+  display: block;
+}
+
+app-entity-grid .entity-grid-error {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 8px 16px;
+  border-left: 4px solid var(--app-danger);
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+/* A row that was never saved. */
+app-entity-grid .row-new {
+  background-color: #e6f8f8;
+}
+
+/* A saved row with edits that are not saved yet. */
+app-entity-grid .row-unsaved {
+  background-color: #fff6e5;
+}
+
+/* A required value that is still empty. */
+app-entity-grid .cell-required {
+  box-shadow: inset 0 0 0 1px var(--app-danger);
+}
+
+/* v21 header: centred labels; filter icon always visible and white on the teal header. */
+app-entity-grid .ag-header-cell-label {
+  justify-content: center;
+}
+
+app-entity-grid .ag-header-cell .ag-icon,
+app-entity-grid .ag-header-cell-filter-button,
+app-entity-grid .ag-header-cell-menu-button {
+  color: #fff;
+  opacity: 1;
+}
+
+app-entity-grid .cell-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Title bar: v21's "+ New" button (teal, white "+" in a circle). */
+.entity-grid-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--app-teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.entity-grid-new:hover {
+  background-color: #048a91;
+}
+
+.entity-grid-new:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}
+
+.entity-grid-new-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #fff;
+  color: var(--app-teal);
+}
+
+.entity-grid-new-icon mat-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.entity-grid-unsaved {
+  color: var(--app-warning);
+  font-weight: 500;
+}

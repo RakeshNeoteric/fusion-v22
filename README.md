@@ -82,6 +82,22 @@ Server text from 5xx responses is never shown to users.
 3. Set `data: { breadcrumb: 'Section / Name' }` for the page title bar.
 4. Inside the screen, use `PermissionService` (`canCreate`, `canEdit`, `canDelete`, `isReadOnly`).
 
+### Configuration screens (`EntityGrid`)
+
+Simple record lists (Branches, Vehicles, Body Locations and so on) need no screen code of their
+own. `shared/grid/entity-grid` handles loading, search, sort, filter, paging, add, inline edit,
+saving each row, soft delete with confirmation, and permissions. To add one:
+
+1. In `api/config/`, add the model and a class extending `ConfigCrudApi`, giving its path and id
+   field (see `body-location.api.ts`).
+2. In the feature, add a page that passes an `EntityGridConfig`: columns (`text`, `number`,
+   `toggle` or `select`), validation, defaults for a new row, and the permission code (see
+   `body-locations-page.ts`).
+3. Add the route with `canDeactivate: [unsavedChangesGuard]`.
+
+Grid features are added module by module in `shared/grid/grid-setup.ts`. In development, AG Grid
+logs a console error when a feature's module is missing.
+
 ## Conventions
 
 - Standalone components, `ChangeDetectionStrategy.OnPush`, zoneless change detection.

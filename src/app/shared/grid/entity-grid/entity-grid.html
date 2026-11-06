@@ -1,0 +1,48 @@
+<!-- Shown on the right of the page title bar, like v21's "+ New" button. -->
+<ng-template cdkPortal>
+  @if (hasUnsavedChanges()) {
+    <span class="entity-grid-unsaved" role="status">Unsaved changes</span>
+  }
+  @if (canCreate()) {
+    <button
+      type="button"
+      class="entity-grid-new"
+      [attr.aria-label]="'New ' + config().entityName"
+      (click)="add()"
+    >
+      <span class="entity-grid-new-icon" aria-hidden="true">
+        <mat-icon svgIcon="add" />
+      </span>
+      <span>New</span>
+    </button>
+  }
+</ng-template>
+
+@if (status() === 'failed') {
+  <div class="entity-grid-error" role="alert">
+    <span>Could not load the list.</span>
+    <button mat-stroked-button type="button" (click)="load()">Try again</button>
+  </div>
+}
+
+<ag-grid-angular
+  class="entity-grid"
+  domLayout="autoHeight"
+  overlayNoRowsTemplate="No records found."
+  [modules]="modules"
+  [theme]="theme"
+  [rowData]="rows()"
+  [columnDefs]="columnDefs()"
+  [defaultColDef]="defaultColDef"
+  [getRowId]="getRowId"
+  [context]="context"
+  [rowClassRules]="rowClassRules"
+  [readOnlyEdit]="true"
+  [stopEditingWhenCellsLoseFocus]="true"
+  [loading]="status() === 'loading'"
+  [pagination]="true"
+  [paginationPageSize]="pageSize"
+  [paginationPageSizeSelector]="pageSizeOptions"
+  (gridReady)="onGridReady($event)"
+  (cellEditRequest)="onCellEditRequest($event)"
+/>

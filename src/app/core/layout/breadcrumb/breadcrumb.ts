@@ -1,7 +1,9 @@
+import { CdkPortalOutlet } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { PageActions } from '../page-actions';
 
 export const DEFAULT_BREADCRUMB = 'Dashboard / Home';
 
@@ -25,14 +27,28 @@ export function buildBreadcrumb(root: ActivatedRouteSnapshot): string {
 
 @Component({
   selector: 'app-breadcrumb',
+  imports: [CdkPortalOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<h1 class="breadcrumb">{{ text() }}</h1>`,
+  template: `
+    <h1 class="breadcrumb">{{ text() }}</h1>
+    <div class="actions">
+      <ng-template [cdkPortalOutlet]="actions.portal()" />
+    </div>
+  `,
   styles: `
     :host {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 10px 20px;
       border-bottom: 1px solid #e0e0e0;
       background-color: #fff;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .breadcrumb {
       margin: 0;
@@ -45,6 +61,7 @@ export function buildBreadcrumb(root: ActivatedRouteSnapshot): string {
 })
 export class Breadcrumb {
   private readonly router = inject(Router);
+  protected readonly actions = inject(PageActions);
 
   protected readonly text = toSignal(
     this.router.events.pipe(

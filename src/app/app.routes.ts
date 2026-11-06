@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import { canAccess } from '@core/permissions/permission.guard';
 import { signedInGuard, signedOutGuard } from '@core/session/session.guards';
+import { unsavedChangesGuard } from '@shared/navigation/unsaved-changes.guard';
 
 /**
  * Feature paths must stay the same as v21: menu links come from the backend
@@ -31,6 +32,17 @@ export const routes: Routes = [
         data: { breadcrumb: 'Dashboard' },
         canMatch: [canAccess('DBOARD')],
         loadComponent: () => import('@features/home/home-page').then((m) => m.DashboardPage),
+      },
+      {
+        path: 'body-location',
+        title: 'Body Locations',
+        data: { breadcrumb: 'Configuration / Body Locations' },
+        canMatch: [canAccess('BODY_LOC')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('@features/configuration/body-locations/body-locations-page').then(
+            (m) => m.BodyLocationsPage,
+          ),
       },
       {
         path: 'forbidden',
