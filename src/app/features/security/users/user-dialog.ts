@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { FileStorageApi } from '@api/files/file-storage.api';
 import { type AppUser, UserApi } from '@api/security/user.api';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
+import { DialogFiles } from '@shared/forms/record-dialog/dialog-files';
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
 import { ImagePicker } from '@shared/ui/image-picker/image-picker';
@@ -30,121 +28,142 @@ const DEFAULT_PHOTO = '/images/profile.png';
         [readOnly]="readOnly"
         [saving]="saving() || uploading()"
       >
-        <div class="user-photo">
-          <app-image-picker
-            alt="Profile photo"
-            removeLabel="Remove Photo"
-            [src]="photo.src()"
-            [canChange]="!readOnly && !uploading()"
-            [hasImage]="!!form.controls.ProfileImage.value"
-            (picked)="uploadPhoto($event)"
-            (removed)="removePhoto()"
-          />
-        </div>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label for="usr-first">First Name <span class="required">*</span></label>
-            <input
-              id="usr-first"
-              type="text"
-              placeholder="Enter First Name"
-              formControlName="Firstname"
+        <div class="user-layout">
+          <div class="user-photo">
+            <app-image-picker
+              alt="Profile photo"
+              removeLabel="Remove Photo"
+              round
+              [size]="220"
+              [src]="photo.src()"
+              [canChange]="!readOnly && !uploading()"
+              [hasImage]="!!form.controls.ProfileImage.value"
+              (picked)="uploadPhoto($event)"
+              (removed)="removePhoto()"
             />
-            @if (showError('Firstname')) {
-              <span class="field-error">First Name is required.</span>
-            }
           </div>
-          <div class="form-field">
-            <label for="usr-last">Last Name <span class="required">*</span></label>
-            <input
-              id="usr-last"
-              type="text"
-              placeholder="Enter Last Name"
-              formControlName="Lastname"
-            />
-            @if (showError('Lastname')) {
-              <span class="field-error">Last Name is required.</span>
-            }
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-field">
-            <label for="usr-email">Email <span class="required">*</span></label>
-            <input
-              id="usr-email"
-              type="email"
-              placeholder="Enter Email"
-              formControlName="UserEmail"
-            />
-            @if (showError('UserEmail')) {
-              <span class="field-error">
-                {{
-                  form.controls.UserEmail.hasError('pattern')
-                    ? 'Enter a valid email address.'
-                    : 'Email is required.'
-                }}
+          <div class="user-fields">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="usr-first">First Name <span class="required">*</span></label>
+                <input
+                  id="usr-first"
+                  type="text"
+                  placeholder="Enter First Name"
+                  formControlName="Firstname"
+                />
+                @if (showError('Firstname')) {
+                  <span class="field-error">First Name is required.</span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="usr-last">Last Name <span class="required">*</span></label>
+                <input
+                  id="usr-last"
+                  type="text"
+                  placeholder="Enter Last Name"
+                  formControlName="Lastname"
+                />
+                @if (showError('Lastname')) {
+                  <span class="field-error">Last Name is required.</span>
+                }
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="usr-email">Email <span class="required">*</span></label>
+                <input
+                  id="usr-email"
+                  type="email"
+                  placeholder="Enter Email"
+                  formControlName="UserEmail"
+                />
+                @if (showError('UserEmail')) {
+                  <span class="field-error">
+                    {{
+                      form.controls.UserEmail.hasError('pattern')
+                        ? 'Enter a valid email address.'
+                        : 'Email is required.'
+                    }}
+                  </span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="usr-employee">Employee ID</label>
+                <input
+                  id="usr-employee"
+                  type="text"
+                  placeholder="Enter Employee ID"
+                  formControlName="EmployeeId"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="usr-phone">Phone Number</label>
+                <app-phone-field
+                  inputId="usr-phone"
+                  label="Phone Number"
+                  formControlName="PhoneNumber"
+                />
+                @if (showError('PhoneNumber')) {
+                  <span class="field-error">Enter a valid phone number.</span>
+                }
+              </div>
+              <div class="form-field">
+                <label for="usr-mobile">Mobile Number <span class="required">*</span></label>
+                <app-phone-field
+                  inputId="usr-mobile"
+                  label="Mobile Number"
+                  formControlName="MobileNumber"
+                />
+                @if (showError('MobileNumber')) {
+                  <span class="field-error">
+                    {{
+                      form.controls.MobileNumber.hasError('required')
+                        ? 'Mobile Number is required.'
+                        : 'Enter a valid mobile number.'
+                    }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <label class="switch-field">
+              <span class="switch">
+                <input type="checkbox" role="switch" formControlName="IsActive" />
+                <span class="slider"></span>
               </span>
-            }
-          </div>
-          <div class="form-field">
-            <label for="usr-employee">Employee ID</label>
-            <input
-              id="usr-employee"
-              type="text"
-              placeholder="Enter Employee ID"
-              formControlName="EmployeeId"
-            />
+              Is Active?
+            </label>
           </div>
         </div>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label for="usr-phone">Phone Number</label>
-            <app-phone-field
-              inputId="usr-phone"
-              label="Phone Number"
-              formControlName="PhoneNumber"
-            />
-            @if (showError('PhoneNumber')) {
-              <span class="field-error">Enter a valid phone number.</span>
-            }
-          </div>
-          <div class="form-field">
-            <label for="usr-mobile">Mobile Number <span class="required">*</span></label>
-            <app-phone-field
-              inputId="usr-mobile"
-              label="Mobile Number"
-              formControlName="MobileNumber"
-            />
-            @if (showError('MobileNumber')) {
-              <span class="field-error">
-                {{
-                  form.controls.MobileNumber.hasError('required')
-                    ? 'Mobile Number is required.'
-                    : 'Enter a valid mobile number.'
-                }}
-              </span>
-            }
-          </div>
-        </div>
-
-        <label class="switch-field">
-          <span class="switch">
-            <input type="checkbox" role="switch" formControlName="IsActive" />
-            <span class="slider"></span>
-          </span>
-          Is Active?
-        </label>
       </app-record-dialog-frame>
     </form>
   `,
   styles: `
+    /* v21: round photo on the left, the fields in two columns beside it. */
+    .user-layout {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 28px;
+    }
     .user-photo {
       display: flex;
+      flex: 0 0 auto;
       justify-content: center;
-      margin-bottom: 20px;
+      margin: 0 auto;
+    }
+    .user-fields {
+      flex: 1 1 440px;
+      min-width: 0;
+    }
+    .user-fields .form-field {
+      flex-basis: 200px;
     }
   `,
 })
@@ -152,12 +171,9 @@ export class UserDialog extends RecordDialog<AppUser> {
   protected readonly source = inject(UserApi);
   protected readonly entityName = 'User';
 
-  private readonly files = inject(FileStorageApi);
   private readonly record = this.data.record;
   private readonly storedPhoto = this.record?.ProfileImage || '';
-  /** Photos uploaded while the popup was open; those not kept are deleted at the end. */
-  private readonly uploaded = new Set<string>();
-  private saved = false;
+  private readonly photoFiles = new DialogFiles('UserProfile', this.storedPhoto);
 
   protected readonly title = this.isNew
     ? 'Create New User'
@@ -194,21 +210,13 @@ export class UserDialog extends RecordDialog<AppUser> {
   constructor() {
     super();
     void this.photo.load(this.storedPhoto);
-    // Closed without saving: photos uploaded meanwhile are not used by anything.
-    inject(MatDialogRef)
-      .afterClosed()
-      .subscribe(() => {
-        if (!this.saved) this.deletePhotos([...this.uploaded]);
-      });
   }
 
   protected async uploadPhoto(file: File): Promise<void> {
     if (this.readOnly || this.uploading()) return;
     this.uploading.set(true);
     try {
-      const path = await firstValueFrom(this.files.upload(file, 'UserProfile'));
-      this.uploaded.add(path);
-      this.setPhoto(path);
+      this.setPhoto(await this.photoFiles.upload(file));
       this.photo.show(file);
     } catch {
       // The error interceptor has already told the user why.
@@ -246,23 +254,12 @@ export class UserDialog extends RecordDialog<AppUser> {
 
   /** Deletes the photo that was replaced or removed, and uploads that were not kept. */
   protected override afterSave(saved: AppUser): void {
-    this.saved = true;
-    const kept = saved.ProfileImage || this.form.controls.ProfileImage.value;
-    const unused = [...this.uploaded];
-    if (this.storedPhoto) unused.push(this.storedPhoto);
-    this.deletePhotos(unused.filter((path) => path !== kept));
+    this.photoFiles.saved(saved.ProfileImage || this.form.controls.ProfileImage.value);
   }
 
   private setPhoto(path: string): void {
     const control = this.form.controls.ProfileImage;
     control.setValue(path);
     control.markAsDirty();
-  }
-
-  /** Best effort: a file left behind is harmless, so a failure does not stop anything. */
-  private deletePhotos(paths: readonly string[]): void {
-    for (const path of new Set(paths)) {
-      this.files.delete(path).subscribe({ error: () => undefined });
-    }
   }
 }

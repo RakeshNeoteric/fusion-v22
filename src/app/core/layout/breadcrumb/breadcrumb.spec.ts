@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { PageTitle } from '../page-title';
 import { Breadcrumb, buildBreadcrumb } from './breadcrumb';
 
 @Component({ template: '' })
@@ -66,5 +67,23 @@ describe('Breadcrumb', () => {
     await harness.navigateByUrl('/client/client/7');
     await fixture.whenStable();
     expect(host.textContent?.trim()).toBe('Client / Client / Details for 7');
+  });
+
+  it("shows a page's own title while it has one", async () => {
+    await harness.navigateByUrl('/home');
+    const fixture = TestBed.createComponent(Breadcrumb);
+    const title = TestBed.inject(PageTitle);
+    const host = fixture.nativeElement as HTMLElement;
+    title.show('Security / Agent / Permissions');
+    await fixture.whenStable();
+    expect(host.textContent?.trim()).toBe('Security / Agent / Permissions');
+
+    title.hide('Something else');
+    await fixture.whenStable();
+    expect(host.textContent?.trim()).toBe('Security / Agent / Permissions');
+
+    title.hide('Security / Agent / Permissions');
+    await fixture.whenStable();
+    expect(host.textContent?.trim()).toBe('Home');
   });
 });

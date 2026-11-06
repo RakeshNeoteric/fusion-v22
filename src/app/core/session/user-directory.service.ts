@@ -65,19 +65,27 @@ export class UserDirectoryService {
    * are now inactive or deleted (shown first, labelled with their status) so existing data stays visible.
    */
   optionsForRole(roleName: string, selectedUserId: number | null = null): UserOption[] {
-    const all = this.usersInRole(roleName);
-    const options = all.filter(isSelectable).map(toOption);
-    if (selectedUserId !== null && !options.some((option) => option.id === selectedUserId)) {
-      const selected = all.find((user) => user.AspNetUserId === selectedUserId);
-      if (selected) options.unshift(toOption(selected));
-    }
-    return options;
+    return optionsOf(this.usersInRole(roleName), selectedUserId);
+  }
+
+  /** Like {@link optionsForRole}, from every user (v21 Service Provider "… By" pickers). */
+  options(selectedUserId: number | null = null): UserOption[] {
+    return optionsOf(this.users(), selectedUserId);
   }
 
   displayName(userId: number): string | null {
     const user = this.users().find((candidate) => candidate.AspNetUserId === userId);
     return user ? displayNameOf(user) : null;
   }
+}
+
+function optionsOf(users: readonly DirectoryUser[], selectedUserId: number | null): UserOption[] {
+  const options = users.filter(isSelectable).map(toOption);
+  if (selectedUserId !== null && !options.some((option) => option.id === selectedUserId)) {
+    const selected = users.find((user) => user.AspNetUserId === selectedUserId);
+    if (selected) options.unshift(toOption(selected));
+  }
+  return options;
 }
 
 function toOption(user: DirectoryUser): UserOption {

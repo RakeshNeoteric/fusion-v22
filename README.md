@@ -110,9 +110,16 @@ saves. A form extends `RecordDialog` (`shared/forms/record-dialog`), which holds
 and is opened with `RecordDialogs.open(Form, record, permission, injector)`; read-only users get the
 form disabled and no Save. Lookups shared by the grid and the form extend `RecordLookup` and are
 provided on the page (see `claim-centres-page.ts`). Phone numbers use `app-phone-field` (E.164).
-A form can override `afterSave` to tidy up once the record is stored (the user form deletes
-replaced photos). Pictures kept in file storage (company logo, user photo) use `app-image-picker`
-with a `StoredImage` for the preview (`shared/ui/image-picker`).
+A form can override `afterSave` to tidy up once the record is stored. Files a form points at
+(user photo, BEE certificate) go through `DialogFiles` (`shared/forms/record-dialog/dialog-files.ts`):
+a new file is uploaded when chosen, the replaced one is deleted only after Save, and uploads are
+deleted when the form is cancelled. Pictures kept in file storage (company logo, user photo) use
+`app-image-picker` (`size`, `round`) with a `StoredImage` for the preview (`shared/ui/image-picker`).
+`RecordDialogs.open` takes an optional width for long forms (Service Provider: 1150px).
+
+A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
+`PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
+`data.breadcrumb` is shown.
 
 Forms share the v21 look from `src/form-styles.css` (put `class="app-form"` on the container,
 `app-button` on buttons). Large third-party styles are built as separate bundles in

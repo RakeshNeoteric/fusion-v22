@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   type OnInit,
   computed,
   inject,
@@ -13,6 +14,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { AppApi } from '@api/app.api';
 import { RoleApi } from '@api/security/role.api';
+import { PageTitle } from '@core/layout/page-title';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
@@ -60,6 +62,9 @@ export class PermissionsPage implements OnInit, HasUnsavedChanges {
   private readonly roles = inject(RoleApi);
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly pageTitle = inject(PageTitle);
+  /** The title bar text this page shows (v21: "Security / {role} / Permissions"). */
+  private shownTitle: string | null = null;
 
   /** Saving permissions is part of maintaining roles. */
   protected readonly canEdit = inject(PermissionService).canEdit('ROLES');
@@ -96,6 +101,10 @@ export class PermissionsPage implements OnInit, HasUnsavedChanges {
     () => new Set(this.changed().map((menu) => menu.code)),
   );
 
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.showTitle(null));
+  }
+
   ngOnInit(): void {
     void this.load();
   }
@@ -119,6 +128,7 @@ export class PermissionsPage implements OnInit, HasUnsavedChanges {
         menus.map((menu) => [menu.code, menuDraft(menu, role.RolesPermissions ?? [])]),
       );
       this.roleName.set(role.RoleName);
+      this.showTitle(`Security / ${role.RoleName} / Permissions`);
       this.sections.set(sections);
       this.saved.set(drafts);
       this.drafts.set(drafts);
@@ -220,6 +230,12 @@ export class PermissionsPage implements OnInit, HasUnsavedChanges {
 
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.hasUnsavedChanges()) event.preventDefault();
+  }
+
+  private showTitle(text: string | null): void {
+    if (this.shownTitle !== null) this.pageTitle.hide(this.shownTitle);
+    this.shownTitle = text;
+    if (text !== null) this.pageTitle.show(text);
   }
 
   /** Changes the open menu, if the user may. */

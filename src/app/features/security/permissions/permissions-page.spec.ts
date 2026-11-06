@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { AppApi, type PermissionMenu } from '@api/app.api';
 import type { RolePermission } from '@api/models/app.models';
 import { RoleApi, type RolePermissionDraft } from '@api/security/role.api';
+import { PageTitle } from '@core/layout/page-title';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { permission, role } from '../../../../testing/app-init.fixtures';
@@ -131,6 +132,8 @@ describe('PermissionsPage', () => {
   it("shows the role, sections in name order and the first menu's permissions", async () => {
     await render();
     expect(host.querySelector('.pm-title')?.textContent).toContain('Case Controller');
+    // v21 title bar: the role between the section and the page.
+    expect(TestBed.inject(PageTitle).text()).toBe('Security / Case Controller / Permissions');
     expect(
       buttons('nav[aria-labelledby="pm-sections-title"] button').map((b) => b.textContent?.trim()),
     ).toEqual(['Cases', 'Configuration']);
@@ -226,6 +229,8 @@ describe('PermissionsPage', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await click('.pm-actions button', 'Back');
     expect(navigate).toHaveBeenCalledWith(['/roles']);
+    fixture.destroy();
+    expect(TestBed.inject(PageTitle).text()).toBeNull();
   });
 
   it('explains when the role no longer exists', async () => {

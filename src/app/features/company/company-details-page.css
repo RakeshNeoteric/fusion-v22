@@ -92,21 +92,6 @@
   --mat-button-toggle-height: 40px;
   --mat-button-toggle-label-text-size: 15px;
 }
-.yes-toggle,
-.no-toggle {
-  --mat-button-toggle-selected-state-text-color: #fff;
-  --mat-pseudo-checkbox-minimal-selected-checkmark-color: #fff;
-  --mat-pseudo-checkbox-minimal-disabled-selected-checkmark-color: #fff;
-  --mat-button-toggle-disabled-selected-state-text-color: #fff;
-}
-.yes-toggle {
-  --mat-button-toggle-selected-state-background-color: #008000;
-  --mat-button-toggle-disabled-selected-state-background-color: #008000;
-}
-.no-toggle {
-  --mat-button-toggle-selected-state-background-color: #e74c3c;
-  --mat-button-toggle-disabled-selected-state-background-color: #e74c3c;
-}
 .visually-hidden {
   position: absolute;
   width: 1px;

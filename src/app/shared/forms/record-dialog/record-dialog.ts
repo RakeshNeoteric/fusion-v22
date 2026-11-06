@@ -55,7 +55,9 @@ export interface RecordDialogData<T> {
       </fieldset>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button type="button" class="app-button" [mat-dialog-close]="undefined">Cancel</button>
+      <button type="button" class="app-button rd-cancel" [mat-dialog-close]="undefined">
+        Cancel
+      </button>
       @if (!readOnly()) {
         <button type="submit" class="app-button" [disabled]="saving()">
           {{ isNew() ? 'Save' : 'Update' }}
@@ -151,6 +153,8 @@ export class RecordDialogs {
     record: T | null,
     permission: string,
     injector?: Injector,
+    /** Wider popups for long forms (v21 Service Provider). */
+    width = '800px',
   ): Promise<T | null> {
     const readOnly =
       record === null
@@ -159,7 +163,7 @@ export class RecordDialogs {
     const ref = this.dialog.open<RecordDialog<T>, RecordDialogData<T>, T>(component, {
       data: { record, readOnly },
       injector,
-      width: '800px',
+      width,
       maxWidth: '90vw',
       // The first field, not the close button.
       autoFocus: '.rd-fields :is(input, select, textarea):not([disabled])',

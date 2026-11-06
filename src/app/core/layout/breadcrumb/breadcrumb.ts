@@ -1,9 +1,10 @@
 import { CdkPortalOutlet } from '@angular/cdk/portal';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { PageActions } from '../page-actions';
+import { PageTitle } from '../page-title';
 
 export const DEFAULT_BREADCRUMB = 'Dashboard / Home';
 
@@ -63,11 +64,16 @@ export class Breadcrumb {
   private readonly router = inject(Router);
   protected readonly actions = inject(PageActions);
 
-  protected readonly text = toSignal(
+  private readonly pageTitle = inject(PageTitle);
+
+  private readonly routeText = toSignal(
     this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
       map(() => buildBreadcrumb(this.router.routerState.snapshot.root)),
     ),
     { initialValue: buildBreadcrumb(this.router.routerState.snapshot.root) },
   );
+
+  /** A page's own title, while it shows one; otherwise the route's. */
+  protected readonly text = computed(() => this.pageTitle.text() ?? this.routeText());
 }

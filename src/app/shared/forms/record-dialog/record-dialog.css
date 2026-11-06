@@ -33,3 +33,10 @@
   padding: 4px 0 0;
   border: none;
 }
+/* v21: red Cancel next to the teal Save. */
+.record-dialog .rd-cancel {
+  background-color: #e74c3c;
+}
+.record-dialog .rd-cancel:hover:not(:disabled) {
+  background-color: #c0392b;
+}

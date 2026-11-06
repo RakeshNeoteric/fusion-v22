@@ -1,0 +1,167 @@
+/* v21 Service Provider popup: bordered sections with a teal title, four fields a row. */
+.sp-section {
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 10px 16px 16px;
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+}
+.sp-section-title {
+  padding: 0 6px;
+  color: var(--app-teal);
+  font-size: 17px;
+  font-weight: 600;
+}
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 18px;
+  align-items: start;
+}
+.sp-trail {
+  margin-top: 4px;
+}
+.sp-wide {
+  grid-column: span 2;
+}
+.sp-question {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #444;
+  font-size: 14px;
+}
+.sp-question mat-button-toggle-group {
+  align-self: flex-start;
+}
+.form-field input[readonly],
+.form-field input:disabled,
+.form-field select:disabled {
+  background: #f3f6f6;
+  color: #555;
+}
+textarea {
+  resize: vertical;
+}
+
+/* Upload Certificate */
+.sp-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+}
+.sp-choose {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--app-teal);
+  border-radius: 6px;
+  background: #e7f9f9;
+  color: #036e70;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sp-choose:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sp-file-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: #555;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Contact rows */
+.sp-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sp-contact {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.4fr 1.2fr 1fr 76px;
+  gap: 12px;
+  align-items: start;
+}
+.sp-contact-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 26px;
+}
+.sp-icon-button,
+.sp-add {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.sp-icon-button {
+  border: none;
+  background: none;
+  color: var(--app-teal);
+}
+.sp-icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentcolor;
+}
+.sp-danger {
+  color: #e74c3c;
+}
+.sp-add {
+  border: 2px solid var(--app-teal);
+  background: #fff;
+  color: var(--app-teal);
+  font-size: 22px;
+  font-weight: 600;
+}
+.sp-add:hover:not(:disabled) {
+  background: var(--app-teal);
+  color: #fff;
+}
+.sp-add:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.sp-icon-button:focus-visible,
+.sp-add:focus-visible,
+.sp-choose:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+mat-button-toggle-group {
+  --mat-button-toggle-height: 36px;
+  --mat-button-toggle-label-text-size: 14px;
+  --mat-button-toggle-shape: 20px;
+}
+
+@media (max-width: 900px) {
+  .sp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sp-contact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sp-contact-actions {
+    padding-top: 0;
+  }
+  .sp-spacer {
+    display: none;
+  }
+}

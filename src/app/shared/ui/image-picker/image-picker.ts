@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  booleanAttribute,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { NotificationService } from '@core/notifications/notification.service';
 
@@ -11,8 +18,9 @@ import { NotificationService } from '@core/notifications/notification.service';
   selector: 'app-image-picker',
   imports: [MatMenuModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.round]': 'round()', '[style.--picker-size.px]': 'size()' },
   template: `
-    <img class="picture" width="130" height="130" [src]="src()" [alt]="alt()" />
+    <img class="picture" [width]="size()" [height]="size()" [src]="src()" [alt]="alt()" />
     @if (canChange()) {
       <button
         type="button"
@@ -39,25 +47,33 @@ import { NotificationService } from '@core/notifications/notification.service';
   `,
   styles: `
     :host {
+      --picker-size: 130px;
+
       position: relative;
       display: block;
-      width: 130px;
-      height: 130px;
+      flex: none;
+      width: var(--picker-size);
+      height: var(--picker-size);
     }
     .picture {
       box-sizing: border-box;
       display: block;
-      width: 130px;
-      height: 130px;
+      width: 100%;
+      height: 100%;
       border: 2px solid #ccc;
       border-radius: 15%;
       background: #fff;
       object-fit: contain;
     }
+    :host(.round) .picture {
+      border-color: #d8eded;
+      border-radius: 50%;
+      object-fit: cover;
+    }
     .picture-change {
       position: absolute;
-      top: 98px;
-      left: 98px;
+      right: 4px;
+      bottom: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -68,6 +84,18 @@ import { NotificationService } from '@core/notifications/notification.service';
       border-radius: 50%;
       background: rgb(0 0 0 / 60%);
       cursor: pointer;
+    }
+    :host(.round) .picture-change {
+      right: 10%;
+      bottom: 6%;
+      width: 40px;
+      height: 40px;
+      border: 2px solid #fff;
+      background: var(--app-teal);
+    }
+    :host(.round) .picture-change svg {
+      width: 18px;
+      height: 18px;
     }
     .picture-change svg {
       width: 14px;
@@ -88,6 +116,10 @@ export class ImagePicker {
   /** Whether there is a stored picture to remove. */
   readonly hasImage = input(false);
   readonly removeLabel = input('Remove');
+  /** Width and height in pixels. */
+  readonly size = input(130);
+  /** A circle (v21 user photo) instead of a rounded square (company logo). */
+  readonly round = input(false, { transform: booleanAttribute });
 
   readonly picked = output<File>();
   readonly removed = output();

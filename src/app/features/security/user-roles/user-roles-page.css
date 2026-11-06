@@ -1,4 +1,7 @@
-/* v21 User Role Mapping: three tall lists with teal titles, arrows between the role lists. */
+/*
+ * v21 User Roles Mapping: a light teal card with three tall lists under teal titles, and the
+ * arrows between the two role lists.
+ */
 :host {
   display: block;
   padding: 20px;
@@ -6,10 +9,10 @@
 .ur-columns {
   display: flex;
   gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid #e5e7eb;
+  padding: 18px;
+  border: 1px solid #c9e9ea;
   border-radius: 12px;
-  background: #fff;
+  background: #e7f9f9;
   box-shadow: 0 6px 18px rgb(16 24 40 / 6%);
 }
 .ur-box {
@@ -18,18 +21,16 @@
   flex-direction: column;
   min-width: 0;
   height: 612px;
-  border: 1px solid #d9e3ec;
+  overflow: hidden;
+  border: 1px solid #b7dfe0;
   border-radius: 10px;
-  background: #fff;
-  box-shadow:
-    0 4px 8px rgb(0 0 0 / 8%),
-    0 8px 20px rgb(0 0 0 / 12%);
+  background: #f4fdfd;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
 }
 .ur-title {
-  margin: 0 0 5px;
-  padding: 10px;
+  margin: 0;
+  padding: 12px 10px;
   overflow: hidden;
-  border-radius: 10px 10px 0 0;
   background: var(--app-teal);
   color: #fff;
   font-size: 17px;
@@ -39,20 +40,33 @@
   white-space: nowrap;
 }
 .ur-search {
-  padding: 6px 10px;
+  position: relative;
+  padding: 10px;
+}
+.ur-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 22px;
+  width: 15px;
+  height: 15px;
+  fill: #7a8a8a;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 .ur-search input {
   box-sizing: border-box;
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 10px 10px 10px 38px;
+  border: 1px solid #b7dfe0;
   border-radius: 10px;
+  background: #fff;
   font: inherit;
   font-size: 14px;
 }
 .ur-search input:focus {
-  border-color: #000;
+  border-color: var(--app-teal);
   outline: none;
+  box-shadow: 0 0 0 2px rgb(5 185 188 / 20%);
 }
 .ur-list {
   margin: 0;
@@ -75,12 +89,12 @@
   transition: background-color 0.2s ease;
 }
 .ur-item:hover:not(:disabled) {
-  background: #deecec;
+  background: #d3f1f1;
 }
 .ur-item.selected {
   border-color: var(--app-teal);
-  background: #75e9e9;
-  font-weight: 500;
+  background: #92e6e6;
+  font-weight: 600;
 }
 .ur-item:disabled {
   cursor: default;
@@ -108,18 +122,18 @@
 .ur-move {
   width: 45px;
   height: 38px;
-  border: none;
+  border: 1px solid var(--app-teal);
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
-  color: #34495e;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  color: var(--app-teal);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 .ur-move:hover:not(:disabled) {
-  background: #337e80;
+  background: var(--app-teal);
   color: #fff;
 }
 .ur-move:disabled {

@@ -122,6 +122,16 @@ export const routes: Routes = [
           import('@features/configuration/services/services-page').then((m) => m.ServicesPage),
       },
       {
+        path: 'services/service-providers',
+        title: 'Service Providers',
+        data: { breadcrumb: 'Services / Service Providers' },
+        canMatch: [canAccess('SERVICE_PR')],
+        loadComponent: () =>
+          import('@features/services/service-providers/service-providers-page').then(
+            (m) => m.ServiceProvidersPage,
+          ),
+      },
+      {
         path: 'claim-centre',
         title: 'Claim Centres',
         data: { breadcrumb: 'Configuration / Claim Centre' },

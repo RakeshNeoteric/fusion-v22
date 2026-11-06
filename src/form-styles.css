@@ -150,3 +150,20 @@
   outline: 2px solid #000;
   outline-offset: 2px;
 }
+
+/* v21 Yes / No toggles (Material button toggles): green and red when chosen. */
+.yes-toggle,
+.no-toggle {
+  --mat-button-toggle-selected-state-text-color: #fff;
+  --mat-button-toggle-disabled-selected-state-text-color: #fff;
+  --mat-pseudo-checkbox-minimal-selected-checkmark-color: #fff;
+  --mat-pseudo-checkbox-minimal-disabled-selected-checkmark-color: #fff;
+}
+.yes-toggle {
+  --mat-button-toggle-selected-state-background-color: #008000;
+  --mat-button-toggle-disabled-selected-state-background-color: #6fae6f;
+}
+.no-toggle {
+  --mat-button-toggle-selected-state-background-color: #e74c3c;
+  --mat-button-toggle-disabled-selected-state-background-color: #f0a299;
+}

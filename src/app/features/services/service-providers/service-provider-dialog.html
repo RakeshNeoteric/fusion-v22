@@ -1,0 +1,419 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <app-record-dialog-frame
+    [title]="title"
+    [isNew]="isNew"
+    [readOnly]="readOnly"
+    [saving]="saving() || uploading()"
+  >
+    <fieldset class="sp-section">
+      <legend class="sp-section-title">Service Provider Details:</legend>
+      <div class="sp-grid">
+        <div class="form-field">
+          <label for="sp-name">Name <span class="required">*</span></label>
+          <input id="sp-name" type="text" placeholder="Enter Name" formControlName="Name" />
+          @if (showError('Name')) {
+            <span class="field-error">Name is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-vat">VAT Number <span class="required">*</span></label>
+          <input
+            id="sp-vat"
+            type="text"
+            placeholder="Enter VAT Number"
+            formControlName="VATNumber"
+          />
+          @if (showError('VATNumber')) {
+            <span class="field-error">VAT Number is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-reg">Company Reg. No <span class="required">*</span></label>
+          <input
+            id="sp-reg"
+            type="text"
+            placeholder="Enter Company Reg. No"
+            formControlName="CompanyRegNo"
+          />
+          @if (showError('CompanyRegNo')) {
+            <span class="field-error">Company Reg. No is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-branch">Branch <span class="required">*</span></label>
+          <input id="sp-branch" type="text" placeholder="Enter Branch" formControlName="Branch" />
+          @if (showError('Branch')) {
+            <span class="field-error">Branch is required.</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="sp-office">Office Address <span class="required">*</span></label>
+          <textarea
+            id="sp-office"
+            rows="2"
+            placeholder="Enter Office Address"
+            formControlName="OfficeAddress"
+          ></textarea>
+          @if (showError('OfficeAddress')) {
+            <span class="field-error">Office Address is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-storage">
+            Storage Address (if different) <span class="required">*</span>
+          </label>
+          <textarea
+            id="sp-storage"
+            rows="2"
+            placeholder="Enter Storage Address"
+            formControlName="StorageAddress"
+          ></textarea>
+          @if (showError('StorageAddress')) {
+            <span class="field-error">Storage Address is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-town">Town / City <span class="required">*</span></label>
+          <input
+            id="sp-town"
+            type="text"
+            placeholder="Enter Town / City"
+            formControlName="TownCity"
+          />
+          @if (showError('TownCity')) {
+            <span class="field-error">Town / City is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="sp-province">Province <span class="required">*</span></label>
+          <select id="sp-province" formControlName="Province">
+            <option [ngValue]="null" disabled>Select Province</option>
+            @for (province of provinces; track province) {
+              <option [ngValue]="province">{{ province }}</option>
+            }
+          </select>
+          @if (showError('Province')) {
+            <span class="field-error">Province is required.</span>
+          }
+        </div>
+
+        <div class="sp-question sp-wide">
+          <span id="sp-internal-label">FMS Internal Service Provider?</span>
+          <mat-button-toggle-group
+            aria-labelledby="sp-internal-label"
+            formControlName="IsInternalServiceProvider"
+          >
+            <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+            <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="sp-section">
+      <legend class="sp-section-title">BEE Requirements:</legend>
+      <div class="sp-grid">
+        <div class="sp-question">
+          <span id="sp-bee-label">BEE Status</span>
+          <mat-button-toggle-group aria-labelledby="sp-bee-label" formControlName="BeeStatus">
+            <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+            <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+        <div class="form-field">
+          <label for="sp-bee-expiry">
+            BEE Expiry Date
+            @if (form.controls.BeeStatus.value) {
+              <span class="required">*</span>
+            }
+          </label>
+          <input id="sp-bee-expiry" type="date" formControlName="BeeExpiryDate" />
+          @if (showError('BeeExpiryDate')) {
+            <span class="field-error">BEE Expiry Date is required.</span>
+          }
+        </div>
+        <div class="form-field sp-wide">
+          <span class="form-label" id="sp-certificate-label">Upload Certificate</span>
+          <div class="sp-upload" role="group" aria-labelledby="sp-certificate-label">
+            <button
+              type="button"
+              class="sp-choose"
+              [disabled]="readOnly || !form.controls.BeeStatus.value || uploading()"
+              (click)="certificateInput.click()"
+            >
+              {{ uploading() ? 'Uploading…' : 'Choose File' }}
+            </button>
+            <span class="sp-file-name">
+              {{
+                certificateName() ||
+                  (form.controls.BeeCertificate.value ? 'Certificate' : 'No file chosen')
+              }}
+            </span>
+            @if (form.controls.BeeCertificate.value) {
+              <button
+                type="button"
+                class="sp-icon-button"
+                title="View certificate"
+                aria-label="View certificate"
+                (click)="viewCertificate()"
+              >
+                <svg viewBox="0 0 576 512" aria-hidden="true">
+                  <path
+                    d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4 142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1-288 0zm144-64a64 64 0 1 0 0 128 64 64 0 1 0 0-128z"
+                  />
+                </svg>
+              </button>
+              @if (!readOnly) {
+                <button
+                  type="button"
+                  class="sp-icon-button sp-danger"
+                  title="Remove certificate"
+                  aria-label="Remove certificate"
+                  (click)="removeCertificate()"
+                >
+                  ✖
+                </button>
+              }
+            }
+            <input
+              #certificateInput
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              hidden
+              (change)="chooseCertificate($event)"
+            />
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="sp-section">
+      <legend class="sp-section-title">Contact Details:</legend>
+      <div formArrayName="contacts" class="sp-contacts">
+        @for (row of contacts.controls; track row; let index = $index) {
+          <div class="sp-contact" [formGroupName]="index">
+            <div class="form-field">
+              <label [for]="'sp-tel-' + index"
+                >Telephone / Cell <span class="required">*</span></label
+              >
+              <app-phone-field
+                [inputId]="'sp-tel-' + index"
+                label="Telephone / Cell"
+                formControlName="telephone"
+              />
+              @if (showContactError(index, 'telephone')) {
+                <span class="field-error">
+                  {{
+                    row.controls.telephone.hasError('required')
+                      ? 'Telephone / Cell is required.'
+                      : 'Enter a valid number.'
+                  }}
+                </span>
+              }
+            </div>
+            <div class="form-field">
+              <label [for]="'sp-contact-name-' + index">Name</label>
+              <input
+                [id]="'sp-contact-name-' + index"
+                type="text"
+                placeholder="Enter Name"
+                formControlName="name"
+              />
+            </div>
+            <div class="form-field">
+              <label [for]="'sp-fax-' + index">Fax Number</label>
+              <app-phone-field
+                [inputId]="'sp-fax-' + index"
+                label="Fax Number"
+                formControlName="fax"
+              />
+              @if (showContactError(index, 'fax')) {
+                <span class="field-error">Enter a valid number.</span>
+              }
+            </div>
+            <div class="form-field">
+              <label [for]="'sp-email-' + index">Email</label>
+              <input
+                [id]="'sp-email-' + index"
+                type="email"
+                placeholder="Enter Email"
+                formControlName="email"
+              />
+              @if (showContactError(index, 'email')) {
+                <span class="field-error">Enter a valid email address.</span>
+              }
+            </div>
+            <div class="form-field">
+              <label [for]="'sp-comments-' + index">Comments</label>
+              <input
+                [id]="'sp-comments-' + index"
+                type="text"
+                placeholder="Enter Comments"
+                formControlName="comments"
+              />
+            </div>
+            <div class="sp-contact-actions">
+              @if (!readOnly) {
+                @if (contacts.length > 1) {
+                  <button
+                    type="button"
+                    class="sp-icon-button sp-danger"
+                    title="Remove contact"
+                    [attr.aria-label]="'Remove contact ' + (index + 1)"
+                    (click)="removeContact(index)"
+                  >
+                    ✖
+                  </button>
+                }
+                @if ($last) {
+                  <button
+                    type="button"
+                    class="sp-add"
+                    title="Add contact"
+                    aria-label="Add contact"
+                    [disabled]="contacts.length >= maxContacts"
+                    (click)="addContact()"
+                  >
+                    +
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </fieldset>
+
+    <div class="sp-grid sp-trail">
+      <div class="form-field">
+        <label for="sp-type">Service Type <span class="required">*</span></label>
+        <select id="sp-type" formControlName="ServiceTypeCode">
+          <option [ngValue]="null" disabled>Select Service Type</option>
+          @for (type of serviceTypes; track type.value) {
+            <option [ngValue]="type.value">{{ type.label }}</option>
+          }
+        </select>
+        @if (showError('ServiceTypeCode')) {
+          <span class="field-error">Service Type is required.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="sp-rate">Rate / KM <span class="required">*</span></label>
+        <input
+          id="sp-rate"
+          type="number"
+          min="0"
+          max="999.99"
+          step="0.01"
+          placeholder="0.00"
+          formControlName="RatePerKm"
+        />
+        @if (showError('RatePerKm')) {
+          <span class="field-error">
+            {{
+              form.controls.RatePerKm.hasError('required')
+                ? 'Rate / KM is required.'
+                : 'Enter a rate from 0 to 999.99.'
+            }}
+          </span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="sp-designation">Designation No <span class="required">*</span></label>
+        <input
+          id="sp-designation"
+          type="text"
+          placeholder="Enter Designation No"
+          formControlName="DesignationNumber"
+        />
+        @if (showError('DesignationNumber')) {
+          <span class="field-error">Designation No is required.</span>
+        }
+      </div>
+      <div class="sp-spacer"></div>
+
+      <div class="form-field">
+        <label for="sp-authorised-on">Date Authorised</label>
+        <input id="sp-authorised-on" type="date" formControlName="RateAuthorisedOn" />
+      </div>
+      <div class="form-field">
+        <label for="sp-authorised-by">Authorised By</label>
+        <select id="sp-authorised-by" formControlName="AuthorisedBy">
+          <option [ngValue]="null">Select Person</option>
+          @for (user of authorisers; track user.id) {
+            <option [ngValue]="user.id">{{ user.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="sp-opened-on">Date Opened</label>
+        <input id="sp-opened-on" type="date" formControlName="ActiveOn" />
+      </div>
+      <div class="form-field">
+        <label for="sp-opened-by">Opened By</label>
+        <input
+          id="sp-opened-by"
+          type="text"
+          readonly
+          [value]="userName(form.controls.ActiveBy.value)"
+        />
+      </div>
+
+      <div class="sp-question">
+        <span id="sp-verified-label">Is Verified</span>
+        <mat-button-toggle-group aria-labelledby="sp-verified-label" formControlName="IsVerified">
+          <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+          <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      <div class="form-field">
+        <label for="sp-verified-on">Date Verified</label>
+        <input id="sp-verified-on" type="date" formControlName="VerifiedOn" />
+      </div>
+      <div class="form-field">
+        <label for="sp-verified-by">Verified By</label>
+        <select id="sp-verified-by" formControlName="VerifiedBy">
+          <option [ngValue]="null">Select Person</option>
+          @for (user of verifiers; track user.id) {
+            <option [ngValue]="user.id">{{ user.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="sp-spacer"></div>
+
+      <div class="sp-question">
+        <span id="sp-accredited-label">Is Accredited</span>
+        <mat-button-toggle-group
+          aria-labelledby="sp-accredited-label"
+          formControlName="IsAccredited"
+        >
+          <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+          <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      <div class="form-field">
+        <label for="sp-accredited-on">Date Accredited</label>
+        <input id="sp-accredited-on" type="date" formControlName="AccreditedOn" />
+      </div>
+      <div class="form-field">
+        <label for="sp-accredited-by">Accredited By</label>
+        <select id="sp-accredited-by" formControlName="AccreditedBy">
+          <option [ngValue]="null">Select Person</option>
+          @for (user of accreditors; track user.id) {
+            <option [ngValue]="user.id">{{ user.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="sp-spacer"></div>
+
+      <div class="sp-question">
+        <span id="sp-active-label">Is Active</span>
+        <mat-button-toggle-group aria-labelledby="sp-active-label" formControlName="IsActive">
+          <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+          <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+  </app-record-dialog-frame>
+</form>
