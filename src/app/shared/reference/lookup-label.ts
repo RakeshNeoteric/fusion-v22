@@ -22,10 +22,10 @@ export function isSelectable(status: LookupStatus): boolean {
  * Choices for a picker: every active record, plus the current value when it is
  * inactive or deleted, so an old record still shows what it points at (v21 popups).
  */
-export function pickerOptions<T extends LookupStatus>(
+export function pickerOptions<T extends LookupStatus, K extends string | number>(
   records: readonly T[],
-  current: number | null,
-  id: (record: T) => number,
+  current: K | null,
+  id: (record: T) => K,
   name: (record: T) => string,
 ): SelectOption[] {
   return records

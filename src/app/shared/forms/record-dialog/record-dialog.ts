@@ -41,7 +41,7 @@ export interface RecordDialogData<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Styles the projected fields and inputs, so they cannot be encapsulated; all scoped to .record-dialog.
   encapsulation: ViewEncapsulation.None,
-  host: { class: 'record-dialog' },
+  host: { class: 'record-dialog app-form' },
   template: `
     <div class="rd-header">
       <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
@@ -53,9 +53,9 @@ export interface RecordDialogData<T> {
       </fieldset>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button type="button" class="rd-button" mat-dialog-close>Cancel</button>
+      <button type="button" class="app-button" mat-dialog-close>Cancel</button>
       @if (!readOnly()) {
-        <button type="submit" class="rd-button" [disabled]="saving()">
+        <button type="submit" class="app-button" [disabled]="saving()">
           {{ isNew() ? 'Save' : 'Update' }}
         </button>
       }

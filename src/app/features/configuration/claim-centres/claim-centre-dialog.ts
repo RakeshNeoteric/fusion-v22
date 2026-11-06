@@ -143,6 +143,8 @@ export class ClaimCentreDialog extends RecordDialog<ClaimCentre> {
   protected toRecord(): ClaimCentre {
     const value = this.form.getRawValue();
     return {
+      // Keeps any field this form does not show.
+      ...(this.record ?? { IsDeleted: false }),
       ClaimCentreId: this.record?.ClaimCentreId ?? 0,
       Name: value.Name.trim(),
       ClientGroupId: value.ClientGroupId,
@@ -153,7 +155,6 @@ export class ClaimCentreDialog extends RecordDialog<ClaimCentre> {
       Tel: value.Tel,
       Fax: value.Fax,
       IsActive: value.IsActive,
-      IsDeleted: this.record?.IsDeleted ?? false,
     };
   }
 }

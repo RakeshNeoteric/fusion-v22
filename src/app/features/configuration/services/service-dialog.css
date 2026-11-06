@@ -1,0 +1,17 @@
+/* Quill's own look comes from the quill-snow.css bundle (see ServiceDialog). */
+app-service-dialog .note-editor {
+  display: block;
+}
+app-service-dialog .note-editor .ql-toolbar {
+  border-radius: 10px 10px 0 0;
+}
+app-service-dialog .note-editor .ql-container {
+  height: 220px;
+  border-radius: 0 0 10px 10px;
+  font: inherit;
+  font-size: 14px;
+}
+app-service-dialog .note-editor.ng-invalid.ng-touched .ql-container,
+app-service-dialog .note-editor.ng-invalid.ng-touched .ql-toolbar {
+  border-color: var(--app-danger);
+}

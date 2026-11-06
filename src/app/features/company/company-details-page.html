@@ -1,0 +1,201 @@
+<section class="company-card app-form" aria-labelledby="company-title">
+  <h2 id="company-title" class="company-title">
+    <!-- Font Awesome Free "pen-to-square" (CC BY 4.0), the v21 title icon. -->
+    <svg class="company-title-icon" viewBox="0 0 512 512" aria-hidden="true">
+      <path
+        d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"
+      />
+    </svg>
+    Company Details
+  </h2>
+
+  @switch (status()) {
+    @case ('loading') {
+      <p class="company-status" role="status">Loading company details…</p>
+    }
+    @case ('failed') {
+      <div class="company-status" role="alert">
+        <span>Could not load the company details.</span>
+        <button type="button" class="app-button" (click)="load()">Try again</button>
+      </div>
+    }
+    @default {
+      <div class="logo">
+        <img class="logo-image" [src]="logoSrc()" alt="Company logo" width="130" height="130" />
+        @if (canChangeLogo()) {
+          <button
+            type="button"
+            class="logo-change"
+            aria-label="Change logo"
+            title="Change logo"
+            [matMenuTriggerFor]="logoMenu"
+          >
+            <!-- Font Awesome Free "camera" (CC BY 4.0), as in v21. -->
+            <svg viewBox="0 0 512 512" aria-hidden="true">
+              <path
+                d="M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H373.3L362.9 64.8C356.4 45.2 338.1 32 317.4 32H194.6c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"
+              />
+            </svg>
+          </button>
+          <mat-menu #logoMenu="matMenu">
+            <button mat-menu-item type="button" (click)="logoFile.click()">
+              Choose from Gallery
+            </button>
+            <button mat-menu-item type="button" [disabled]="!hasLogo()" (click)="removeLogo()">
+              Remove Logo
+            </button>
+          </mat-menu>
+          <input #logoFile type="file" accept="image/*" hidden (change)="uploadLogo($event)" />
+        } @else if (canEdit) {
+          <p class="logo-hint">Save the company details to add a logo.</p>
+        }
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <fieldset class="company-fields section-block" [disabled]="!canEdit">
+          <legend class="subtitle">Physical Address :</legend>
+          <div class="form-row" formGroupName="physical">
+            <div class="form-field">
+              <label for="cd-name">Company Name</label>
+              <input id="cd-name" type="text" [formControl]="form.controls.companyName" />
+            </div>
+            <div class="form-field">
+              <label for="cd-street">Street</label>
+              <input id="cd-street" type="text" formControlName="street" />
+            </div>
+            <div class="form-field">
+              <label for="cd-town">Town / City</label>
+              <input id="cd-town" type="text" formControlName="townCity" />
+            </div>
+            <div class="form-field">
+              <label for="cd-province">Province</label>
+              <select id="cd-province" formControlName="province">
+                <option [ngValue]="null">Select Province</option>
+                @for (province of provinces; track province) {
+                  <option [ngValue]="province">{{ province }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row" formGroupName="physical">
+            <div class="form-field">
+              <label for="cd-postcode">Post Code</label>
+              <input id="cd-postcode" type="text" formControlName="postcode" />
+            </div>
+            <div class="form-field">
+              <label for="cd-country">Country</label>
+              <select id="cd-country" formControlName="country">
+                <option [ngValue]="null">Select Country</option>
+                @for (country of countries; track country.code) {
+                  <option [ngValue]="country.code">{{ country.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="company-fields" [disabled]="!canEdit">
+          <div class="same-as">
+            <span id="cd-same-label" class="form-label"
+              >Physical Address Same as Postal Address</span
+            >
+            <mat-button-toggle-group
+              aria-labelledby="cd-same-label"
+              formControlName="sameAsPhysical"
+            >
+              <mat-button-toggle class="yes-toggle" [value]="true">Yes</mat-button-toggle>
+              <mat-button-toggle class="no-toggle" [value]="false">No</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </fieldset>
+
+        <fieldset class="company-fields section-block" [disabled]="!canEdit">
+          <legend class="subtitle">Postal Address :</legend>
+          <div class="form-row" formGroupName="postal">
+            <div class="form-field">
+              <label for="cd-postal-street">Street</label>
+              <input id="cd-postal-street" type="text" formControlName="street" />
+            </div>
+            <div class="form-field">
+              <label for="cd-postal-town">Town / City</label>
+              <input id="cd-postal-town" type="text" formControlName="townCity" />
+            </div>
+            <div class="form-field">
+              <label for="cd-postal-province">Province</label>
+              <select id="cd-postal-province" formControlName="province">
+                <option [ngValue]="null">Select Province</option>
+                @for (province of provinces; track province) {
+                  <option [ngValue]="province">{{ province }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="cd-postal-postcode">Post Code</label>
+              <input id="cd-postal-postcode" type="text" formControlName="postcode" />
+            </div>
+          </div>
+          <div class="form-row" formGroupName="postal">
+            <div class="form-field">
+              <label for="cd-postal-country">Country</label>
+              <select id="cd-postal-country" formControlName="country">
+                <option [ngValue]="null">Select Country</option>
+                @for (country of countries; track country.code) {
+                  <option [ngValue]="country.code">{{ country.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="company-fields section-block" [disabled]="!canEdit">
+          <legend class="visually-hidden">Contact details</legend>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="cd-tel">Telephone Number</label>
+              <app-phone-field
+                inputId="cd-tel"
+                label="Telephone Number"
+                formControlName="telephone"
+              />
+              @if (showError('telephone')) {
+                <span class="field-error">Enter a valid telephone number.</span>
+              }
+            </div>
+            <div class="form-field">
+              <label for="cd-fax">Fax Number</label>
+              <app-phone-field inputId="cd-fax" label="Fax Number" formControlName="fax" />
+              @if (showError('fax')) {
+                <span class="field-error">Enter a valid fax number.</span>
+              }
+            </div>
+            <div class="form-field">
+              <label for="cd-vat">VAT Number</label>
+              <input id="cd-vat" type="text" formControlName="vatNumber" />
+            </div>
+            <div class="form-field">
+              <label for="cd-reg">Company Reg. No</label>
+              <input id="cd-reg" type="text" formControlName="companyRegNo" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="cd-email">Email</label>
+              <input id="cd-email" type="email" placeholder="Enter Email" formControlName="email" />
+              @if (showError('email')) {
+                <span class="field-error">Enter a valid email address.</span>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        @if (canEdit) {
+          <div class="company-actions">
+            <button type="submit" class="app-button company-save" [disabled]="saving()">
+              Save
+            </button>
+          </div>
+        }
+      </form>
+    }
+  }
+</section>

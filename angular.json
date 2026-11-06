@@ -29,7 +29,17 @@
                 "input": "public"
               }
             ],
-            "styles": ["@angular/material/prebuilt-themes/azure-blue.css", "src/styles.css"]
+            "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
+              "src/styles.css",
+              "src/form-styles.css",
+              {
+                "input": "node_modules/quill/dist/quill.snow.css",
+                "bundleName": "quill-snow",
+                "inject": false
+              }
+            ],
+            "allowedCommonJsDependencies": ["quill-delta"]
           },
           "configurations": {
             "production": {

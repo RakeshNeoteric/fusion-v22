@@ -83,6 +83,45 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'company-details',
+        title: 'Company Details',
+        data: { breadcrumb: 'Company / Company Details' },
+        canMatch: [canAccess('CMP')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('@features/company/company-details-page').then((m) => m.CompanyDetailsPage),
+      },
+      {
+        path: 'client/client-group',
+        title: 'Client Groups',
+        data: { breadcrumb: 'Client / Client Group' },
+        canMatch: [canAccess('CLIENT_GRP')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('@features/configuration/client-groups/client-groups-page').then(
+            (m) => m.ClientGroupsPage,
+          ),
+      },
+      {
+        path: 'services/service-types',
+        title: 'Service Types',
+        data: { breadcrumb: 'Services / Service Types' },
+        canMatch: [canAccess('SRV_PRV_TY')],
+        canDeactivate: [unsavedChangesGuard],
+        loadComponent: () =>
+          import('@features/configuration/service-types/service-types-page').then(
+            (m) => m.ServiceTypesPage,
+          ),
+      },
+      {
+        path: 'services/services',
+        title: 'Services',
+        data: { breadcrumb: 'Services' },
+        canMatch: [canAccess('SERVICES')],
+        loadComponent: () =>
+          import('@features/configuration/services/services-page').then((m) => m.ServicesPage),
+      },
+      {
         path: 'claim-centre',
         title: 'Claim Centres',
         data: { breadcrumb: 'Configuration / Claim Centre' },

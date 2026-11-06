@@ -109,6 +109,11 @@ and is opened with `RecordDialogs.open(Form, record, permission, injector)`; rea
 form disabled and no Save. Lookups shared by the grid and the form extend `RecordLookup` and are
 provided on the page (see `claim-centres-page.ts`). Phone numbers use `app-phone-field` (E.164).
 
+Forms share the v21 look from `src/form-styles.css` (put `class="app-form"` on the container,
+`app-button` on buttons). Large third-party styles are built as separate bundles in
+`angular.json` (`"inject": false`) and added on first use with `useLazyStylesheet`, as the
+Services note editor does with Quill.
+
 Grid features are added module by module in `shared/grid/grid-setup.ts`. In development, AG Grid
 logs a console error when a feature's module is missing.
 

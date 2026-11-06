@@ -11,10 +11,13 @@ import { BodyLocationApi } from '@api/config/body-location.api';
 import { BranchApi } from '@api/config/branch.api';
 import { ClaimCentreApi } from '@api/config/claim-centre.api';
 import { ClientGroupApi } from '@api/config/client-group.api';
+import { CompanyDetailsApi } from '@api/config/company-details.api';
 import { DocumentTypeApi } from '@api/config/document.api';
 import { RatingQuestionOptionApi } from '@api/config/rating-question-option.api';
 import { RatingQuestionTypeApi } from '@api/config/rating-question-type.api';
 import { RatingQuestionApi } from '@api/config/rating-question.api';
+import { ServiceTypeApi } from '@api/config/service-type.api';
+import { ServiceApi } from '@api/config/service.api';
 import { TransportOperatorApi } from '@api/config/transport-operator.api';
 import { VehicleApi } from '@api/config/vehicle.api';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
@@ -63,7 +66,10 @@ describe('app routes', () => {
           ClientGroupApi,
           RatingQuestionApi,
           RatingQuestionOptionApi,
+          ServiceTypeApi,
+          ServiceApi,
         ].map((api) => ({ provide: api, useValue: emptyConfigApi })),
+        { provide: CompanyDetailsApi, useValue: { get: () => of([]) } },
         { provide: ConfirmService, useValue: { ask: confirmLeave } },
       ],
     });
@@ -139,6 +145,9 @@ describe('app routes', () => {
     ['/claim-centre', 'CLM_CTR', 'Configuration / Claim Centre'],
     ['/list/list', 'RQL', 'Rating Questions / List'],
     ['/options/options', 'RQO', 'Rating Questions / Options'],
+    ['/client/client-group', 'CLIENT_GRP', 'Client / Client Group'],
+    ['/services/service-types', 'SRV_PRV_TY', 'Services / Service Types'],
+    ['/services/services', 'SERVICES', 'Services'],
   ])('guards %s by the %s permission', async (path, code, breadcrumb) => {
     signIn();
     await harness.navigateByUrl(path);
@@ -151,6 +160,20 @@ describe('app routes', () => {
       harness.routeNativeElement?.querySelector('app-breadcrumb h1')?.textContent?.trim(),
     ).toBe(breadcrumb);
     expect(harness.routeNativeElement?.querySelector('app-entity-grid')).not.toBeNull();
+  });
+
+  it('guards Company Details by the CMP permission', async () => {
+    signIn();
+    await harness.navigateByUrl('/company-details');
+    expect(url()).toBe('/forbidden');
+
+    TestBed.inject(PermissionService).load([role('Viewer', [permission('CMP')])]);
+    await harness.navigateByUrl('/company-details');
+    expect(url()).toBe('/company-details');
+    expect(
+      harness.routeNativeElement?.querySelector('app-breadcrumb h1')?.textContent?.trim(),
+    ).toBe('Company / Company Details');
+    expect(harness.routeNativeElement?.querySelector('app-company-details-page')).not.toBeNull();
   });
 
   it('asks before leaving a page with unsaved changes', async () => {

@@ -1,0 +1,165 @@
+/* v21 Company Details look: full-width card, bordered address sections, 4 fields a row. */
+:host {
+  display: block;
+  padding: 20px;
+}
+.company-card {
+  box-sizing: border-box;
+  padding: 40px;
+  border-radius: 10px;
+  background: #fff;
+}
+.company-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: var(--app-teal);
+  font-size: 24px;
+  font-weight: 700;
+}
+.company-title-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+.company-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+/* Logo: rounded square with a dark camera button on its corner. */
+.logo {
+  position: relative;
+  width: 130px;
+  margin-bottom: 24px;
+}
+.logo-image {
+  box-sizing: border-box;
+  display: block;
+  width: 130px;
+  height: 130px;
+  border: 2px solid #ccc;
+  border-radius: 15%;
+  background: #fff;
+  object-fit: contain;
+}
+.logo-change {
+  position: absolute;
+  top: 98px;
+  left: 98px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 60%);
+  cursor: pointer;
+}
+.logo-change svg {
+  width: 14px;
+  height: 14px;
+  fill: #fff;
+}
+.logo-change:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+.logo-hint {
+  width: max-content;
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.company-fields {
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  border: none;
+}
+.section-block {
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
+/* Floated so the legend sits inside the box like a heading, not on its border. */
+.subtitle {
+  float: left;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 0;
+  color: var(--app-teal);
+  font-size: 18px;
+  font-weight: 700;
+}
+.subtitle + .form-row {
+  clear: both;
+}
+
+/* Four fields a row at a fixed width, so a short row does not stretch (v21: 22%). */
+.company-card .form-row {
+  gap: 16px;
+}
+.company-card .form-field {
+  flex: 0 0 22%;
+  max-width: 22%;
+}
+@media (max-width: 900px) {
+  .company-card .form-field {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* "Same as" Yes/No: label above; Yes green, No red when chosen. */
+.same-as {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.same-as mat-button-toggle-group {
+  --mat-button-toggle-height: 40px;
+  --mat-button-toggle-label-text-size: 15px;
+}
+.yes-toggle,
+.no-toggle {
+  --mat-button-toggle-selected-state-text-color: #fff;
+  --mat-pseudo-checkbox-minimal-selected-checkmark-color: #fff;
+  --mat-pseudo-checkbox-minimal-disabled-selected-checkmark-color: #fff;
+  --mat-button-toggle-disabled-selected-state-text-color: #fff;
+}
+.yes-toggle {
+  --mat-button-toggle-selected-state-background-color: #008000;
+  --mat-button-toggle-disabled-selected-state-background-color: #008000;
+}
+.no-toggle {
+  --mat-button-toggle-selected-state-background-color: #e74c3c;
+  --mat-button-toggle-disabled-selected-state-background-color: #e74c3c;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.company-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.company-save {
+  width: 150px;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: 700;
+}

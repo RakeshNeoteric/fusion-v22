@@ -185,6 +185,8 @@ export class RatingQuestionOptionDialog extends RecordDialog<RatingQuestionOptio
   protected toRecord(): RatingQuestionOption {
     const value = this.form.getRawValue();
     return {
+      // Keeps any field this form does not show.
+      ...(this.record ?? { IsDeleted: false }),
       RatingQuestionOptionId: this.record?.RatingQuestionOptionId ?? 0,
       RatingQuestionTypeId: value.RatingQuestionTypeId,
       QuestionOption: value.QuestionOption.trim(),
@@ -193,7 +195,6 @@ export class RatingQuestionOptionDialog extends RecordDialog<RatingQuestionOptio
       IsNoteRequired: value.IsNoteRequired,
       DoRaiseFlag: value.DoRaiseFlag,
       IsActive: value.IsActive,
-      IsDeleted: this.record?.IsDeleted ?? false,
     };
   }
 

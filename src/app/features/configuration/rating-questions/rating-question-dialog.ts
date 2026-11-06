@@ -103,12 +103,13 @@ export class RatingQuestionDialog extends RecordDialog<RatingQuestion> {
   protected toRecord(): RatingQuestion {
     const value = this.form.getRawValue();
     return {
+      // Keeps any field this form does not show.
+      ...(this.record ?? { IsDeleted: false }),
       RatingQuestionId: this.record?.RatingQuestionId ?? 0,
       RatingQuestionTypeId: value.RatingQuestionTypeId,
       Question: value.Question.trim(),
       ListRank: value.ListRank,
       IsActive: value.IsActive,
-      IsDeleted: this.record?.IsDeleted ?? false,
     };
   }
 }

@@ -9,7 +9,8 @@ import { isSelectable, type LookupStatus, pickerOptions, statusLabel } from './l
  * v21 rules: only active records can be picked; old records still name an inactive or
  * deleted choice as "Name (Inactive)" / "Name (Deleted)".
  */
-export abstract class RecordLookup<T extends LookupStatus> {
+/** `K` is the key other records store: usually a numeric id, sometimes a code (service types). */
+export abstract class RecordLookup<T extends LookupStatus, K extends string | number = number> {
   private readonly records = signal<readonly T[]>([]);
   private readonly byId = computed(
     () => new Map(this.records().map((record) => [this.idOf(record), record])),
@@ -26,25 +27,25 @@ export abstract class RecordLookup<T extends LookupStatus> {
 
   /** All records, including deleted ones, so old references can still be named. */
   protected abstract fetch(): Observable<T[]>;
-  abstract idOf(record: T): number;
+  abstract idOf(record: T): K;
   abstract nameOf(record: T): string;
 
   load(): Observable<T[]> {
     return this.fetch().pipe(tap((records) => this.records.set(records)));
   }
 
-  find(id: number | null): T | undefined {
+  find(id: K | null): T | undefined {
     return id === null ? undefined : this.byId().get(id);
   }
 
   /** The name to show for an id, with its status; '' when unknown. */
-  label(id: number | null): string {
+  label(id: K | null): string {
     const record = this.find(id);
     return record ? statusLabel(this.nameOf(record), record) : '';
   }
 
   /** Choices for a form: the active records, plus the current one if it is no longer active. */
-  choices(current: number | null): SelectOption[] {
+  choices(current: K | null): SelectOption[] {
     return pickerOptions(
       this.records(),
       current,
