@@ -41,6 +41,15 @@ export const EDITABLE_GRID_MODULES: Module[] = [
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 
+/** Read-only lists that group, sort and search their rows themselves (Cases). */
+export const LIST_GRID_MODULES: Module[] = [
+  ClientSideRowModelModule,
+  PaginationModule,
+  RowStyleModule,
+  ColumnAutoSizeModule,
+  ...(isDevMode() ? [ValidationModule] : []),
+];
+
 /** v21 look: Alpine with a teal header, white bold centred labels, column borders. */
 export const APP_GRID_THEME = themeAlpine.withParams({
   accentColor: '#05b9bc',

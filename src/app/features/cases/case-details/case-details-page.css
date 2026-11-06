@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  padding: 20px;
+}
+.cd-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  color: #5f6b6b;
+}
+.cd-back {
+  text-decoration: none;
+}
+/* v21: one white card holding the header and the tabs. */
+.cd-card {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 40px;
+  border-radius: 10px;
+  background: #fff;
+}
+.cd-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px 8px 20px;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  box-shadow: 0 0 5px #e0e0e0;
+}
+.cd-reference {
+  margin: 0;
+  color: #212121;
+  font-size: 18px;
+  font-weight: 400;
+}
+.cd-status {
+  margin-left: 4px;
+  font-weight: 700;
+}
+.cd-status[data-status='New'] {
+  color: #b35c00;
+}
+.cd-status[data-status='Active'] {
+  color: #2e7d32;
+}
+.cd-status[data-status='Pending'] {
+  color: #8a6d00;
+}
+.cd-status:is([data-status='Closed'], [data-status='Aborted']) {
+  color: #d32f2f;
+}
+.cd-opened-by {
+  color: #b33;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+.cd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cd-action {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 6px;
+  background: rgb(5 185 188 / 10%);
+  color: #000;
+  cursor: pointer;
+}
+.cd-action:hover {
+  background: rgb(5 185 188 / 22%);
+}
+.cd-action:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}
+.cd-action mat-icon {
+  width: 26px;
+  height: 26px;
+}
+.cd-panel {
+  margin-top: -32px;
+  padding: 24px 4px;
+}
+.cd-coming {
+  margin: 0;
+  color: #5f6b6b;
+}

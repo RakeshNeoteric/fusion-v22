@@ -1,0 +1,60 @@
+@switch (status()) {
+  @case ('loading') {
+    <p class="cd-state" role="status">Loading case…</p>
+  }
+  @case ('failed') {
+    <div class="cd-state" role="alert">
+      <p>Failed to load the case details.</p>
+      <a routerLink="/cases" class="app-button cd-back">Back to Cases</a>
+    </div>
+  }
+  @case ('ready') {
+    @if (details(); as current) {
+      <div class="cd-card">
+        <header class="cd-header">
+          <h1 class="cd-reference">
+            Case Reference Number: {{ current.CaseReferenceNumber || 'N/A' }}
+            <span class="cd-status" [attr.data-status]="current.CaseStatus"
+              >({{ current.CaseStatus }})</span
+            >
+            @if (heldByOther()) {
+              <span class="cd-opened-by"> — Already opened by {{ holderName() }}</span>
+            }
+          </h1>
+          <div class="cd-actions">
+            <!-- Vehicle Tracker, Case Stages, Abort and View More come in phase 7f. -->
+            <button
+              type="button"
+              class="cd-action"
+              aria-label="Exit"
+              matTooltip="Exit"
+              (click)="exit()"
+            >
+              <mat-icon svgIcon="logout" />
+            </button>
+          </div>
+        </header>
+
+        <app-folder-tabs
+          #tabStrip
+          class="cd-tabs"
+          idPrefix="case"
+          label="Case"
+          [tabs]="tabs()"
+          [selected]="currentTab()?.id ?? ''"
+          (choose)="choose($event)"
+        />
+        @if (currentTab(); as tab) {
+          <section
+            role="tabpanel"
+            class="cd-panel"
+            [id]="tabStrip.panelId(tab.id)"
+            [attr.aria-labelledby]="tabStrip.tabId(tab.id)"
+          >
+            <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>
+          </section>
+        }
+      </div>
+    }
+  }
+}

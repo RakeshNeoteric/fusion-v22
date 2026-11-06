@@ -131,6 +131,14 @@ every link or unlink at once through `ClientLinksApi`; linked records are listed
 `CLIENT_LINK_CONTEXT` token in the injector passed to `RecordDialogs.open`. Stored files are
 previewed or downloaded with `FileViewer` (`shared/files`).
 
+The case list (`features/cases`) groups by client, service and status like v21, without AG Grid
+Enterprise: `case-grouping.ts` turns the cases into group headings and case rows, sorted within
+their groups, and `app-case-group-bar` changes the grouping (drag, remove, add back). Opening a case
+(`GET CaseDetails/{id}`) makes the user its holder (`CaseOpenedBy`); others and everyone on
+a closed or aborted case only look. The holder lets go with `CaseExit` on Exit, and also when
+leaving the page any other way. The tabs a case shows come from its service type's
+`ServiceTypeBasedTabs` rule (`case-setup.ts`); phase tabs appear only once the case has them.
+
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
 `data.breadcrumb` is shown.

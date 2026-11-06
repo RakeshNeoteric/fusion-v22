@@ -24,6 +24,7 @@ import { AppApi } from '@api/app.api';
 import { RoleApi } from '@api/security/role.api';
 import { UserApi } from '@api/security/user.api';
 import { ServiceProviderApi } from '@api/services/service-provider.api';
+import { CaseApi } from '@api/cases/case.api';
 import { ClientApi } from '@api/clients/client.api';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { of } from 'rxjs';
@@ -79,6 +80,16 @@ describe('app routes', () => {
           UserApi,
         ].map((api) => ({ provide: api, useValue: emptyConfigApi })),
         { provide: CompanyDetailsApi, useValue: { get: () => of([]) } },
+        {
+          provide: CaseApi,
+          useValue: {
+            list: () => of([]),
+            init: () => of({ ClientDto: [], ServiceTypeBasedTabs: [] }),
+            open: () =>
+              of({ CaseDetailId: 4, CaseStatus: 'Active', CaseOpenedBy: null, CaseClientId: 1 }),
+            exit: () => of(''),
+          },
+        },
         {
           provide: RoleApi,
           useValue: {
@@ -208,6 +219,8 @@ describe('app routes', () => {
   it.each([
     ['/permissions/3', 'ROLES', 'Security / Permissions', 'app-permissions-page'],
     ['/userrolemap', 'USRROLEMAP', 'Security / User Roles Mapping', 'app-user-roles-page'],
+    ['/cases', 'CASES', 'Call Centre / Cases', 'app-cases-page'],
+    ['/cases/case-details?id=4', 'CASES', 'Call Centre / Case Details', 'app-case-details-page'],
   ])('guards %s by the %s permission', async (path, code, breadcrumb, page) => {
     signIn();
     await harness.navigateByUrl(path);

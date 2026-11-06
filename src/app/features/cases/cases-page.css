@@ -1,0 +1,50 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+.cases-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--app-danger);
+}
+.cases-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--app-teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.cases-new:hover:not(:disabled) {
+  background-color: #048a91;
+}
+.cases-new:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.cases-new:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}
+.cases-new-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #fff;
+  color: var(--app-teal);
+}
+.cases-new-icon mat-icon {
+  width: 18px;
+  height: 18px;
+}

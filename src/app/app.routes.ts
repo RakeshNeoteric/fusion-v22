@@ -92,6 +92,21 @@ export const routes: Routes = [
           import('@features/company/company-details-page').then((m) => m.CompanyDetailsPage),
       },
       {
+        path: 'cases',
+        title: 'Cases',
+        data: { breadcrumb: 'Call Centre / Cases' },
+        canMatch: [canAccess('CASES')],
+        loadComponent: () => import('@features/cases/cases-page').then((m) => m.CasesPage),
+      },
+      {
+        path: 'cases/case-details',
+        title: 'Case Details',
+        data: { breadcrumb: 'Call Centre / Case Details' },
+        canMatch: [canAccess('CASES')],
+        loadComponent: () =>
+          import('@features/cases/case-details/case-details-page').then((m) => m.CaseDetailsPage),
+      },
+      {
         path: 'client/client',
         title: 'Clients',
         data: { breadcrumb: 'Client' },

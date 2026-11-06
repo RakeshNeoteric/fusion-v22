@@ -1,0 +1,46 @@
+<!-- Shown on the right of the page title bar (v21 "+ New"). -->
+<ng-template cdkPortal>
+  @if (canCreate) {
+    <button
+      type="button"
+      class="cases-new"
+      aria-label="New case"
+      [disabled]="status() !== 'ready'"
+      (click)="newCase()"
+    >
+      <span class="cases-new-icon" aria-hidden="true"><mat-icon svgIcon="add" /></span>
+      <span>New</span>
+    </button>
+  }
+</ng-template>
+
+@if (status() === 'failed') {
+  <div class="cases-error" role="alert">
+    <span>Could not load the cases.</span>
+    <button type="button" class="app-button" (click)="load()">Try again</button>
+  </div>
+}
+
+<div class="cases-list">
+  <app-case-group-bar [(groupBy)]="groupBy" />
+  <ag-grid-angular
+    class="cases-grid"
+    domLayout="autoHeight"
+    overlayNoRowsTemplate="No cases found."
+    [modules]="modules"
+    [theme]="theme"
+    [rowData]="rows()"
+    [columnDefs]="columnDefs()"
+    [defaultColDef]="defaultColDef"
+    [context]="context"
+    [getRowId]="rowId"
+    [getRowStyle]="rowStyle"
+    [animateRows]="false"
+    [loading]="status() === 'loading'"
+    [pagination]="true"
+    [paginationPageSize]="pageSize"
+    [paginationPageSizeSelector]="pageSizeOptions"
+    (sortChanged)="sorted($event)"
+    (rowClicked)="opened($event)"
+  />
+</div>
