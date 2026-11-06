@@ -1,59 +1,70 @@
-# FusionEdge
+# Fusion Edge (Angular 22)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
+Frontend for Fusion Edge Services (funeral / repatriation case management). This is the Angular 22
+rewrite of `fusion-edge-v21`, migrated feature by feature with behaviour parity.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Getting started
 
 ```bash
-ng generate component component-name
+npm ci
+npm start            # https://localhost:4200 (https is required by the Azure AD redirect URI)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The dev server uses a self-signed certificate; accept it in the browser the first time.
 
-```bash
-ng generate --help
+| Script                  | What it does                                            |
+| ----------------------- | ------------------------------------------------------- |
+| `npm start`             | Dev server with `environment.development.ts`            |
+| `npm run build`         | Production build (`environment.ts`)                     |
+| `npm run lint`          | ESLint (TypeScript + templates, type-aware)             |
+| `npm run test:ci`       | Unit tests once (Vitest)                                |
+| `npm run test:coverage` | Unit tests with coverage                                |
+| `npm run format`        | Prettier                                                |
+| `npm run verify`        | Format check + lint + tests + build. Run before pushing |
+
+## Architecture
+
+```
+src/app/
+├── core/       App-wide singletons: config, auth, http, permissions, session, layout
+├── api/        Backend contract: DTOs/enums + one typed client per backend controller
+├── shared/     Reusable, feature-agnostic UI (grid, dialogs, form controls), pipes, utils
+└── features/   One folder per business area, each lazy-loaded through its own *.routes.ts
 ```
 
-## Building
+Dependencies point inward: **features → shared / core → api**. ESLint enforces this:
+`core`, `shared` and `api` cannot import from `features`.
 
-To build the project run:
+Path aliases: `@core/*`, `@shared/*`, `@api/*`, `@features/*`.
 
-```bash
-ng build
-```
+### Configuration
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Runtime settings (API URL, Azure AD, AG Grid licence key) are typed by `AppConfig` and injected with
+`inject(APP_CONFIG)`. Only `core/config` may import from `src/environments`; ESLint blocks it
+everywhere else.
 
-## Running unit tests
+| File                                          | Used by                     |
+| --------------------------------------------- | --------------------------- |
+| `src/environments/environment.ts`             | Production build            |
+| `src/environments/environment.development.ts` | `ng serve` and unit tests   |
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Backend contract
 
-```bash
-ng test
-```
+- JSON property names are **PascalCase** (the API disables camelCase), so DTOs use PascalCase too.
+- Enums are sent as **strings**; model them as string-literal unions.
+- No component injects `HttpClient`; it goes through a typed client in `api/`.
 
-## Running end-to-end tests
+## Conventions
 
-For end-to-end (e2e) testing, run:
+- Standalone components, `ChangeDetectionStrategy.OnPush`, zoneless change detection.
+- Signals for state: `input()`, `output()`, `model()`, `signal()`, `computed()`. Use `inject()`, not
+  constructor injection.
+- Built-in control flow (`@if`, `@for`, `@switch`).
+- Strict TypeScript (`strict`, `noUncheckedIndexedAccess`) and `strictTemplates`. `any` is a lint error.
+- File naming follows the Angular style guide: `case-list.ts`, `case-list.html`, `case-list.spec.ts`.
+- Add an abstraction only when at least two real screens need it.
 
-```bash
-ng e2e
-```
+## Testing
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Unit tests use Vitest via `ng test`. Test business rules, stores, mappers, guards and interceptors.
+Each migrated feature also has a parity checklist against v21 in its phase report.
