@@ -12,6 +12,9 @@ import { UserDirectoryService } from './user-directory.service';
 export interface SessionUser {
   readonly id: number;
   readonly email: string;
+  readonly firstName: string;
+  readonly lastName: string;
+  /** "First Last", or the email when the user has no name. */
   readonly displayName: string;
   readonly roles: readonly string[];
 }
@@ -88,6 +91,13 @@ export class SessionService {
     }
   }
 
+  /** The user changed their own name (My Profile): the header shows it straight away. */
+  renamed(firstName: string, lastName: string): void {
+    const state = this.currentState();
+    if (state.status !== 'ready') return;
+    this.currentState.set({ status: 'ready', user: named(state.user, firstName, lastName) });
+  }
+
   async signOut(): Promise<void> {
     this.permissions.clear();
     this.directory.clear();
@@ -137,12 +147,27 @@ function validationFailure(error: unknown): SessionState {
 }
 
 function toSessionUser(profile: UserRolePermissions, fallbackEmail: string): SessionUser {
-  const email = profile.UserEmail || fallbackEmail;
-  const name = `${(profile.Firstname ?? '').trim()} ${(profile.Lastname ?? '').trim()}`.trim();
-  return {
+  const user = {
     id: profile.AspNetUserId,
-    email,
-    displayName: name || email,
+    email: profile.UserEmail || fallbackEmail,
     roles: profile.Roles.filter((role) => !role.IsDeleted).map((role) => role.RoleName),
+  };
+  return named(user, profile.Firstname ?? '', profile.Lastname ?? '');
+}
+
+function named(
+  user: Omit<SessionUser, 'firstName' | 'lastName' | 'displayName'>,
+  firstName: string,
+  lastName: string,
+): SessionUser {
+  const first = firstName.trim();
+  const last = lastName.trim();
+  return {
+    id: user.id,
+    email: user.email,
+    roles: user.roles,
+    firstName: first,
+    lastName: last,
+    displayName: `${first} ${last}`.trim() || user.email,
   };
 }

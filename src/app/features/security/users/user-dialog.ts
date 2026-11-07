@@ -1,20 +1,35 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { type AppUser, UserApi } from '@api/security/user.api';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { DialogFiles } from '@shared/forms/record-dialog/dialog-files';
-import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
+import {
+  RecordDialog,
+  type RecordDialogData,
+  RecordDialogFrame,
+} from '@shared/forms/record-dialog/record-dialog';
 import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
+import { formatDateTime } from '@shared/reference/date-time';
 import { ImagePicker } from '@shared/ui/image-picker/image-picker';
 import { StoredImage } from '@shared/ui/image-picker/stored-image';
 
 const DEFAULT_PHOTO = '/images/profile.png';
+
+export interface UserDialogData extends RecordDialogData<AppUser> {
+  /**
+   * The signed-in user's own profile (v21 header popup): email, employee id and Is Active
+   * cannot be changed, and the last sign-in is shown.
+   */
+  readonly profile?: boolean;
+}
 
 /**
  * v21 user popup: profile photo, name, email, employee id, phone numbers and Is Active.
  * A new photo is uploaded when chosen, but the user record only changes on Update; the
  * photo it replaces (or one uploaded and then not used) is deleted afterwards, so
  * cancelling never leaves the record pointing at a deleted file (v21 deleted at once).
+ * Also the user's own profile ({@link UserDialogData.profile}).
  */
 @Component({
   selector: 'app-user-dialog',
@@ -44,6 +59,17 @@ const DEFAULT_PHOTO = '/images/profile.png';
           </div>
 
           <div class="user-fields">
+            @if (profile && (lastLogin || readOnly)) {
+              <p class="user-profile-note">
+                @if (lastLogin) {
+                  <span>Last sign-in: {{ lastLogin }}</span>
+                }
+                @if (readOnly) {
+                  <span>Ask an administrator to change your details.</span>
+                }
+              </p>
+            }
+
             <div class="form-row">
               <div class="form-field">
                 <label for="usr-first">First Name <span class="required">*</span></label>
@@ -165,21 +191,33 @@ const DEFAULT_PHOTO = '/images/profile.png';
     .user-fields .form-field {
       flex-basis: 200px;
     }
+    .user-profile-note {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0 0 16px;
+      color: #555;
+    }
   `,
 })
 export class UserDialog extends RecordDialog<AppUser> {
   protected readonly source = inject(UserApi);
-  protected readonly entityName = 'User';
+  protected readonly profile = inject<UserDialogData>(MAT_DIALOG_DATA).profile === true;
+  protected readonly entityName = this.profile ? 'Profile' : 'User';
 
   private readonly record = this.data.record;
+  /** The backend does not record sign-ins yet: it sends year 1 then, and nothing is shown. */
+  protected readonly lastLogin = recorded(this.record?.LastLoginDateTime);
   private readonly storedPhoto = this.record?.ProfileImage || '';
   private readonly photoFiles = new DialogFiles('UserProfile', this.storedPhoto);
 
-  protected readonly title = this.isNew
-    ? 'Create New User'
-    : this.readOnly
-      ? 'View User'
-      : 'Edit User';
+  protected readonly title = this.profile
+    ? 'My Profile'
+    : this.isNew
+      ? 'Create New User'
+      : this.readOnly
+        ? 'View User'
+        : 'Edit User';
 
   protected readonly uploading = signal(false);
   protected readonly photo = new StoredImage(DEFAULT_PHOTO);
@@ -210,6 +248,16 @@ export class UserDialog extends RecordDialog<AppUser> {
   constructor() {
     super();
     void this.photo.load(this.storedPhoto);
+    if (this.profile) {
+      // v21: only an administrator changes these (Users screen).
+      for (const control of [
+        this.form.controls.UserEmail,
+        this.form.controls.EmployeeId,
+        this.form.controls.IsActive,
+      ]) {
+        control.disable();
+      }
+    }
   }
 
   protected async uploadPhoto(file: File): Promise<void> {
@@ -262,4 +310,8 @@ export class UserDialog extends RecordDialog<AppUser> {
     control.setValue(path);
     control.markAsDirty();
   }
+}
+
+function recorded(moment: string | undefined): string {
+  return moment && Number(moment.slice(0, 4)) >= 2000 ? formatDateTime(moment) : '';
 }

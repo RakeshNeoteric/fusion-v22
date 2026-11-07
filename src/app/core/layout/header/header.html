@@ -30,6 +30,12 @@
             <span class="user-roles">{{ user.roles.join(', ') }}</span>
           }
         </div>
+        @if (profile) {
+          <button mat-menu-item type="button" (click)="openProfile()">
+            <mat-icon svgIcon="person" />
+            <span>My Profile</span>
+          </button>
+        }
         <button mat-menu-item type="button" (click)="signOut()">
           <mat-icon svgIcon="logout" />
           <span>Sign out</span>

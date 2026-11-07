@@ -115,7 +115,14 @@ describe('app routes', () => {
   function signIn(): void {
     state.set({
       status: 'ready',
-      user: { id: 7, email: 'jane@example.com', displayName: 'Jane Doe', roles: ['Viewer'] },
+      user: {
+        id: 7,
+        email: 'jane@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        displayName: 'Jane Doe',
+        roles: ['Viewer'],
+      },
     });
   }
 

@@ -41,6 +41,7 @@
     [paginationPageSize]="pageSize"
     [paginationPageSizeSelector]="pageSizeOptions"
     (sortChanged)="sorted($event)"
+    (filterChanged)="filtered($event)"
     (rowClicked)="opened($event)"
   />
 </div>

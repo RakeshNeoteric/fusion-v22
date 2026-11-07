@@ -174,8 +174,18 @@ export class RecordDialogs {
       record === null
         ? !this.permissions.canCreate(permission)
         : !this.permissions.canEdit(permission);
+    return this.show<T>(component, { record, readOnly }, injector, width);
+  }
+
+  /** Opens a record form with the data given, when read-only follows another rule (My Profile). */
+  async show<T>(
+    component: ComponentType<object>,
+    data: RecordDialogData<T>,
+    injector?: Injector,
+    width = '800px',
+  ): Promise<T | null> {
     const ref = this.dialog.open<object, RecordDialogData<T>, T>(component, {
-      data: { record, readOnly },
+      data,
       injector,
       width,
       maxWidth: '90vw',

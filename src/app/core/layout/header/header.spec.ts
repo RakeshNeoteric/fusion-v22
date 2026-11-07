@@ -4,6 +4,7 @@ import { provideAppIcons } from '@core/icons/app-icons';
 import { type SessionUser, SessionService } from '@core/session/session.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { Header, initialsOf } from './header';
+import { PROFILE_EDITOR } from './profile-editor';
 
 describe('initialsOf', () => {
   it.each([
@@ -21,19 +22,25 @@ describe('Header', () => {
   const user: SessionUser = {
     id: 7,
     email: 'jane.doe@example.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
     displayName: 'Jane Doe',
     roles: ['Case Controller', 'Admin'],
   };
   const signOut = vi.fn<() => Promise<void>>();
   const ask = vi.fn<() => Promise<boolean>>();
 
-  async function render() {
+  const openProfile = vi.fn<() => Promise<void>>();
+
+  async function render(withProfile = true) {
     signOut.mockReset().mockResolvedValue();
+    openProfile.mockReset().mockResolvedValue();
     TestBed.configureTestingModule({
       providers: [
         provideAppIcons(),
         { provide: SessionService, useValue: { user: signal(user), signOut } },
         { provide: ConfirmService, useValue: { ask } },
+        ...(withProfile ? [{ provide: PROFILE_EDITOR, useValue: { open: openProfile } }] : []),
       ],
     });
     const fixture = TestBed.createComponent(Header);
@@ -68,6 +75,28 @@ describe('Header', () => {
     await fixture.whenStable();
     expect(ask).toHaveBeenCalled();
     expect(signOut).not.toHaveBeenCalled();
+  });
+
+  function menuItem(text: string): HTMLButtonElement | undefined {
+    return [...document.querySelectorAll<HTMLButtonElement>('[mat-menu-item]')].find((item) =>
+      item.textContent?.includes(text),
+    );
+  }
+
+  it('opens My Profile from the user menu (v21 user popup)', async () => {
+    const { fixture, host } = await render();
+    host.querySelector<HTMLButtonElement>('.user-chip')?.click();
+    await fixture.whenStable();
+    menuItem('My Profile')?.click();
+    expect(openProfile).toHaveBeenCalledOnce();
+  });
+
+  it('offers no My Profile when the app provides none', async () => {
+    const { fixture, host } = await render(false);
+    host.querySelector<HTMLButtonElement>('.user-chip')?.click();
+    await fixture.whenStable();
+    expect(menuItem('Sign out')).toBeDefined();
+    expect(menuItem('My Profile')).toBeUndefined();
   });
 
   it('asks the shell to toggle the sidebar', async () => {

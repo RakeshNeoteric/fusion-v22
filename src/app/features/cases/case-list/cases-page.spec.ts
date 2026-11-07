@@ -1,6 +1,8 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, provideRouter } from '@angular/router';
+import { AgGridAngular } from 'ag-grid-angular';
 import { of } from 'rxjs';
 import { CaseApi } from '@api/cases/case.api';
 import { PageActions } from '@core/layout/page-actions';
@@ -109,6 +111,39 @@ describe('CasesPage', () => {
       ),
     ).toEqual(['Service Name', 'Case Status Group', 'Client Name']);
     expect(groups()[0]).toBe('Groceries (1)');
+  });
+
+  it('filters the cases by a column, as v21 does, and the groups follow', async () => {
+    const grid = fixture.debugElement.query(By.directive(AgGridAngular))
+      .componentInstance as AgGridAngular;
+    expect(
+      host().querySelector('.ag-header-cell[col-id="deceased"] .ag-header-cell-filter-button'),
+    ).not.toBeNull();
+
+    grid.api.setFilterModel({ deceased: { filterType: 'text', type: 'contains', filter: 'JOHN' } });
+    await settle();
+    expect(groups()).toEqual(['Zulu Insure (1)', 'Groceries (1)']);
+
+    grid.api.setFilterModel({
+      deceased: { filterType: 'text', type: 'notContains', filter: 'john' },
+    });
+    await settle();
+    expect(groups()).toEqual(['Acme (1)', 'Funeral (1)']);
+
+    grid.api.setFilterModel(null);
+    await settle();
+    expect(groups()).toHaveLength(4);
+  });
+
+  it('filters dates as they are shown', async () => {
+    const grid = fixture.debugElement.query(By.directive(AgGridAngular))
+      .componentInstance as AgGridAngular;
+    grid.api.setFilterModel({
+      openDate: { filterType: 'text', type: 'contains', filter: '/1999' },
+    });
+    await settle();
+    expect(groups()).toEqual([]);
+    expect(host().textContent).toContain('No cases found.');
   });
 
   it('opens a new case once it is created', async () => {

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { type HttpContext, HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import type { CrudSource } from '@api/config/config-crud.api';
@@ -49,6 +49,13 @@ export class UserApi implements CrudSource<AppUser> {
     return this.http
       .get<AppUser[]>('Users')
       .pipe(map((users) => (users ?? []).filter((user) => user.IsDeleted !== true)));
+  }
+
+  /** The user with this email (the backend matches user name or email), or null. */
+  byEmail(email: string, context?: HttpContext): Observable<AppUser | null> {
+    return this.http
+      .get<AppUser[]>('Users', { params: { UserName: email }, ...(context ? { context } : {}) })
+      .pipe(map((users) => (users ?? []).find((user) => user.IsDeleted !== true) ?? null));
   }
 
   create(user: AppUser): Observable<AppUser> {

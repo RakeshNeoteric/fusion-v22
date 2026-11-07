@@ -100,6 +100,8 @@ describe('SessionService', () => {
       user: {
         id: 7,
         email: 'jane.doe@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
         displayName: 'Jane Doe',
         roles: ['Case Controller'],
       },
@@ -175,6 +177,18 @@ describe('SessionService', () => {
     await started;
     expect(session.state().status).toBe('error');
     expect(session.isReady()).toBe(false);
+  });
+
+  it('shows a changed name once the user saves their profile', async () => {
+    await startValidated();
+    session.renamed(' Janet ', 'Doe');
+    expect(session.user()).toMatchObject({
+      firstName: 'Janet',
+      displayName: 'Janet Doe',
+      roles: ['Case Controller'],
+    });
+    session.renamed('', '');
+    expect(session.user()?.displayName).toBe('jane.doe@example.com');
   });
 
   it('signOut clears the session and signs out of Microsoft', async () => {

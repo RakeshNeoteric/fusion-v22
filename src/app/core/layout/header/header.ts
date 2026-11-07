@@ -5,6 +5,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SessionService } from '@core/session/session.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { PROFILE_EDITOR } from './profile-editor';
 
 @Component({
   selector: 'app-header',
@@ -18,9 +19,14 @@ export class Header {
 
   private readonly session = inject(SessionService);
   private readonly confirm = inject(ConfirmService);
+  protected readonly profile = inject(PROFILE_EDITOR, { optional: true });
 
   protected readonly user = this.session.user;
   protected readonly initials = computed(() => initialsOf(this.user()?.displayName ?? ''));
+
+  protected openProfile(): void {
+    void this.profile?.open();
+  }
 
   protected async signOut(): Promise<void> {
     const confirmed = await this.confirm.ask({

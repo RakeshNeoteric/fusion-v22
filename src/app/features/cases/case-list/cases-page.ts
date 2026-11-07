@@ -13,14 +13,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import type {
-  ColDef,
-  GetRowIdParams,
-  RowClassParams,
-  RowStyle,
-  RowClickedEvent,
-  SortChangedEvent,
-  ValueGetterParams,
+import {
+  type ColDef,
+  type FilterChangedEvent,
+  type GetRowIdParams,
+  TextFilterModule,
+  type RowClassParams,
+  type RowStyle,
+  type RowClickedEvent,
+  type SortChangedEvent,
+  type ValueGetterParams,
 } from 'ag-grid-community';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { CaseApi, type CaseDetails } from '@api/cases/case.api';
@@ -35,6 +37,7 @@ import {
 } from '@shared/grid/grid-setup';
 import { type CaseGridContext, CaseGroupCell, CaseLinkCell, CaseStatusCell } from './case-cells';
 import { CaseGroupBar } from './case-group-bar';
+import { CASE_FILTER_OPTIONS, type CaseFilters, filterCases } from './case-filters';
 import {
   type CaseGroupKey,
   type CaseListRow,
@@ -67,9 +70,17 @@ const CASE_COLUMNS: readonly {
   { key: 'funeralDate', header: 'Funeral Date', date: true, minWidth: 150 },
 ];
 
+const DATE_COLUMNS = new Set(CASE_COLUMNS.filter((column) => column.date).map((c) => c.key));
+
+/** A case's value in a column, as shown (and filtered). */
+function cellText(row: CaseRow, key: CaseSortKey): string {
+  return DATE_COLUMNS.has(key) ? displayDate(row[key]) : String(row[key]);
+}
+
 /**
  * v21 Call Centre / Cases: every case, grouped by client, service and status (v21 used AG Grid
  * Enterprise row grouping; here the page groups the rows itself). Clicking a case opens it.
+ * Each column has v21's text filter: the grid shows it, the page applies it before grouping.
  */
 @Component({
   selector: 'app-cases-page',
@@ -84,7 +95,7 @@ export class CasesPage {
   private readonly router = inject(Router);
   private readonly pageActions = inject(PageActions);
 
-  protected readonly modules = LIST_GRID_MODULES;
+  protected readonly modules = [...LIST_GRID_MODULES, TextFilterModule];
   protected readonly theme = APP_GRID_THEME;
   protected readonly pageSize = PAGE_SIZE;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
@@ -98,9 +109,15 @@ export class CasesPage {
   /** Groups opened or closed by the user (see `groupCases`). */
   private readonly toggled = signal<ReadonlySet<string>>(new Set());
   private readonly sort = signal<CaseSort | null>(null);
+  private readonly filters = signal<CaseFilters>({});
 
   protected readonly rows = computed(() =>
-    groupCases(this.cases(), this.groupBy(), this.toggled(), this.sort()),
+    groupCases(
+      filterCases(this.cases(), this.filters(), cellText),
+      this.groupBy(),
+      this.toggled(),
+      this.sort(),
+    ),
   );
 
   protected readonly context: CaseGridContext = {
@@ -132,8 +149,13 @@ export class CasesPage {
       minWidth: column.minWidth,
       valueGetter: (params: ValueGetterParams<CaseListRow>) => {
         const row = params.data;
-        if (row?.kind !== 'case') return '';
-        return column.date ? displayDate(row[column.key]) : row[column.key];
+        return row?.kind === 'case' ? cellText(row, column.key) : '';
+      },
+      filter: 'agTextColumnFilter',
+      filterParams: {
+        filterOptions: [...CASE_FILTER_OPTIONS],
+        // The page filters the cases (see `filtered`); the grid must not hide the group rows.
+        textMatcher: () => true,
       },
       ...(column.key === 'status' ? { cellRenderer: CaseStatusCell } : {}),
       ...(column.key === 'reference' ? { cellRenderer: CaseLinkCell } : {}),
@@ -189,6 +211,10 @@ export class CasesPage {
     const column = event.api.getColumnState().find((state) => state.sort);
     const key = CASE_COLUMNS.find((candidate) => candidate.key === column?.colId)?.key;
     this.sort.set(key && column?.sort ? { key, direction: column.sort } : null);
+  }
+
+  protected filtered(event: FilterChangedEvent<CaseListRow>): void {
+    this.filters.set(event.api.getFilterModel() as CaseFilters);
   }
 
   /** v21: clicking anywhere on a case opens it. */
