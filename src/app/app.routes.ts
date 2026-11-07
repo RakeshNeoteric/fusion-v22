@@ -240,6 +240,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reports/clientreports',
+        title: 'Client Reports',
+        data: { breadcrumb: 'Reports / Client Reports' },
+        canMatch: [canAccess('CLIENT_REPORTS')],
+        loadComponent: () =>
+          import('@features/reports/client-reports/client-reports-page').then(
+            (m) => m.ClientReportsPage,
+          ),
+      },
+      {
         path: 'forbidden',
         title: 'Access denied',
         data: { breadcrumb: 'Access denied' },

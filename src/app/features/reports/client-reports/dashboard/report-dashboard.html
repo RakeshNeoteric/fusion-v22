@@ -1,0 +1,54 @@
+<header class="db-top">
+  <div class="db-heading">
+    <h2>FMS – {{ clientName() }} Dashboard</h2>
+    <span class="db-muted">Evaluating Cases by Service</span>
+    <span class="db-muted">{{ period() }}</span>
+  </div>
+  @if (view().tiles.length) {
+    <ul class="db-tiles" aria-label="Cases by service this period">
+      @for (tile of view().tiles; track $index) {
+        <li class="db-tile">
+          <span class="db-tile-icon"><img [src]="'icons/services/' + tile.icon" alt="" /></span>
+          <div>
+            <p class="db-tile-label">{{ tile.title }}</p>
+            <p class="db-tile-value">{{ tile.value }}</p>
+            <span class="db-change" [class]="'tone-' + tile.tone">{{ tile.change }}</span>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="db-muted">No cases in the period.</p>
+  }
+</header>
+
+<div class="db-cards">
+  @for (card of cards(); track card.id) {
+    <section class="db-card" [attr.aria-labelledby]="'db-' + card.id">
+      <header class="db-card-header">
+        <h3 [id]="'db-' + card.id">{{ card.title }}</h3>
+        <span class="db-muted">
+          {{ card.covers === 'period' ? period() : 'January – December ' + year() }}
+        </span>
+      </header>
+      <app-chart [options]="card.options" [label]="card.title" />
+      @if (card.table) {
+        <app-dashboard-table [table]="card.table" [caption]="card.title" [format]="card.format" />
+      }
+    </section>
+  } @empty {
+    <p class="db-muted">There is nothing to chart for this client this year.</p>
+  }
+</div>
+
+<ul class="db-summary" aria-label="Totals this period">
+  @for (tile of view().summary; track tile.label) {
+    <li class="db-summary-tile">
+      <p>{{ tile.label }}</p>
+      <p class="db-summary-value">{{ tile.value }}</p>
+      @if (tile.change) {
+        <span class="db-change" [class]="'tone-' + tile.tone">{{ tile.change }}</span>
+      }
+    </li>
+  }
+</ul>

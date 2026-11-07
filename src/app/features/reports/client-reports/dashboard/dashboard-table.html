@@ -1,0 +1,75 @@
+<table>
+  <caption class="dt-caption">
+    {{
+      caption()
+    }}, by month
+  </caption>
+  @if (monthTable(); as table) {
+    <thead>
+      <tr>
+        <th scope="col" class="dt-name">{{ table.rowLabel }}</th>
+        @for (month of months; track month) {
+          <th scope="col">{{ month }}</th>
+        }
+        @if (yearTotals()) {
+          <th scope="col">Total (Yearly)</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of table.rows; track row.name) {
+        <tr>
+          <th scope="row" class="dt-name">
+            <span class="dt-swatch" [style.background]="row.color"></span>{{ row.name }}
+          </th>
+          @for (cell of row.values; track $index) {
+            <td>{{ value(cell) }}</td>
+          }
+          @if (yearTotals()) {
+            <td>{{ value(row.total) }}</td>
+          }
+        </tr>
+      }
+      @if (table.totals; as totals) {
+        <tr class="dt-total">
+          <th scope="row" class="dt-name">Total (Monthly)</th>
+          @for (cell of totals.values; track $index) {
+            <td>{{ value(cell) }}</td>
+          }
+          @if (yearTotals()) {
+            <td>{{ value(totals.total) }}</td>
+          }
+        </tr>
+      }
+    </tbody>
+  }
+  @if (budgetTable(); as table) {
+    @for (group of table.groups; track group.name) {
+      <tbody>
+        <tr class="dt-group">
+          <th scope="colgroup" [attr.colspan]="months.length + 1" class="dt-name">
+            <span class="dt-swatch" [style.background]="group.color"></span>{{ group.name }}
+          </th>
+        </tr>
+        <tr class="dt-months">
+          <td></td>
+          @for (month of months; track month) {
+            <th scope="col">{{ month }}</th>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="dt-name">Budget</th>
+          @for (cell of group.budget; track $index) {
+            <td>{{ value(cell) }}</td>
+          }
+        </tr>
+        <tr>
+          <th scope="row" class="dt-name">Actual</th>
+          @for (cell of group.actual; track $index) {
+            <td>{{ value(cell) }}</td>
+          }
+        </tr>
+      </tbody>
+    }
+  }
+</table>

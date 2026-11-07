@@ -50,6 +50,9 @@ export const LIST_GRID_MODULES: Module[] = [
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 
+/** Report tables: read-only, each column sorted and searched by the grid (v21 report tabs). */
+export const REPORT_GRID_MODULES: Module[] = [...LIST_GRID_MODULES, TextFilterModule];
+
 /** v21 look: Alpine with a teal header, white bold centred labels, column borders. */
 export const APP_GRID_THEME = themeAlpine.withParams({
   accentColor: '#05b9bc',

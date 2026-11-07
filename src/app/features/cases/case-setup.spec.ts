@@ -3,6 +3,7 @@ import {
   caseDetails as details,
   caseDeceased,
 } from '../../../testing/case.fixtures';
+import type { CaseInit } from '@api/cases/case.api';
 import { CaseDirectory, allowedTabs, callerName, caseTabs, deceasedName } from './case-setup';
 
 describe('case tabs', () => {
@@ -87,5 +88,31 @@ describe('case names', () => {
         }),
       ),
     ).toBe('J');
+  });
+});
+
+describe('CaseDirectory.reportService', () => {
+  it('reportService: the name, type and whether the client issues vouchers for it', () => {
+    const withProvider: CaseInit = {
+      ...INIT,
+      ClientDto: (INIT.ClientDto ?? []).map((client) =>
+        client.ClientId === 1
+          ? {
+              ...client,
+              ClientServices: (client.ClientServices ?? []).map((link) =>
+                link.ServiceId === 6 ? { ...link, VoucherProvider: 'Grocery_Shoprite' } : link,
+              ),
+            }
+          : client,
+      ),
+    };
+    expect(new CaseDirectory(INIT).reportService(1, 6)).toEqual({
+      name: 'Groceries',
+      typeCode: 'AVS',
+      issuesVouchers: false,
+    });
+    expect(new CaseDirectory(withProvider).reportService(1, 6)?.issuesVouchers).toBe(true);
+    expect(new CaseDirectory(INIT).reportService(1, 5)?.typeCode).toBe('FUN');
+    expect(new CaseDirectory(INIT).reportService(1, 404)).toBeNull();
   });
 });

@@ -242,6 +242,36 @@ Claims is not migrated: v21's Claims screen (`/claims/claims`) was an empty plac
 backend has no claims endpoints, and no menu entry links to it. The backend's claimant import
 (`ClaimantManagement`) never had a screen. Claim Centre (Configuration) is a separate screen.
 
+Reports / Client Reports (`features/reports/client-reports`) shows one client's cases created in
+a period (default last month), for some or all of its active services (`GET
+Client/ClientCaseDetails`). View shows a Dashboard tab, a tab of all the client's cases, and a tab
+per chosen service (all of them when none is chosen) with that service type's columns
+(`report-columns.ts`): Funeral adds the deceased's details, AVS and FINF the policy holder's, and a
+voucher service a row per voucher with its code, amount, month issued and status. Tables are
+`ReportTable` (`features/reports/report-table.ts`): sorting and text filters, ten rows a page.
+v21 also let a column be dragged to group rows, which needs AG Grid Enterprise. The backend only
+looks at cases created this calendar year, so a period in an earlier year comes back empty.
+
+The Client Reports dashboard (`client-reports/dashboard`) is built in two steps: plain
+functions turn the backend's `DashBoard` into cards (a chart spec and its table), then
+`chart-options.ts` turns a chart spec into ECharts options. Nedgroup and Capitec have
+dashboards of their own, picked by what the client's name contains; every other client gets
+FNB's. Service tiles, status and province totals cover the period asked for; the monthly charts
+cover every month of the current year, as the backend counts them. Year-to-date lines are running
+totals of the months. Colours follow what a line or slice is about (a service, province or voucher
+type), from a palette checked for colour-blind separation. Charts are drawn by `shared/chart`
+(`Chart`), which loads ECharts on first use; tests provide a fake `CHART_ENGINE`.
+
+Excel files are built in the browser with ExcelJS (`shared/excel`): `NEW_WORKBOOK` loads it on
+first use (a lazy chunk), `excel-sheet.ts` has the v21 look (teal title bar, orange headers,
+zebra rows, filter and frozen headers) and makes sheet names Excel accepts (31 characters, unique),
+and `saveFile` downloads the result. Client Reports' Export Excel (on the Dashboard tab) exports
+the report as last viewed (`client-reports/export`): a summary (Nedgroup: its services in the
+period's first month; others: the year's cases by month and service), the dashboard's cards with
+the charts as drawn on screen and their tables (Nedgroup: a services sheet and a vouchers sheet),
+a sheet per report tab, and the redeemed vouchers. v21's empty "Call Centre Stats" sheet is left
+out.
+
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
 `data.breadcrumb` is shown.

@@ -100,6 +100,13 @@ export interface CaseOption {
   readonly name: string;
 }
 
+export interface ReportService {
+  readonly name: string;
+  /** Upper case, e.g. `FUN`; '' when not set. */
+  readonly typeCode: string;
+  readonly issuesVouchers: boolean;
+}
+
 /** Names of clients and services from `CaseInit`, as the case screens show them. */
 export class CaseDirectory {
   constructor(private readonly init: CaseInit) {}
@@ -158,6 +165,27 @@ export class CaseDirectory {
   /** The client's name as printed on documents (no status). */
   printedClientName(clientId: number | null): string {
     return this.client(clientId)?.ClientName.trim() ?? '';
+  }
+
+  /** The service's name as printed in reports (no status). */
+  printedServiceName(clientId: number | null, serviceId: number): string {
+    const link = this.links(clientId).find((candidate) => candidate.ServiceId === serviceId);
+    return (link?.ServiceDto ?? this.anyService(serviceId))?.ServiceName.trim() ?? '';
+  }
+
+  /**
+   * What the reports need to know about one of the client's services: its name, type, and
+   * whether it issues vouchers (a voucher service with a voucher provider set up, v21).
+   */
+  reportService(clientId: number | null, serviceId: number): ReportService | null {
+    const link = this.links(clientId).find((candidate) => candidate.ServiceId === serviceId);
+    const service = link?.ServiceDto ?? this.anyService(serviceId);
+    if (!service) return null;
+    return {
+      name: service.ServiceName.trim(),
+      typeCode: (service.ServiceTypeCode ?? '').trim().toUpperCase(),
+      issuesVouchers: service.IsVoucherService && !!link?.VoucherProvider?.trim(),
+    };
   }
 
   /** The company's addresses, for its letterhead. */

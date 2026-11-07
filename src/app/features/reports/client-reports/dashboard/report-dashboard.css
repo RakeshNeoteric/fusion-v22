@@ -1,0 +1,132 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+p {
+  margin: 0;
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.db-top {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 25px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #f8fafc;
+}
+.db-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.db-heading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 600;
+}
+.db-muted {
+  color: #64748b;
+  font-size: 13px;
+}
+.db-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.db-tile {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  border-left: 4px solid #2a78d6;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.db-tile-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+.db-tile-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.db-tile-label {
+  color: #64748b;
+  font-size: 13px;
+}
+.db-tile-value {
+  margin: 4px 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.db-change {
+  font-size: 14px;
+  font-weight: 500;
+}
+.tone-good {
+  color: #006300;
+}
+.tone-bad {
+  color: #b3261e;
+}
+.db-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  gap: 16px;
+}
+.db-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+}
+.db-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.db-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.db-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.db-summary-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.db-summary-value {
+  font-size: 24px;
+  font-weight: 600;
+}

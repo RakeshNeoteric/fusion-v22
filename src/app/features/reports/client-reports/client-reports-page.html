@@ -1,0 +1,95 @@
+@if (status() === 'failed') {
+  <div class="cr-error" role="alert">
+    <span>Could not load the clients.</span>
+    <button type="button" class="app-button" (click)="load()">Try again</button>
+  </div>
+}
+
+<form class="app-form cr-filters" [formGroup]="form" (ngSubmit)="view()" novalidate>
+  <div class="form-field">
+    <label for="cr-client">Client <span class="required">*</span></label>
+    <select id="cr-client" formControlName="client">
+      <option [ngValue]="null">Select Client</option>
+      @for (client of clients(); track client.id) {
+        <option [ngValue]="client.id">{{ client.name }}</option>
+      }
+    </select>
+    @if (showError(controls.client)) {
+      <span class="field-error">Choose a client.</span>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="cr-from">From <span class="required">*</span></label>
+    <input id="cr-from" type="date" formControlName="from" />
+    @if (showError(controls.from)) {
+      <span class="field-error">Enter the first day.</span>
+    }
+  </div>
+  <div class="form-field">
+    <label for="cr-to">To <span class="required">*</span></label>
+    <input id="cr-to" type="date" formControlName="to" />
+    @if (showError(controls.to)) {
+      <span class="field-error">Enter the last day.</span>
+    } @else if (form.hasError('period') && (controls.from.touched || controls.to.touched)) {
+      <span class="field-error">The last day cannot be before the first.</span>
+    }
+  </div>
+
+  <div class="cr-actions">
+    <button type="submit" class="app-button" [disabled]="status() !== 'ready' || viewing()">
+      {{ viewing() ? 'Loading…' : 'View' }}
+    </button>
+    @if (report() && tab()?.kind === 'dashboard') {
+      <button type="button" class="app-button" [disabled]="exporting()" (click)="exportExcel()">
+        {{ exporting() ? 'Exporting…' : 'Export Excel' }}
+      </button>
+    }
+  </div>
+
+  @if (services().length) {
+    <fieldset class="cr-services">
+      <legend class="form-label">Services <span class="cr-hint">(none chosen: all)</span></legend>
+      @for (service of services(); track service.ServiceId) {
+        <label class="cr-service">
+          <input
+            type="checkbox"
+            [checked]="chosen(service.ServiceId)"
+            (change)="toggleService(service.ServiceId, $event)"
+          />
+          {{ service.ServiceName }}
+        </label>
+      }
+    </fieldset>
+  }
+</form>
+
+@if (report(); as shown) {
+  <app-folder-tabs
+    #tabStrip
+    idPrefix="cr"
+    label="Client report"
+    [tabs]="shown.tabs"
+    [selected]="tab()?.id ?? ''"
+    (choose)="selectedTab.set($event)"
+  />
+  @if (tab(); as current) {
+    <section
+      role="tabpanel"
+      class="cr-panel"
+      [id]="tabStrip.panelId(current.id)"
+      [attr.aria-labelledby]="tabStrip.tabId(current.id)"
+    >
+      @if (table(); as grid) {
+        <app-report-table [columns]="grid.columns" [rows]="grid.rows" />
+      } @else {
+        <app-report-dashboard
+          [view]="shown.dashboard"
+          [clientName]="shown.clientName"
+          [period]="shown.period"
+          [year]="shown.year"
+        />
+      }
+    </section>
+  }
+}

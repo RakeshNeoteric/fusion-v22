@@ -449,6 +449,8 @@ export interface CaseInitClientService {
   readonly IsDeleted: boolean | null;
   /** HTML: what the agent should know about this service for this client. */
   readonly Note?: string | null;
+  /** The provider this client's vouchers for the service come from; empty when none is set up. */
+  readonly VoucherProvider?: string | null;
   readonly ServiceDto: CaseInitService | null;
 }
 
