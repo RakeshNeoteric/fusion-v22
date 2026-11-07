@@ -26,12 +26,9 @@ const avs = (costs: CaseAdditionalCostRecord[] = []) =>
   });
 
 describe('Additional Cost', () => {
-  const { api, notify, show, settle, element, type, press, text } = caseTabHarness();
+  const { api, notify, show, settle, fromMenu, element, type, press, text } = caseTabHarness();
 
-  const open = async () => {
-    element<HTMLButtonElement>('button[aria-label="Additional Cost"]').click();
-    await settle();
-  };
+  const open = () => fromMenu('Additional Cost');
 
   it('adds a cost and saves the case totals', async () => {
     await show(avs([cost()]));

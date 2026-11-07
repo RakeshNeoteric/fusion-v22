@@ -1,0 +1,75 @@
+<form [formGroup]="answers" (ngSubmit)="update()" novalidate>
+  <app-record-dialog-frame
+    title="Case Rating"
+    [isNew]="false"
+    [readOnly]="readOnly()"
+    [savable]="state() === 'ready'"
+    [saving]="saving()"
+  >
+    <app-case-identity idPrefix="cr" />
+    <div class="form-row">
+      <div class="form-field">
+        <label for="cr-contact-name">Contact Name</label>
+        <input id="cr-contact-name" type="text" [value]="contactName()" disabled />
+      </div>
+      <div class="form-field">
+        <label for="cr-contact-phone">Contact Phone</label>
+        <input id="cr-contact-phone" type="text" [value]="contactPhone()" disabled />
+      </div>
+    </div>
+
+    @switch (state()) {
+      @case ('loading') {
+        <p role="status">Loading rating questions…</p>
+      }
+      @case ('failed') {
+        <div class="cr-failed" role="alert">
+          <p>Failed to load the rating questions.</p>
+          <button type="button" class="app-button" (click)="load()">Try again</button>
+        </div>
+      }
+      @default {
+        @if (rows().length > 0) {
+          <app-link-table
+            caption="Rating Questions"
+            [rows]="rows()"
+            [columns]="columns"
+            [rowKey]="rowKey"
+            [nameOf]="rowName"
+          >
+            <ng-template appLinkCell="Answer" let-row>
+              <select
+                class="cr-answer"
+                [id]="'cr-answer-' + row.linkId"
+                [attr.aria-label]="'Answer to ' + row.question"
+                [formControl]="control(row)"
+              >
+                <option value="">-- Select --</option>
+                @for (option of row.options; track option) {
+                  <option [value]="option">{{ option }}</option>
+                }
+              </select>
+            </ng-template>
+          </app-link-table>
+          <p class="cr-progress" id="cr-progress">
+            {{ progress().answered }} of {{ progress().total }} questions answered.
+          </p>
+        } @else {
+          <p role="status">This client has no rating questions.</p>
+        }
+      }
+    }
+
+    @if (!readOnly() && progress().total > 0) {
+      <button
+        rdFooterStart
+        type="button"
+        class="app-button cr-close-case"
+        [disabled]="saving()"
+        (click)="closeCase()"
+      >
+        Close Rating Completed
+      </button>
+    }
+  </app-record-dialog-frame>
+</form>

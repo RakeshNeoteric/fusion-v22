@@ -45,6 +45,9 @@ describe('Phase Costing', () => {
     notify,
     show,
     settle,
+    openMenu,
+    menuItem,
+    fromMenu,
     element,
     type,
     choose,
@@ -55,8 +58,7 @@ describe('Phase Costing', () => {
   } = caseTabHarness();
 
   const open = async () => {
-    element<HTMLButtonElement>('button[aria-label="Phase Costing"]').click();
-    await settle();
+    await fromMenu('Phase Costing');
     await settle();
   };
   const savedPhase = (call = 0) => api.savePhase.mock.calls[call]?.[0] as CasePhaseRecord;
@@ -177,8 +179,9 @@ describe('Phase Costing', () => {
 
   it('is only offered on services with phases', async () => {
     await show(held());
-    expect(document.querySelector('button[aria-label="Phase Costing"]')).toBeNull();
-    expect(document.querySelector('button[aria-label="Additional Cost"]')).toBeNull();
+    await openMenu();
+    expect(menuItem('Phase Costing')).toBeUndefined();
+    expect(menuItem('Additional Cost')).toBeUndefined();
   });
 });
 

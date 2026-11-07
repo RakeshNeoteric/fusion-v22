@@ -178,7 +178,7 @@ as in v21. Documents (`tabs/documents`) has a row for each document the client a
 Documents links): the client's template, and the file uploaded for it on this case. An upload is
 one form post with the file; uploading again replaces the case's file (after asking), and the
 backend deletes the old one. Moments the backend stores in UTC are shown in local time with
-`shared/reference/date-time.ts`. Emailing documents comes with the header actions (7f).
+`shared/reference/date-time.ts`. Emailing documents comes with SMS / Email (7f-2).
 
 Voucher/SMS (`tabs/voucher`) requests vouchers through `api/vouchers/voucher.api.ts`. The
 provider and the limits (amount and number of vouchers) come from the client's link to the case's
@@ -187,6 +187,19 @@ against the provider's stock and the limits, counting the vouchers the case hold
 approved or redeemed). After a request, the tab shows the stock the backend returns and reloads
 the case's vouchers, whose status the transport managers change. Sent SMS cannot be listed: the
 backend keeps them without their case.
+
+What happens to the case as a whole lives in `case-details/lifecycle`: `CaseLifecycle` (provided
+by the page next to `CaseWorkspace`) and the popups that collect what it needs. Exit asks whether
+the call is complete: No lets go of the case as it is; Yes closes it once the main caller has
+answered every rating question, opening Case Rating first when some are not. Abort and Re-Open
+need a reason, which goes in the case history; the backend sets the status from the history note
+(`CaseAbort` → Aborted, `CaseReopen` / `CaseReAssign` → Active), then `CaseExit` lets the case go
+and stamps who closed it. `CaseExit` answers 200 even when someone else holds the case, so its
+text is checked (`CaseHeldElsewhereError`). Re-Assign saves the whole case with the new controller
+and rebuilds the open tab, so no form keeps the old one. Case Rating offers the options set up for
+each question's type (Configuration / Rating Question Options) and saves the caller's name and
+number with the answers. Phase Costing, Additional Cost, Case Rating, Re-Open and Re-Assign are in
+the header's View More menu, as in v21.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

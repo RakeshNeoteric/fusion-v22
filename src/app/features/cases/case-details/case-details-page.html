@@ -25,36 +25,73 @@
             }
           </h1>
           <div class="cd-actions">
-            <!-- Vehicle Tracker, Case Stages, Abort and View More come in phase 7f. -->
-            @if (hasCosting()) {
-              <button
-                type="button"
-                class="cd-action"
-                aria-label="Phase Costing"
-                matTooltip="Phase Costing"
-                (click)="openPhaseCosting()"
-              >
-                <mat-icon svgIcon="calculate" />
-              </button>
-              <button
-                type="button"
-                class="cd-action"
-                aria-label="Additional Cost"
-                matTooltip="Additional Cost"
-                (click)="openAdditionalCosting()"
-              >
-                <mat-icon svgIcon="payments" />
-              </button>
-            }
+            <!-- Vehicle Tracker and Case Stages come in phase 7f-2. -->
+            <button
+              type="button"
+              class="cd-action"
+              aria-label="Abort"
+              [matTooltip]="workspace.readOnly() ? 'This case cannot be changed' : 'Abort'"
+              [disabled]="workspace.readOnly() || leaving()"
+              (click)="abort()"
+            >
+              <mat-icon svgIcon="block" />
+            </button>
             <button
               type="button"
               class="cd-action"
               aria-label="Exit"
               matTooltip="Exit"
+              [disabled]="leaving()"
               (click)="exit()"
             >
               <mat-icon svgIcon="logout" />
             </button>
+            <button
+              type="button"
+              class="cd-action"
+              aria-label="View More"
+              matTooltip="View More"
+              [matMenuTriggerFor]="moreMenu"
+            >
+              <mat-icon svgIcon="apps" />
+            </button>
+            <!-- v21 "View More"; Contact History and SMS / Email come in phase 7f-2. -->
+            <mat-menu #moreMenu="matMenu" xPosition="before">
+              <button mat-menu-item type="button" (click)="openRating()">
+                <mat-icon svgIcon="star" />
+                <span>Case Rating</span>
+              </button>
+              @if (hasCosting()) {
+                <button mat-menu-item type="button" (click)="openAdditionalCosting()">
+                  <mat-icon svgIcon="payments" />
+                  <span>Additional Cost</span>
+                </button>
+                <button mat-menu-item type="button" (click)="openPhaseCosting()">
+                  <mat-icon svgIcon="calculate" />
+                  <span>Phase Costing</span>
+                </button>
+              }
+              @if (finished()) {
+                <button
+                  mat-menu-item
+                  type="button"
+                  [disabled]="!lifecycle.canReopen()"
+                  (click)="reopen()"
+                >
+                  <mat-icon svgIcon="restore" />
+                  <span>Re-Open Case</span>
+                </button>
+              }
+              <button
+                mat-menu-item
+                type="button"
+                [disabled]="workspace.readOnly()"
+                (click)="reassign()"
+              >
+                <mat-icon svgIcon="swap-person" />
+                <span>Re-Assign</span>
+              </button>
+            </mat-menu>
           </div>
         </header>
 
@@ -94,45 +131,47 @@
             [id]="tabStrip.panelId(tab.id)"
             [attr.aria-labelledby]="tabStrip.tabId(tab.id)"
           >
-            @switch (tab.id) {
-              @case ('caller') {
-                <app-caller-tab />
-              }
-              @case ('policy-details') {
-                <app-policy-details-tab />
-              }
-              @case ('validation') {
-                <app-validation-tab />
-              }
-              @case ('deceased-info') {
-                <app-deceased-info-tab />
-              }
-              @case ('cause-of-death') {
-                <app-cause-of-death-tab />
-              }
-              @case ('final-funeral') {
-                <app-final-funeral-tab />
-              }
-              @case ('phase1') {
-                <app-phase-tab phase="phase1" />
-              }
-              @case ('phase2') {
-                <app-phase-tab phase="phase2" />
-              }
-              @case ('phase3') {
-                <app-phase-tab phase="phase3" />
-              }
-              @case ('phase4') {
-                <app-phase-tab phase="phase4" />
-              }
-              @case ('complaints') {
-                <app-complaints-tab />
-              }
-              @case ('documents') {
-                <app-documents-tab />
-              }
-              @case ('voucher') {
-                <app-voucher-tab />
+            @for (revision of [tabRevision()]; track revision) {
+              @switch (tab.id) {
+                @case ('caller') {
+                  <app-caller-tab />
+                }
+                @case ('policy-details') {
+                  <app-policy-details-tab />
+                }
+                @case ('validation') {
+                  <app-validation-tab />
+                }
+                @case ('deceased-info') {
+                  <app-deceased-info-tab />
+                }
+                @case ('cause-of-death') {
+                  <app-cause-of-death-tab />
+                }
+                @case ('final-funeral') {
+                  <app-final-funeral-tab />
+                }
+                @case ('phase1') {
+                  <app-phase-tab phase="phase1" />
+                }
+                @case ('phase2') {
+                  <app-phase-tab phase="phase2" />
+                }
+                @case ('phase3') {
+                  <app-phase-tab phase="phase3" />
+                }
+                @case ('phase4') {
+                  <app-phase-tab phase="phase4" />
+                }
+                @case ('complaints') {
+                  <app-complaints-tab />
+                }
+                @case ('documents') {
+                  <app-documents-tab />
+                }
+                @case ('voucher') {
+                  <app-voucher-tab />
+                }
               }
             }
           </section>

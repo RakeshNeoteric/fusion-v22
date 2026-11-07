@@ -281,6 +281,54 @@ export interface CaseDocumentRecord {
   readonly UploadedDate: string | null;
 }
 
+/** Backend `CaseHistoryNoteTypes`, sent as its name. */
+export const CASE_NOTE_TYPES = [
+  'New',
+  'Note',
+  'Admin',
+  'Inbound',
+  'Outbound',
+  'SMS',
+  'Email',
+  'AutoLog',
+  'CaseOpen',
+  'CaseExit',
+  'CaseAbort',
+  'CaseReopen',
+  'CaseReAssign',
+  'CaseChanges',
+  'CaseClosed',
+] as const;
+export type CaseNoteType = (typeof CASE_NOTE_TYPES)[number];
+
+/**
+ * Backend `CaseHistory`: a note in the case's history. Adding some notes also changes the
+ * case's status (backend): `CaseAbort` aborts it; `CaseReopen` and `CaseReAssign` make it
+ * Active.
+ */
+export interface CaseHistoryRecord {
+  readonly CaseHistoryId: number;
+  readonly CaseDetailId: number;
+  readonly NoteType: CaseNoteType | null;
+  readonly Note: string | null;
+  /** UTC; the backend returns it without a zone. */
+  readonly CreatedDate: string;
+  /** The `AspNetUserId` of who wrote it. */
+  readonly CreatedByUserId: number;
+}
+
+/** Backend `CaseRating`: the caller's answer to one of the client's rating questions. */
+export interface CaseRatingRecord {
+  readonly CaseRatingId: number;
+  readonly CaseDetailId: number;
+  readonly ContactName: string | null;
+  readonly ContactNumber: string | null;
+  readonly ClientRatingQuestionId: number;
+  /** The question as asked, kept with the answer. */
+  readonly Question: string | null;
+  readonly QuestionAnswer: string | null;
+}
+
 /** The parts of a phase the tab strip needs. */
 export type CasePhaseSummary = Pick<CasePhaseRecord, 'CasePhaseDetailsId' | 'PhaseName'>;
 
@@ -324,6 +372,10 @@ export interface CaseDetails {
   readonly Complaint?: readonly CaseComplaintRecord[] | null;
   /** The files uploaded for the client's documents. */
   readonly CaseDocument?: readonly CaseDocumentRecord[] | null;
+  /** The case's history, oldest first as stored. */
+  readonly CaseHistory?: readonly CaseHistoryRecord[] | null;
+  /** The caller's answers to the client's rating questions. */
+  readonly CaseRatings?: readonly CaseRatingRecord[] | null;
   /** Vouchers reserved for the case, each with its voucher. */
   readonly CaseVouchers?: readonly CaseVoucherRecord[] | null;
   /** Authorised phases' costs, kept by Phase Costing (decimal(8,2)). */
@@ -542,6 +594,23 @@ export class CaseApi {
     if (record.UploadedDate) form.append('UploadedDate', record.UploadedDate);
     form.append('Content', file, file.name);
     return this.http.post(id > 0 ? `CaseDocument/${id}` : 'CaseDocument', form);
+  }
+
+  /** Adds a note to the case's history (some notes change the case's status: see the type). */
+  addHistory(record: CaseHistoryRecord): Observable<CaseHistoryRecord> {
+    return this.http.post<CaseHistoryRecord>('CaseHistory', columnsOf(record));
+  }
+
+  /**
+   * Saves the caller's answers (new ones have id 0). `closeCase` also closes the case; v21 sent
+   * Active otherwise, which reopened a pending case on every save.
+   */
+  saveRatings(records: readonly CaseRatingRecord[], closeCase: boolean): Observable<unknown> {
+    return this.http.post(
+      'CaseRating',
+      records.map((record) => columnsOf(record)),
+      closeCase ? { params: { caseStatus: 'Closed' } } : {},
+    );
   }
 
   fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {

@@ -10,6 +10,7 @@ import {
   RecordDialogFrame,
 } from '@shared/forms/record-dialog/record-dialog';
 import { requiredText } from '@shared/forms/validators';
+import { CaseIdentity } from '../../case-identity';
 import { CaseWorkspace } from '../../case-workspace';
 
 /**
@@ -18,7 +19,7 @@ import { CaseWorkspace } from '../../case-workspace';
  */
 @Component({
   selector: 'app-complaint-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame],
+  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -29,16 +30,7 @@ import { CaseWorkspace } from '../../case-workspace';
         [readOnly]="readOnly"
         [saving]="saving()"
       >
-        <div class="form-row">
-          <div class="form-field">
-            <label for="cp-reference">Case Reference Number</label>
-            <input id="cp-reference" type="text" [value]="reference" disabled />
-          </div>
-          <div class="form-field">
-            <label for="cp-number">Case Number</label>
-            <input id="cp-number" type="text" [value]="number" disabled />
-          </div>
-        </div>
+        <app-case-identity idPrefix="cp" />
         <div class="form-row">
           <div class="form-field">
             <label for="cp-title">Title <span class="required">*</span></label>
@@ -89,8 +81,6 @@ export class ComplaintDialog extends RecordDialog<CaseComplaintRecord> {
   };
 
   private readonly record = this.data.record;
-  protected readonly reference = this.workspace.details()?.CaseReferenceNumber ?? '';
-  protected readonly number = this.workspace.details()?.CaseNumber ?? '';
 
   protected readonly form = new FormGroup({
     title: new FormControl(this.record?.Title ?? '', {

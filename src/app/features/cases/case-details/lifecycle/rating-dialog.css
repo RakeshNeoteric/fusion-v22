@@ -1,0 +1,18 @@
+.cr-answer {
+  width: 100%;
+  min-width: 140px;
+}
+.cr-progress {
+  margin: 8px 0 0;
+  color: #5f6b6b;
+}
+.cr-failed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* v21: the close button sits apart from Cancel / Update. */
+.cr-close-case {
+  margin-right: auto;
+  background-color: var(--app-navy);
+}

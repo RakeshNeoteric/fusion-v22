@@ -6,7 +6,7 @@ import { caseTabHarness, held } from './tabs/testing/case-tab-harness';
 const onDefaultTabs = held({ CaseClientServiceId: 8 });
 
 describe('Case access', () => {
-  const { api, clients, show, allowOnlyViewing, openTab, element, disabled, text } =
+  const { api, clients, show, allowOnlyViewing, openTab, fromMenu, element, disabled, text } =
     caseTabHarness();
 
   it('lets a user with edit access change a case they have open', async () => {
@@ -56,8 +56,7 @@ describe('Case access', () => {
       await show(held({ CaseClientServiceId: 6 }));
 
       expect(element<HTMLButtonElement>('button[aria-label="Add Phase"]').disabled).toBe(true);
-      element<HTMLButtonElement>('button[aria-label="Additional Cost"]').click();
-      await new Promise((resolve) => setTimeout(resolve));
+      await fromMenu('Additional Cost');
 
       expect(document.querySelector('#ac-name')).toBeNull();
     });

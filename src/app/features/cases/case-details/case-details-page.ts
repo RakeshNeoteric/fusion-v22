@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
@@ -21,7 +22,14 @@ import { CaseApi } from '@api/cases/case.api';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
 import { NotificationService } from '@core/notifications/notification.service';
-import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs, isPhaseKey } from '../case-setup';
+import {
+  type CaseTab,
+  type CaseTabKey,
+  CaseDirectory,
+  caseTabs,
+  isFinished,
+  isPhaseKey,
+} from '../case-setup';
 import { openAdditionalCosting } from './costing/additional-costing-dialog';
 import { openPhaseCosting } from './costing/phase-costing-dialog';
 import { CallerTab } from './tabs/caller/caller-tab';
@@ -37,10 +45,15 @@ import { VoucherTab } from './tabs/voucher/voucher-tab';
 import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
+import { CaseHeldElsewhereError, CaseLifecycle } from './lifecycle/case-lifecycle';
+import { type ExitChoice, ExitDialog } from './lifecycle/exit-dialog';
+import { openCaseDialog } from './lifecycle/open-case-dialog';
+import { type RatingDialogData, type RatingOutcome, RatingDialog } from './lifecycle/rating-dialog';
+import { ratingProgress } from './lifecycle/rating-rules';
+import { ReassignDialog } from './lifecycle/reassign-dialog';
+import { type ReasonAction, ReasonDialog } from './lifecycle/reason-dialog';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
-
-/** Which sub-phase of the migration builds each tab (shown until it is built). */
 
 /**
  * v21 Call Centre / Case Details: the case header and the tabs its service type allows.
@@ -54,6 +67,7 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
     FolderTabs,
     RouterLink,
     MatIconModule,
+    MatMenuModule,
     MatTooltip,
     CallerTab,
     PolicyDetailsTab,
@@ -67,7 +81,7 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
     VoucherTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [CaseWorkspace],
+  providers: [CaseWorkspace, CaseLifecycle],
   templateUrl: './case-details-page.html',
   styleUrl: './case-details-page.css',
 })
@@ -78,6 +92,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
   protected readonly workspace = inject(CaseWorkspace);
+  protected readonly lifecycle = inject(CaseLifecycle);
 
   /** `?id=` (v21 also used `?caseDetailId=` right after creating a case). */
   readonly id = input(0, { transform: numberAttribute });
@@ -87,6 +102,18 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   protected readonly status = signal<LoadStatus>('loading');
   protected readonly details = this.workspace.details;
   protected readonly tab = signal<CaseTabKey>('caller');
+  /**
+   * Bumped when the case is re-assigned: the open tab is built again from the saved case, so
+   * its fields show the new controller (a stale form would save the old one back). Tabs follow
+   * read-only changes (re-open) by themselves.
+   */
+  protected readonly tabRevision = signal(0);
+  /** An exit, abort or close is under way. */
+  protected readonly leaving = signal(false);
+  protected readonly finished = computed(() => {
+    const details = this.details();
+    return !!details && isFinished(details);
+  });
   /** The open tab's form, when it has one. */
   private readonly tabForm = viewChild(CaseTabForm);
 
@@ -179,10 +206,59 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     await openAdditionalCosting(this.dialog, this.injector);
   }
 
-  /** v21 Exit: saves the open tab and goes back to the cases (the call questions come in 7f). */
+  /**
+   * v21 Exit: saves the open tab and asks whether the call is complete. No lets go of the case
+   * as it is; Yes closes it, once the caller has answered the rating questions (the rating
+   * popup opens when some are not). A case the user cannot change is just left.
+   */
   protected async exit(): Promise<void> {
-    await this.saveTab();
-    await this.router.navigate(['/cases']);
+    if (this.leaving() || !(await this.saveTab())) return;
+    if (this.workspace.readOnly()) {
+      await this.leave();
+      return;
+    }
+    const choice = await openCaseDialog<ExitDialog, ExitChoice>(
+      this.dialog,
+      this.injector,
+      ExitDialog,
+      { width: '640px' },
+    );
+    if (choice === 'incomplete') await this.leave();
+    else if (choice === 'complete') await this.closeCase();
+  }
+
+  /** v21 Abort: the reason, then the case is aborted and left. */
+  protected async abort(): Promise<void> {
+    if (this.leaving() || this.workspace.readOnly() || !(await this.saveTab())) return;
+    if (await this.askReason('abort')) await this.router.navigate(['/cases']);
+  }
+
+  /** v21 Re-Open Case (closed and aborted cases): the reason, then the case is Active again. */
+  protected async reopen(): Promise<void> {
+    if (this.lifecycle.canReopen()) await this.askReason('reopen');
+  }
+
+  /** v21 Re-Assign: the open tab is saved first, since the whole case is saved. */
+  protected async reassign(): Promise<void> {
+    if (this.workspace.readOnly() || !(await this.saveTab())) return;
+    const done = await openCaseDialog<ReassignDialog, true>(
+      this.dialog,
+      this.injector,
+      ReassignDialog,
+      { width: '800px' },
+    );
+    if (done) this.rebuildTab();
+  }
+
+  /** v21 Case Rating; closing the case from it leaves the case. */
+  protected async openRating(data: RatingDialogData = {}): Promise<void> {
+    const outcome = await openCaseDialog<RatingDialog, RatingOutcome, RatingDialogData>(
+      this.dialog,
+      this.injector,
+      RatingDialog,
+      { width: '900px', data },
+    );
+    if (outcome === 'closed') await this.router.navigate(['/cases']);
   }
 
   hasUnsavedChanges(): boolean {
@@ -194,12 +270,60 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     return !form?.hasChanges() || form.save();
   }
 
+  /** The call is complete: closed with the rating answered, or the rating asked for first. */
+  private async closeCase(): Promise<void> {
+    this.leaving.set(true);
+    try {
+      const rows = await this.lifecycle.ratingQuestions();
+      const { answered, total } = ratingProgress(rows);
+      if (answered < total) {
+        this.leaving.set(false);
+        await this.openRating({ rows });
+        return;
+      }
+      await this.lifecycle.exit('Closed');
+      this.notifications.success('Case closed.');
+      await this.router.navigate(['/cases']);
+    } catch (error) {
+      if (error instanceof CaseHeldElsewhereError) this.notifications.error(error.message);
+      // Otherwise the error interceptor has said why.
+    } finally {
+      this.leaving.set(false);
+    }
+  }
+
+  /** Lets go of the case as it is and goes back to the cases. */
+  private async leave(): Promise<void> {
+    this.leaving.set(true);
+    try {
+      await this.release();
+      await this.router.navigate(['/cases']);
+    } finally {
+      this.leaving.set(false);
+    }
+  }
+
+  /** Opens the Abort or Re-Open popup; true once done. */
+  private async askReason(action: ReasonAction): Promise<boolean> {
+    const done = await openCaseDialog<ReasonDialog, true, ReasonAction>(
+      this.dialog,
+      this.injector,
+      ReasonDialog,
+      { width: '800px', data: action },
+    );
+    return done === true;
+  }
+
+  private rebuildTab(): void {
+    this.tabRevision.update((revision) => revision + 1);
+  }
+
   /** Lets go of the case if this user has it open, keeping its status. Best effort. */
   private async release(): Promise<void> {
     const details = this.details();
     if (!details || !this.workspace.heldByMe()) return;
     try {
-      await firstValueFrom(this.api.exit(details.CaseDetailId, details.CaseStatus));
+      await this.lifecycle.exit(details.CaseStatus);
     } catch {
       // The error interceptor has said why; the case stays open until the user exits again.
     }

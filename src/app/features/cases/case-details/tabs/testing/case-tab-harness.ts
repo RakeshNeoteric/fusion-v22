@@ -19,6 +19,8 @@ import {
 } from '@api/cases/case.api';
 import { ClientApi } from '@api/clients/client.api';
 import { DocumentTypeApi } from '@api/config/document.api';
+import { RatingQuestionOptionApi } from '@api/config/rating-question-option.api';
+import { RatingQuestionTypeApi } from '@api/config/rating-question-type.api';
 import { TransportOperatorApi } from '@api/config/transport-operator.api';
 import { VehicleApi } from '@api/config/vehicle.api';
 import type { DirectoryUser } from '@api/models/app.models';
@@ -97,6 +99,8 @@ export function caseTabHarness() {
     saveAdditionalCost: vi.fn(),
     addComplaint: vi.fn(),
     uploadDocument: vi.fn(),
+    addHistory: vi.fn(),
+    saveRatings: vi.fn(),
     fetchPolicy: vi.fn(),
   };
   const clients = { get: vi.fn() };
@@ -104,6 +108,8 @@ export function caseTabHarness() {
   const operators = { listIncludingDeleted: vi.fn() };
   const documentTypes = { listIncludingDeleted: vi.fn() };
   const vouchers = { available: vi.fn(), request: vi.fn() };
+  const ratingTypes = { listIncludingDeleted: vi.fn() };
+  const ratingOptions = { listIncludingDeleted: vi.fn() };
   const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage> | undefined;
 
@@ -153,6 +159,10 @@ export function caseTabHarness() {
       of({ ...record, CaseComplaintId: 96 }),
     );
     api.uploadDocument.mockReturnValue(of(null));
+    api.addHistory.mockImplementation((record: object) => of({ ...record, CaseHistoryId: 97 }));
+    api.saveRatings.mockReturnValue(of([]));
+    ratingTypes.listIncludingDeleted.mockReturnValue(of([]));
+    ratingOptions.listIncludingDeleted.mockReturnValue(of([]));
     clients.get.mockReturnValue(of(null));
     documentTypes.listIncludingDeleted.mockReturnValue(of([]));
     vouchers.available.mockReturnValue(of([]));
@@ -169,6 +179,8 @@ export function caseTabHarness() {
         { provide: TransportOperatorApi, useValue: operators },
         { provide: DocumentTypeApi, useValue: documentTypes },
         { provide: VoucherApi, useValue: vouchers },
+        { provide: RatingQuestionTypeApi, useValue: ratingTypes },
+        { provide: RatingQuestionOptionApi, useValue: ratingOptions },
         { provide: NotificationService, useValue: notify },
         {
           provide: SessionService,
@@ -256,6 +268,26 @@ export function caseTabHarness() {
     await settle();
   }
 
+  /** An item of the header's View More menu (open the menu first). */
+  const menuItem = (label: string) =>
+    [...document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-item')].find(
+      (item) => item.textContent?.trim() === label,
+    );
+
+  async function openMenu(): Promise<void> {
+    element<HTMLButtonElement>('.cd-actions button[aria-label="View More"]').click();
+    await settle();
+  }
+
+  /** Picks an item of the header's View More menu. */
+  async function fromMenu(label: string): Promise<void> {
+    await openMenu();
+    const item = menuItem(label);
+    if (!item) throw new Error(`no menu item ${label}`);
+    item.click();
+    await settle();
+  }
+
   const selectedTab = () =>
     document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim();
   const value = (id: string) => element<HTMLInputElement | HTMLSelectElement>(`#${id}`).value;
@@ -269,6 +301,8 @@ export function caseTabHarness() {
     operators,
     documentTypes,
     vouchers,
+    ratingTypes,
+    ratingOptions,
     notify,
     show,
     allowOnlyViewing,
@@ -279,6 +313,9 @@ export function caseTabHarness() {
     answer,
     press,
     openTab,
+    openMenu,
+    menuItem,
+    fromMenu,
     selectedTab,
     value,
     disabled,

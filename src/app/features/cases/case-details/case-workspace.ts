@@ -11,6 +11,7 @@ import {
   type CaseDocumentRecord,
   type CaseFinalFuneralRecord,
   type CasePhaseRecord,
+  type CaseStatus,
   type CaseTransportRecord,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
@@ -21,6 +22,10 @@ import { UserDirectoryService, displayNameOf } from '@core/session/user-director
 import { CASES_PERMISSION, type CaseDirectory, isFinished } from '../case-setup';
 import { type ClientProvider, clientProviders } from './client-providers';
 import { caseTotals } from './costing/costing-rules';
+
+/** Parts of the case the backend changes by itself (uploads, approvals, status rules). */
+export type ReloadableKey =
+  'CaseStatus' | 'CaseOpenedBy' | 'CaseDocument' | 'CaseVouchers' | 'CaseRatings' | 'CaseHistory';
 
 /**
  * The case open on the Case Details page, shared by its header and tabs (provided by the page).
@@ -210,10 +215,24 @@ export class CaseWorkspace {
     if (!unchanged) await this.saveCase(totals);
   }
 
-  /** Takes one of the case's included lists fresh from the backend, keeping everything else. */
-  private async reload(key: 'CaseDocument' | 'CaseVouchers'): Promise<void> {
+  /**
+   * Takes these parts of the case fresh from the backend, keeping everything else as loaded
+   * (another tab may hold changes not saved yet). For what the backend changes by itself.
+   */
+  async reload(...keys: readonly ReloadableKey[]): Promise<void> {
     const fresh = await firstValueFrom(this.api.open(this.require().CaseDetailId));
-    this.loaded.set({ ...this.require(), [key]: fresh[key] ?? [] });
+    const parts = Object.fromEntries(
+      keys.map((key) => [key, fresh[key] ?? null]),
+    ) as Partial<CaseDetails>;
+    this.loaded.set({ ...this.require(), ...parts });
+  }
+
+  /**
+   * The case was let go with this status (`CaseExit`): nobody has it open any more. Not
+   * reloaded, since loading a case opens it for the user again.
+   */
+  released(status: CaseStatus): void {
+    this.loaded.set({ ...this.require(), CaseStatus: status, CaseOpenedBy: null });
   }
 
   private keepPhase(saved: CasePhaseRecord): void {
