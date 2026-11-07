@@ -29,22 +29,49 @@ what each screen does, see [FUNCTIONALITY.md](FUNCTIONALITY.md).
 
 ## 2. What we gained
 
-| Area                | Before (v21)                                                                 | After (v22)                                                                           | Why it matters                                                                 |
-| ------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **First download**  | 8.5 MB (1.8 MB over the network)                                             | **831 kB** (198 kB over the network)                                                  | About 10× smaller: the app opens much faster, especially on slow connections.  |
-| **Automatic tests** | 180, of which most only check that a screen loads (Angular's generated test) | **665** tests of real business rules and screens                                      | Every change is checked before pushing; bugs are caught before users see them. |
-| **UI libraries**    | 5 (Bootstrap, ngx-bootstrap, PrimeNG, Angular Material, ng-select)           | **1** (Angular Material)                                                              | Less code, one consistent look, fewer upgrades to manage.                      |
-| **Icon sources**    | 4 (Font Awesome, Bootstrap Icons, PrimeIcons, Boxicons from a CDN)           | **Built into the app** (v21's own Font Awesome shapes)                                | Same icons, nothing extra to download, no dependence on outside servers.       |
-| **Grid licence**    | AG Grid **Enterprise** (paid)                                                | AG Grid **Community** (free)                                                          | Case grouping was rebuilt in our code, so no licence is needed.                |
-| **Security**        | Menus hidden only; typing a URL opened any screen                            | **Every page checks permissions**                                                     | A user cannot open a screen they are not allowed to, even with a direct link.  |
-| **Code checking**   | Loose TypeScript, no lint rules                                              | **Strict TypeScript + ESLint**                                                        | Many mistakes are caught while typing, before the app runs.                    |
-| **Code layout**     | Mixed folders; components called the backend directly                        | Clear `api / core / shared / features`; only `api/` calls the backend                 | Easy to find things; one place to change when the backend changes.             |
-| **Copied screens**  | About 12 near-identical list screens                                         | **One shared grid**, configured per screen                                            | Fix a bug once and it is fixed everywhere.                                     |
-| **Documentation**   | Only the README Angular generates for a new project                          | README, [FUNCTIONALITY.md](FUNCTIONALITY.md), [MIGRATION.md](MIGRATION.md), this file | New developers can learn the app without asking around.                        |
+| Area                    | Before (v21)                                                                                      | After (v22)                                                                           | Why it matters                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **First download**      | 8.5 MB (1.8 MB over the network)                                                                  | **831 kB** (198 kB over the network)                                                  | About 10× smaller: the app opens much faster, especially on slow connections.  |
+| **Automatic tests**     | 180, of which most only check that a screen loads (Angular's generated test)                      | **665** tests of real business rules and screens                                      | Every change is checked before pushing; bugs are caught before users see them. |
+| **UI libraries**        | 5 (Bootstrap, ngx-bootstrap, PrimeNG, Angular Material, ng-select)                                | **1** (Angular Material)                                                              | Less code, one consistent look, fewer upgrades to manage.                      |
+| **Icon sources**        | 4 (Font Awesome, Bootstrap Icons, PrimeIcons, Boxicons from a CDN)                                | **Built into the app** (v21's own Font Awesome shapes)                                | Same icons, nothing extra to download, no dependence on outside servers.       |
+| **Grid licence**        | AG Grid **Enterprise** (paid)                                                                     | AG Grid **Community** (free)                                                          | Case grouping was rebuilt in our code, so no licence is needed.                |
+| **Security**            | Menus hidden only; typing a URL opened any screen                                                 | **Every page checks permissions**                                                     | A user cannot open a screen they are not allowed to, even with a direct link.  |
+| **Code checking**       | Loose TypeScript, no lint rules                                                                   | **Strict TypeScript + ESLint**                                                        | Many mistakes are caught while typing, before the app runs.                    |
+| **Code layout**         | Mixed folders; components called the backend directly                                             | Clear `api / core / shared / features`; only `api/` calls the backend                 | Easy to find things; one place to change when the backend changes.             |
+| **Copied screens**      | About 12 near-identical list screens                                                              | **One shared grid**, configured per screen                                            | Fix a bug once and it is fixed everywhere.                                     |
+| **Documentation**       | Only the README Angular generates for a new project                                               | README, [FUNCTIONALITY.md](FUNCTIONALITY.md), [MIGRATION.md](MIGRATION.md), this file | New developers can learn the app without asking around.                        |
+| **Rendering / hosting** | **SSR**: an Express (Node.js) server rendered pages, with 31 browser-vs-server checks in the code | **Client-side only (CSR)**: static files                                              | No Node server to host, monitor or patch; any static web host works.           |
 
 ---
 
-## 3. Angular terms, before and after
+## 3. Client-side, not server-side rendering (SSR)
+
+v21 was set up for **SSR** (Angular SSR with an Express server, `src/server.ts`). v22 is
+**client-side only (CSR)**: the browser builds every page. (Neither version uses SSE, Server-Sent
+Events.)
+
+|                  | v21                                                                                          | v22                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Type**         | SSR: Express server (`src/server.ts`, `outputMode: "server"`)                                | Client-side only (CSR)                                                   |
+| **Build output** | A Node.js server plus browser files                                                          | Static files only (HTML, JS, CSS, images) in `dist/fusion-edge/browser`  |
+| **Hosting**      | A Node.js server running all the time                                                        | Any static web host: IIS, Azure Static Web Apps, Nginx, a storage bucket |
+| **Extra code**   | 31 `isPlatformBrowser` / `PLATFORM_ID` checks (`window`, `localStorage` break on the server) | None needed                                                              |
+
+**Why v22 does not use SSR:**
+
+| Reason                                        | Explanation                                                                                                                                                      |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Everything is behind sign-in**              | SSR helps public pages (faster first view, Google indexing). Every Fusion Edge page needs a Microsoft sign-in first, so there is nothing to pre-render or index. |
+| **Microsoft sign-in only works in a browser** | MSAL uses the browser's storage and redirects; the server cannot sign in, so it could only render an empty shell.                                                |
+| **Less to run and maintain**                  | No Node server to host, monitor, scale or patch, and no browser-vs-server checks in the code.                                                                    |
+| **Fast anyway**                               | The first download is 198 kB over the network, and large parts load only when a screen needs them.                                                               |
+
+**For deployment:** copy the built files to any web server, and set up the **SPA fallback**: an
+unknown URL must return `index.html`, or refreshing a page such as
+`/cases/case-details?id=123` gives a 404. See the [README](../README.md#deployment).
+
+## 4. Angular terms, before and after
 
 | Term                        | Before (v21)                                                                            | After (v22)                                                                         | In simple words                                                                                                                                                                              |
 | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +90,7 @@ what each screen does, see [FUNCTIONALITY.md](FUNCTIONALITY.md).
 
 ---
 
-## 4. One example, before and after
+## 5. One example, before and after
 
 **"Pick another service on a case, and the tabs change":**
 
@@ -75,13 +102,14 @@ what each screen does, see [FUNCTIONALITY.md](FUNCTIONALITY.md).
 
 ---
 
-## 5. Quick answers
+## 6. Quick answers
 
-| If someone asks…                 | Answer                                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| "Is it faster?"                  | Yes: about 10× less to download at start, and screens redraw only what changed.                         |
-| "Is it safer?"                   | Yes: every page checks permissions, every change is checked by 665 tests, strict TypeScript and ESLint. |
-| "Does it cost less?"             | No paid AG Grid Enterprise licence is needed.                                                           |
-| "Did anything change for users?" | Same screens and rules; known v21 bugs fixed (listed in [MIGRATION.md](MIGRATION.md)).                  |
-| "Do we need backend changes?"    | No. Backend issues found on the way are listed for the backend team in [MIGRATION.md](MIGRATION.md).    |
-| "How do I learn the app?"        | Start with the [README](../README.md), then [FUNCTIONALITY.md](FUNCTIONALITY.md).                       |
+| If someone asks…                 | Answer                                                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| "Is it faster?"                  | Yes: about 10× less to download at start, and screens redraw only what changed.                                      |
+| "Is it safer?"                   | Yes: every page checks permissions, every change is checked by 665 tests, strict TypeScript and ESLint.              |
+| "Does it cost less?"             | No paid AG Grid Enterprise licence is needed.                                                                        |
+| "Did anything change for users?" | Same screens and rules; known v21 bugs fixed (listed in [MIGRATION.md](MIGRATION.md)).                               |
+| "Do we need backend changes?"    | No. Backend issues found on the way are listed for the backend team in [MIGRATION.md](MIGRATION.md).                 |
+| "Is it SSR or client-side?"      | Client-side only (CSR). v21 had SSR; v22 does not need it, since every page is behind Microsoft sign-in (section 3). |
+| "How do I learn the app?"        | Start with the [README](../README.md), then [FUNCTIONALITY.md](FUNCTIONALITY.md).                                    |

@@ -34,6 +34,30 @@ The dev server uses a self-signed certificate; accept it in the browser the firs
 | `npm run format`        | Prettier                                                |
 | `npm run verify`        | Format check + lint + tests + build. Run before pushing |
 
+## Deployment
+
+The app is **client-side only** (no SSR, no Node server; see
+[docs/WHY-WE-MIGRATED.md](docs/WHY-WE-MIGRATED.md)). `npm run build` writes static files to
+`dist/fusion-edge/browser`; copy that folder to any web server (IIS, Azure Static Web Apps,
+Nginx, a storage bucket).
+
+**Required server setting (SPA fallback):** any URL that is not a file must return `index.html`,
+so the app's router can open it. Without it, refreshing or opening a link such as
+`/cases/case-details?id=123` gives a 404.
+
+| Server                | Setting                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| IIS                   | URL Rewrite rule: if not a file or folder, rewrite to `/index.html`                  |
+| Nginx                 | `try_files $uri $uri/ /index.html;`                                                  |
+| Azure Static Web Apps | `staticwebapp.config.json` with `"navigationFallback": { "rewrite": "/index.html" }` |
+
+The production settings are in `src/environments/environment.ts`: the API address
+(`apiBaseUrl`) and the Azure AD sign-in (`clientId`, `authority`, `redirectUri`). `redirectUri`
+is where Microsoft sends the user back after sign-in (today
+`https://fusionedge-dev.runasp.net/home`). **When the site moves to another address, change
+`redirectUri` and add the new address to the Azure AD app registration's redirect URIs**, or
+sign-in fails.
+
 ## Architecture
 
 ```

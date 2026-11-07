@@ -48,24 +48,25 @@ structure, see the [README](../README.md).
 
 ### Technology
 
-| Area          | v21                                                            | v22                                                                    |
-| ------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Angular       | 21.2, NgModules, zone.js, SSR packages                         | 22.2, standalone only, **zoneless**, OnPush everywhere, signals        |
-| TypeScript    | 5.9, loose                                                     | 6.0, `strict`, `noUncheckedIndexedAccess`, `strictTemplates`, no `any` |
-| State         | NGXS store, services with subjects                             | Signals (`signal`, `computed`), page-provided services                 |
-| Sign-in       | `@azure/msal-angular` + msal-browser                           | `@azure/msal-browser` only, with a small zoneless auth service         |
-| UI kits       | Bootstrap, ngx-bootstrap, PrimeNG, Angular Material, ng-select | Angular Material 22 only, plus the app's own form styles               |
-| Icons         | Font Awesome font, Bootstrap Icons, PrimeIcons, Boxicons (CDN) | v21's Font Awesome shapes as inline SVG; v21's PNG images              |
-| Grid          | AG Grid 33 **Enterprise** (row grouping)                       | AG Grid 36 **Community**, only the modules used; grouping rebuilt      |
-| Charts        | ngx-echarts + ECharts 5                                        | ECharts 5.6 directly, loaded on first use                              |
-| Excel         | ExcelJS + xlsx (SheetJS) + file-saver                          | ExcelJS only, loaded on first use                                      |
-| PDF           | pdfmake 0.2                                                    | pdfmake 0.3, loaded on first use                                       |
-| Phone input   | ngx-intl-tel-input, intl-tel-input, google-libphonenumber      | Own phone field on libphonenumber-js + flag-icons                      |
-| Dates         | moment                                                         | Native `Date` / `Intl`                                                 |
-| Rich text     | ngx-quill 30                                                   | ngx-quill 31, Quill pinned to 2.0.2 (security advisory)                |
-| Notifications | ngx-toastr                                                     | Material snackbar                                                      |
-| Tests         | Karma + Jasmine (180 tests, mostly generated)                  | Vitest, 665 tests                                                      |
-| Lint          | none enforced                                                  | angular-eslint 22 with type-aware rules and architecture boundaries    |
+| Area          | v21                                                            | v22                                                                                |
+| ------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Angular       | 21.2, NgModules, zone.js, SSR packages                         | 22.2, standalone only, **zoneless**, OnPush everywhere, signals                    |
+| Rendering     | **SSR**: Express server (`src/server.ts`), Node.js hosting     | **Client-side only (CSR)**: static files, any web host (see WHY-WE-MIGRATED.md §3) |
+| TypeScript    | 5.9, loose                                                     | 6.0, `strict`, `noUncheckedIndexedAccess`, `strictTemplates`, no `any`             |
+| State         | NGXS store, services with subjects                             | Signals (`signal`, `computed`), page-provided services                             |
+| Sign-in       | `@azure/msal-angular` + msal-browser                           | `@azure/msal-browser` only, with a small zoneless auth service                     |
+| UI kits       | Bootstrap, ngx-bootstrap, PrimeNG, Angular Material, ng-select | Angular Material 22 only, plus the app's own form styles                           |
+| Icons         | Font Awesome font, Bootstrap Icons, PrimeIcons, Boxicons (CDN) | v21's Font Awesome shapes as inline SVG; v21's PNG images                          |
+| Grid          | AG Grid 33 **Enterprise** (row grouping)                       | AG Grid 36 **Community**, only the modules used; grouping rebuilt                  |
+| Charts        | ngx-echarts + ECharts 5                                        | ECharts 5.6 directly, loaded on first use                                          |
+| Excel         | ExcelJS + xlsx (SheetJS) + file-saver                          | ExcelJS only, loaded on first use                                                  |
+| PDF           | pdfmake 0.2                                                    | pdfmake 0.3, loaded on first use                                                   |
+| Phone input   | ngx-intl-tel-input, intl-tel-input, google-libphonenumber      | Own phone field on libphonenumber-js + flag-icons                                  |
+| Dates         | moment                                                         | Native `Date` / `Intl`                                                             |
+| Rich text     | ngx-quill 30                                                   | ngx-quill 31, Quill pinned to 2.0.2 (security advisory)                            |
+| Notifications | ngx-toastr                                                     | Material snackbar                                                                  |
+| Tests         | Karma + Jasmine (180 tests, mostly generated)                  | Vitest, 665 tests                                                                  |
+| Lint          | none enforced                                                  | angular-eslint 22 with type-aware rules and architecture boundaries                |
 
 ### Structure
 
