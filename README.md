@@ -5,11 +5,12 @@ rewrite of `fusion-edge-v21`, migrated feature by feature with behaviour parity.
 
 ## Documentation
 
-| Document                                       | Read it for                                                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| This README                                    | Setup, scripts, architecture, conventions, how to add a screen                                    |
-| [docs/FUNCTIONALITY.md](docs/FUNCTIONALITY.md) | What every screen does, its business rules and backend calls; permissions; backend quirks         |
-| [docs/MIGRATION.md](docs/MIGRATION.md)         | v21 vs v22, what each phase built, v21 bugs not copied, release fixes, backend issues, open items |
+| Document                                           | Read it for                                                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| This README                                        | Setup, scripts, architecture, conventions, how to add a screen                                      |
+| [docs/FUNCTIONALITY.md](docs/FUNCTIONALITY.md)     | What every screen does, its business rules and backend calls; permissions; backend quirks           |
+| [docs/MIGRATION.md](docs/MIGRATION.md)             | v21 vs v22, what each phase built, v21 bugs not copied, release fixes, backend issues, open items   |
+| [docs/WHY-WE-MIGRATED.md](docs/WHY-WE-MIGRATED.md) | Why we moved to Angular 22, what it gained, and what signals, zoneless and standalone mean (tables) |
 
 Keep them up to date: a change in behaviour goes in FUNCTIONALITY.md, a decision or difference from
 v21 in MIGRATION.md.

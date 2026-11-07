@@ -64,7 +64,7 @@ structure, see the [README](../README.md).
 | Dates         | moment                                                         | Native `Date` / `Intl`                                                 |
 | Rich text     | ngx-quill 30                                                   | ngx-quill 31, Quill pinned to 2.0.2 (security advisory)                |
 | Notifications | ngx-toastr                                                     | Material snackbar                                                      |
-| Tests         | Karma + Jasmine (few tests)                                    | Vitest, 655 tests                                                      |
+| Tests         | Karma + Jasmine (180 tests, mostly generated)                  | Vitest, 665 tests                                                      |
 | Lint          | none enforced                                                  | angular-eslint 22 with type-aware rules and architecture boundaries    |
 
 ### Structure
@@ -348,12 +348,12 @@ release endpoint would let the app drop its workarounds.
 
 ## 9. Numbers
 
-At commit `76bda80`:
+At commit `d4f5952`:
 
 |                          |                                               |
 | ------------------------ | --------------------------------------------- |
 | Source files (`src/app`) | 384 (218 TypeScript, 106 test files)          |
-| Unit tests               | 655, all passing                              |
+| Unit tests               | 665, all passing                              |
 | Lint / format            | clean                                         |
 | Initial bundle           | 830.8 kB (197.7 kB transferred)               |
 | Check before pushing     | `npm run verify` (format, lint, tests, build) |
