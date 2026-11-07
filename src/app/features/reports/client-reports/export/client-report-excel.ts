@@ -1,30 +1,19 @@
 import { DOCUMENT, Injectable, inject } from '@angular/core';
-import { NotificationService } from '@core/notifications/notification.service';
-import { NEW_WORKBOOK, XLSX_TYPE } from '@shared/excel/excel-workbook';
-import { saveFile } from '@shared/excel/save-file';
+import { ExcelDownload } from '@shared/excel/excel-download';
 import type { ClientReportExport } from './client-report-export';
 import { clientReportFileName, fillClientReportWorkbook } from './client-report-workbook';
 
-/** Builds the Client Report workbook in the browser and downloads it. */
+/** Builds the Client Report workbook, with the company logo, and downloads it. */
 @Injectable({ providedIn: 'root' })
 export class ClientReportExcel {
   private readonly document = inject(DOCUMENT);
-  private readonly newWorkbook = inject(NEW_WORKBOOK);
-  private readonly notifications = inject(NotificationService);
+  private readonly excel = inject(ExcelDownload);
 
   /** Resolves to whether the file was made; a failure is shown to the user. */
-  async download(report: Omit<ClientReportExport, 'logo'>): Promise<boolean> {
-    try {
-      const [workbook, logo] = await Promise.all([this.newWorkbook(), this.logo()]);
-      fillClientReportWorkbook(workbook, { ...report, logo });
-      const data = await workbook.xlsx.writeBuffer();
-      saveFile(this.document, data, XLSX_TYPE, clientReportFileName(report.clientName));
-      return true;
-    } catch (error) {
-      console.error('[Excel] The client report could not be built', error);
-      this.notifications.error('The Excel file could not be created. Please try again.');
-      return false;
-    }
+  download(report: Omit<ClientReportExport, 'logo'>): Promise<boolean> {
+    return this.excel.save(clientReportFileName(report.clientName), async (workbook) =>
+      fillClientReportWorkbook(workbook, { ...report, logo: await this.logo() }),
+    );
   }
 
   /** The company logo as a data URL; the summary goes without it if it does not load. */

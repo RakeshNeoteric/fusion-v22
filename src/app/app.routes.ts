@@ -250,6 +250,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reports/internalreports',
+        title: 'Internal Reports',
+        data: { breadcrumb: 'Reports / Internal Reports' },
+        canMatch: [canAccess('INTERNAL_REPORTS')],
+        loadComponent: () =>
+          import('@features/reports/internal-reports/internal-reports-page').then(
+            (m) => m.InternalReportsPage,
+          ),
+      },
+      {
         path: 'forbidden',
         title: 'Access denied',
         data: { breadcrumb: 'Access denied' },

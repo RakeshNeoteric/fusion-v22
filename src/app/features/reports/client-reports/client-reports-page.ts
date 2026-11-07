@@ -12,7 +12,6 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  type ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +20,7 @@ import { ClientReportApi } from '@api/reports/client-report.api';
 import { displayDate } from '@shared/reference/date-time';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
 import { CaseDirectory } from '../../cases/case-setup';
+import { dayBoundary, lastMonth, periodInOrder } from '../report-period';
 import { ReportTable, type TableColumn } from '../report-table';
 import {
   type DashboardLayout,
@@ -50,31 +50,6 @@ interface ShownReport {
   /** The year the dashboard's monthly charts cover (the backend's current year). */
   readonly year: number;
   readonly dashboard: ClientDashboardView;
-}
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const isoDate = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-/** v21's default period: last month, first to last day. */
-function lastMonth(today = new Date()): { from: string; to: string } {
-  return {
-    from: isoDate(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
-    to: isoDate(new Date(today.getFullYear(), today.getMonth(), 0)),
-  };
-}
-
-/** `yyyy-MM-dd` as the start (or end) of that day, local time. */
-function dayBoundary(value: string, end: boolean): Date {
-  const [year, month, day] = value.split('-').map(Number);
-  return end
-    ? new Date(year ?? 0, (month ?? 1) - 1, day ?? 1, 23, 59, 59, 999)
-    : new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
-}
-
-function periodInOrder(group: AbstractControl): ValidationErrors | null {
-  const { from, to } = (group as FormGroup).getRawValue() as { from: string; to: string };
-  return from && to && from > to ? { period: true } : null;
 }
 
 /**

@@ -265,12 +265,16 @@ type), from a palette checked for colour-blind separation. Charts are drawn by `
 Excel files are built in the browser with ExcelJS (`shared/excel`): `NEW_WORKBOOK` loads it on
 first use (a lazy chunk), `excel-sheet.ts` has the v21 look (teal title bar, orange headers,
 zebra rows, filter and frozen headers) and makes sheet names Excel accepts (31 characters, unique),
-and `saveFile` downloads the result. Client Reports' Export Excel (on the Dashboard tab) exports
+and `ExcelDownload` builds, writes and downloads a workbook, telling the user if it fails. Client Reports' Export Excel (on the Dashboard tab) exports
 the report as last viewed (`client-reports/export`): a summary (Nedgroup: its services in the
 period's first month; others: the year's cases by month and service), the dashboard's cards with
 the charts as drawn on screen and their tables (Nedgroup: a services sheet and a vouchers sheet),
 a sheet per report tab, and the redeemed vouchers. v21's empty "Call Centre Stats" sheet is left
 out.
+
+Reports / Internal Reports shows a "coming soon" page, as v21 never finished the screen (its View
+Report and Export did nothing) and the backend has no report for it. Both report pages' period
+helpers are in `report-period.ts`.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
