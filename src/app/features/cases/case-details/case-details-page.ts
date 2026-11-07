@@ -65,6 +65,9 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
 /** v21 header panels that drop down under the header. */
 type HeaderPanel = 'stages' | 'tracker';
 
+/** v21 Case Stages, in order. */
+const CASE_STAGES = ['Case Initiation', 'Evaluation', 'Ongoing', 'On Hold', 'Resolution'] as const;
+
 /**
  * v21 Call Centre / Case Details: the case header and the tabs its service type allows.
  * Loading a case opens it for the user (backend); whoever has it open keeps it until they
@@ -118,8 +121,9 @@ export class CaseDetailsPage implements HasUnsavedChanges {
    * read-only changes (re-open) by themselves.
    */
   protected readonly tabRevision = signal(0);
-  /** The header panel open under the header (v21 Case Stages / Vehicle Tracker). */
-  protected readonly panel = signal<HeaderPanel | null>(null);
+  /** The header panels open under the header (v21 Case Stages / Vehicle Tracker). */
+  private readonly openPanels = signal<ReadonlySet<HeaderPanel>>(new Set());
+  protected readonly stages = CASE_STAGES;
   /** An exit, abort or close is under way. */
   protected readonly leaving = signal(false);
   protected readonly finished = computed(() => {
@@ -262,8 +266,17 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     if (done) this.rebuildTab();
   }
 
+  protected isOpen(panel: HeaderPanel): boolean {
+    return this.openPanels().has(panel);
+  }
+
+  /** Each button opens or closes its own panel; both can be open, Case Stages first (v21). */
   protected togglePanel(panel: HeaderPanel): void {
-    this.panel.update((open) => (open === panel ? null : panel));
+    this.openPanels.update((open) => {
+      const next = new Set(open);
+      if (!next.delete(panel)) next.add(panel);
+      return next;
+    });
   }
 
   /** v21 Contact History. */

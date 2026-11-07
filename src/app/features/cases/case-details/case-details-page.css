@@ -140,18 +140,92 @@
 }
 /* v21 Case Stages / Vehicle Tracker: a panel under the header. */
 .cd-panel-drop {
-  margin-top: -32px;
-  padding: 16px 20px;
-  border: 1px solid #f0f0f0;
+  margin: 0 0 16px;
+  padding: 0 24px;
   border-radius: 10px;
+  background: #fff;
   box-shadow: 0 0 5px #e0e0e0;
 }
-.cd-panel-drop h2 {
-  margin: 0 0 8px;
-  color: var(--app-teal);
-  font-size: 16px;
+.cd-panel-drop[open] {
+  padding-bottom: 24px;
 }
-.cd-panel-drop p {
+.cd-panel-drop > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  color: #000;
+  font-size: 17px;
+  cursor: pointer;
+  list-style: none;
+}
+.cd-panel-drop > summary::-webkit-details-marker {
+  display: none;
+}
+/* v21's expansion arrow: up while open, down while folded. */
+.cd-panel-drop > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-top: 2px solid #333;
+  border-left: 2px solid #333;
+  transform: translateY(2px) rotate(45deg);
+}
+.cd-panel-drop:not([open]) > summary::after {
+  transform: translateY(-2px) rotate(225deg);
+}
+.cd-panel-drop > summary:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}
+/* v21 Material stepper look: numbered circles joined by lines on a pale band. */
+.cd-stages {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   margin: 0;
-  color: #5f6b6b;
+  padding: 24px 20px 48px;
+  background: #f7f8fc;
+  list-style: none;
+  overflow-x: auto;
+}
+.cd-stages li {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.cd-stages li:last-child {
+  flex: 0 0 auto;
+}
+.cd-stages li:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  min-width: 24px;
+  height: 1px;
+  background: #757575;
+}
+.cd-stage-number {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #424242;
+  color: #fff;
+  font-size: 12px;
+}
+.cd-stage-current .cd-stage-number {
+  background: #1e5bc6;
+}
+.cd-stage-label {
+  color: #212121;
+  font-size: 14px;
+}
+.cd-tracker-map {
+  display: block;
+  width: 100%;
+  height: auto;
 }

@@ -273,22 +273,39 @@ describe('Contact History and SMS / Email', () => {
   });
 
   describe('Case Stages and Vehicle Tracker', () => {
-    it('drop down under the header, saying there is nothing to show yet', async () => {
+    it('drop down under the header as v21 cards, together or alone', async () => {
       await show(held());
       const toggle = (label: string) =>
         element<HTMLButtonElement>(`.cd-actions button[aria-label="${label}"]`);
+      const panel = (id: string) => document.querySelector<HTMLDetailsElement>(`#${id}`);
 
       toggle('Case Stages').click();
       await settle();
       expect(toggle('Case Stages').getAttribute('aria-expanded')).toBe('true');
-      expect(text()).toContain('Case stages are not recorded by the backend yet');
+      const stages = [...document.querySelectorAll('.cd-stages li')].map((step) => [
+        step.querySelector('.cd-stage-number')?.textContent?.trim(),
+        step.querySelector('.cd-stage-label')?.textContent?.trim(),
+      ]);
+      expect(stages).toEqual([
+        ['1', 'Case Initiation'],
+        ['2', 'Evaluation'],
+        ['3', 'Ongoing'],
+        ['4', 'On Hold'],
+        ['5', 'Resolution'],
+      ]);
+      expect(document.querySelector('.cd-stage-current')?.textContent).toContain('Case Initiation');
+      expect(panel('cd-panel-stages')?.open).toBe(true);
 
+      // v21: both can be open at once.
       toggle('Vehicle Tracker').click();
       await settle();
-      expect(text()).not.toContain('Case stages are not recorded');
-      expect(text()).toContain('Vehicle tracking is not connected yet');
+      expect(panel('cd-panel-stages')).not.toBeNull();
+      expect(panel('cd-panel-tracker')?.querySelector('img')?.getAttribute('src')).toBe(
+        '/icons/case/vehicle-tracker-map.jpg',
+      );
 
       toggle('Vehicle Tracker').click();
+      toggle('Case Stages').click();
       await settle();
       expect(document.querySelector('.cd-panel-drop')).toBeNull();
     });

@@ -31,7 +31,7 @@
               aria-label="Vehicle Tracker"
               matTooltip="Vehicle Tracker"
               aria-controls="cd-panel-tracker"
-              [attr.aria-expanded]="panel() === 'tracker'"
+              [attr.aria-expanded]="isOpen('tracker')"
               (click)="togglePanel('tracker')"
             >
               <img class="cd-action-img" src="/icons/case/tracking.png" alt="" />
@@ -42,7 +42,7 @@
               aria-label="Case Stages"
               matTooltip="Case Stages"
               aria-controls="cd-panel-stages"
-              [attr.aria-expanded]="panel() === 'stages'"
+              [attr.aria-expanded]="isOpen('stages')"
               (click)="togglePanel('stages')"
             >
               <mat-icon svgIcon="timeline" />
@@ -128,21 +128,38 @@
             </mat-menu>
           </div>
         </header>
-        @switch (panel()) {
-          @case ('stages') {
-            <!-- v21 showed a fixed stepper (only "Case Initiation" ever done): not real data. -->
-            <section id="cd-panel-stages" class="cd-panel-drop" aria-label="Case Stages">
-              <h2>Case Stages</h2>
-              <p>Case stages are not recorded by the backend yet, so they cannot be shown.</p>
-            </section>
-          }
-          @case ('tracker') {
-            <!-- v21 showed a fixed map picture: not real data. -->
-            <section id="cd-panel-tracker" class="cd-panel-drop" aria-label="Vehicle Tracker">
-              <h2>Vehicle Tracker</h2>
-              <p>Vehicle tracking is not connected yet, so no vehicles can be shown.</p>
-            </section>
-          }
+        <!--
+          v21 Case Stages and Vehicle Tracker: cards under the header, open together or alone,
+          each folding with its arrow. As in v21 they show fixed content: the backend records no
+          stages and no vehicle positions yet.
+        -->
+        @if (isOpen('stages')) {
+          <details id="cd-panel-stages" class="cd-panel-drop" open>
+            <summary>Case Stages</summary>
+            <ol class="cd-stages">
+              @for (stage of stages; track stage; let index = $index) {
+                <li
+                  [class.cd-stage-current]="index === 0"
+                  [attr.aria-current]="index === 0 ? 'step' : null"
+                >
+                  <span class="cd-stage-number">{{ index + 1 }}</span>
+                  <span class="cd-stage-label">{{ stage }}</span>
+                </li>
+              }
+            </ol>
+          </details>
+        }
+        @if (isOpen('tracker')) {
+          <details id="cd-panel-tracker" class="cd-panel-drop" open>
+            <summary>Vehicle Tracker</summary>
+            <img
+              class="cd-tracker-map"
+              src="/icons/case/vehicle-tracker-map.jpg"
+              alt="Map of the vehicle's route"
+              width="1775"
+              height="815"
+            />
+          </details>
         }
 
         <div class="cd-tab-bar">
