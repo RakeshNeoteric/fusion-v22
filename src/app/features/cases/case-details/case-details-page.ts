@@ -18,6 +18,7 @@ import { firstValueFrom, forkJoin } from 'rxjs';
 import { CaseApi } from '@api/cases/case.api';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
+import { NotificationService } from '@core/notifications/notification.service';
 import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs } from '../case-setup';
 import { CallerTab } from './tabs/caller/caller-tab';
 import { PolicyDetailsTab } from './tabs/policy-details/policy-details-tab';
@@ -25,6 +26,8 @@ import { ValidationTab } from './tabs/validation/validation-tab';
 import { DeceasedInfoTab } from './tabs/deceased-info/deceased-info-tab';
 import { CauseOfDeathTab } from './tabs/cause-of-death/cause-of-death-tab';
 import { FinalFuneralTab } from './tabs/final-funeral/final-funeral-tab';
+import { PhaseTab } from './tabs/phase/phase-tab';
+import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
 
@@ -32,10 +35,6 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /** Which sub-phase of the migration builds each tab (shown until it is built). */
 const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
-  phase1: '7d',
-  phase2: '7d',
-  phase3: '7d',
-  phase4: '7d',
   voucher: '7e',
   complaints: '7e',
   documents: '7e',
@@ -60,6 +59,7 @@ const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
     DeceasedInfoTab,
     CauseOfDeathTab,
     FinalFuneralTab,
+    PhaseTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CaseWorkspace],
@@ -69,6 +69,7 @@ const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
 export class CaseDetailsPage implements HasUnsavedChanges {
   private readonly api = inject(CaseApi);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
   protected readonly workspace = inject(CaseWorkspace);
 
   /** `?id=` (v21 also used `?caseDetailId=` right after creating a case). */
@@ -90,6 +91,19 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   );
 
   protected readonly builtIn = BUILT_IN;
+
+  /** The phase open now, when it is one. */
+  private readonly phaseTab = viewChild(PhaseTab);
+  /** The phase "+" would add; none once the case has all its service type allows. */
+  protected readonly nextPhase = computed(() => {
+    const details = this.details();
+    return details ? nextPhase(details, this.workspace.allowedTabs()) : null;
+  });
+  /** v21: a phase is added from a phase once that phase has its service provider. */
+  protected readonly canAddPhase = computed(
+    () => !this.workspace.readOnly() && (this.phaseTab()?.readyForNext() ?? true),
+  );
+  protected readonly addingPhase = signal(false);
 
   constructor() {
     effect(() => {
@@ -126,6 +140,26 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     if (!tab || tab.id === this.currentTab()?.id) return;
     if (!(await this.saveTab())) return;
     this.tab.set(tab.id);
+  }
+
+  /** v21 "+": saves the open tab, adds the next phase and opens it. */
+  protected async addPhase(): Promise<void> {
+    const phase = this.nextPhase();
+    if (!phase || !this.canAddPhase() || this.addingPhase()) return;
+    this.addingPhase.set(true);
+    try {
+      if (!(await this.saveTab())) return;
+      // After the save: the phase before may just have been given where it removes to.
+      const details = this.details();
+      if (!details) return;
+      await this.workspace.createPhase(phase, collectFromFor(details, phase));
+      this.tab.set(phase);
+      this.notifications.success(`Phase ${phase.slice(-1)} added.`);
+    } catch {
+      // The error interceptor has said why.
+    } finally {
+      this.addingPhase.set(false);
+    }
   }
 
   /** v21 Exit: saves the open tab and goes back to the cases (the call questions come in 7f). */

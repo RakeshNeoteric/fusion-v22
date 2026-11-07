@@ -28,7 +28,14 @@ export const CASE_TABS = [
 export type CaseTabKey = (typeof CASE_TABS)[number]['id'];
 export type CaseTab = (typeof CASE_TABS)[number];
 
-const PHASES: readonly CaseTabKey[] = ['phase1', 'phase2', 'phase3', 'phase4'];
+export type PhaseKey = 'phase1' | 'phase2' | 'phase3' | 'phase4';
+
+/** Phase tabs in order; a case has at most as many as its service type allows. */
+export const PHASES: readonly PhaseKey[] = ['phase1', 'phase2', 'phase3', 'phase4'];
+
+export function isPhaseKey(id: string): id is PhaseKey {
+  return (PHASES as readonly string[]).includes(id);
+}
 
 /** Tabs for a service type with no rule of its own (v21). */
 const DEFAULT_TABS: readonly CaseTabKey[] = ['caller', 'complaints', 'documents'];
@@ -68,15 +75,15 @@ export function caseTabs(
   allowed: readonly CaseTabKey[],
   phases: readonly CasePhaseSummary[],
 ): CaseTab[] {
-  const cap = allowed.filter((key) => PHASES.includes(key)).length;
+  const cap = allowed.filter((key) => isPhaseKey(key)).length;
   const existing = new Set(
     phases
       .map((phase) => (phase.PhaseName ?? '').trim().toLowerCase())
-      .filter((name): name is CaseTabKey => PHASES.includes(name as CaseTabKey)),
+      .filter((name): name is CaseTabKey => isPhaseKey(name)),
   );
   const shownPhases = PHASES.filter((key) => existing.has(key)).slice(0, cap);
   return CASE_TABS.filter((tab) =>
-    PHASES.includes(tab.id) ? shownPhases.includes(tab.id) : allowed.includes(tab.id),
+    isPhaseKey(tab.id) ? shownPhases.includes(tab.id) : allowed.includes(tab.id),
   );
 }
 

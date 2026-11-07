@@ -94,3 +94,33 @@
   margin: 0;
   color: #5f6b6b;
 }
+/* v21: "+" sits at the end of the tab strip and adds the next phase. */
+.cd-tab-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.cd-tab-bar .cd-tabs {
+  flex: 1;
+  min-width: 0;
+}
+.cd-add-phase {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: 50%;
+  background: var(--app-teal);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cd-add-phase:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.cd-add-phase:focus-visible {
+  outline: 2px solid var(--app-navy);
+  outline-offset: 2px;
+}

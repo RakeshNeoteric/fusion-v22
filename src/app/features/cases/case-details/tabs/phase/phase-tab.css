@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+/* v21: the buttons line up with the fields beside them. */
+.ph-action {
+  justify-content: flex-end;
+}
+.ph-dark {
+  background: var(--app-navy);
+}

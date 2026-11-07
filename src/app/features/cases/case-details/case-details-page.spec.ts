@@ -8,7 +8,7 @@ import type { DirectoryUser } from '@api/models/app.models';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
-import { CASE_INIT, caseDetails } from '../../../../testing/case.fixtures';
+import { CASE_INIT, caseDetails, casePhase } from '../../../../testing/case.fixtures';
 import { CaseDetailsPage } from './case-details-page';
 
 const bob: DirectoryUser = {
@@ -78,7 +78,7 @@ describe('CaseDetailsPage', () => {
             Relationship: null,
           },
         ],
-        CasePhaseDetails: [{ CasePhaseDetailsId: 1, PhaseName: 'phase1' }],
+        CasePhaseDetails: [casePhase({ CasePhaseDetailsId: 1, PhaseName: 'phase1' })],
       }),
     );
     expect(api.open).toHaveBeenCalledWith(4);

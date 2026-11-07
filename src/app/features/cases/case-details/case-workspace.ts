@@ -7,11 +7,15 @@ import {
   type CaseDeceasedRecord,
   type CaseDetails,
   type CaseFinalFuneralRecord,
+  type CasePhaseRecord,
+  type CaseTransportRecord,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
+import { ClientApi } from '@api/clients/client.api';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService, displayNameOf } from '@core/session/user-directory.service';
 import { type CaseDirectory, isFinished } from '../case-setup';
+import { type ClientProvider, clientProviders } from './client-providers';
 
 /**
  * The case open on the Case Details page, shared by its header and tabs (provided by the page).
@@ -23,6 +27,8 @@ export class CaseWorkspace {
   private readonly api = inject(CaseApi);
   private readonly session = inject(SessionService);
   private readonly users = inject(UserDirectoryService);
+  private readonly clients = inject(ClientApi);
+  private providers: { clientId: number; list: Promise<readonly ClientProvider[]> } | null = null;
 
   private readonly loaded = signal<CaseDetails | null>(null);
   private readonly lookups = signal<CaseDirectory | null>(null);
@@ -100,6 +106,49 @@ export class CaseWorkspace {
     const saved = await firstValueFrom(this.api.saveFinalFuneral(record));
     this.loaded.set({ ...details, CaseFinalFuneral: saved });
     return saved;
+  }
+
+  /**
+   * The case client's active service providers (`GET Client?Id=`), loaded once while the case
+   * is open. Fails like the request did; the next call tries again.
+   */
+  loadProviders(): Promise<readonly ClientProvider[]> {
+    const clientId = this.details()?.CaseClientId ?? 0;
+    if (!clientId) return Promise.resolve([]);
+    if (this.providers?.clientId !== clientId) {
+      const list = firstValueFrom(this.clients.get(clientId)).then(clientProviders);
+      list.catch(() => (this.providers = null));
+      this.providers = { clientId, list };
+    }
+    return this.providers.list;
+  }
+
+  /** Adds the next phase; the backend needs its text columns, so they start empty. */
+  async createPhase(phaseName: string, collectFrom: string): Promise<CasePhaseRecord> {
+    const details = this.require();
+    const saved = await firstValueFrom(
+      this.api.createPhase(details.CaseDetailId, phaseName, collectFrom),
+    );
+    this.keepPhase(saved);
+    return saved;
+  }
+
+  /** Saves the whole phase, and its transport check list when given. */
+  async savePhase(
+    record: CasePhaseRecord,
+    transport?: CaseTransportRecord,
+  ): Promise<CasePhaseRecord> {
+    const saved = await firstValueFrom(this.api.savePhase(record, transport));
+    this.keepPhase(saved);
+    return saved;
+  }
+
+  private keepPhase(saved: CasePhaseRecord): void {
+    const details = this.require();
+    const others = (details.CasePhaseDetails ?? []).filter(
+      (phase) => phase.CasePhaseDetailsId !== saved.CasePhaseDetailsId,
+    );
+    this.loaded.set({ ...details, CasePhaseDetails: [...others, saved] });
   }
 
   private require(): CaseDetails {

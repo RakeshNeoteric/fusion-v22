@@ -151,6 +151,14 @@ A case has at most one deceased, cause of death and final funeral record (the da
 second), so their tabs update the loaded record and only create one when the case has none.
 Final Funeral stores the parlour's **name** and copies its details when the user picks it; saved
 details are shown as saved, and a parlour no longer linked to the client stays selectable.
+The client's service providers are loaded once per open case (`CaseWorkspace.loadProviders`).
+
+Phase tabs (`tabs/phase`) are one component for Phase 1–4. "+" on the tab strip adds the first
+phase the case lacks (up to the number its service type allows) once the open phase has its
+provider; Collect From is worked out from the case: the body location for Phase 1, otherwise
+where the phase before removed the deceased to. A phase saves when the mouse leaves it (quietly,
+as in v21) as well as before another tab opens. Its saves send the whole row, so Phase Costing's
+values are kept; the Transport Operator Check List is saved inside its phase.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

@@ -1,0 +1,172 @@
+<form class="app-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <app-record-dialog-frame
+    title="Transport Operator Check List"
+    [isNew]="!data.phase.CaseTransportDetails"
+    [readOnly]="data.readOnly"
+    [saving]="saving()"
+    saveLabel="Save"
+  >
+    <div class="form-row">
+      <div class="form-field">
+        <label for="tc-reference">Case Reference Number</label>
+        <input
+          id="tc-reference"
+          type="text"
+          readonly
+          [value]="data.details.CaseReferenceNumber ?? ''"
+        />
+      </div>
+      <div class="form-field">
+        <label for="tc-number">Case Number</label>
+        <input id="tc-number" type="text" readonly [value]="data.details.CaseNumber ?? ''" />
+      </div>
+    </div>
+
+    <fieldset class="tc-section">
+      <legend class="tc-heading">Service Provider Information</legend>
+      <div class="tc-question">
+        <span class="form-label">Have the mortuary fees been paid?</span>
+        <app-choice-toggle
+          formControlName="feesPaid"
+          label="Have the mortuary fees been paid?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="tc-question">
+        <span class="form-label">The deceased will be transported in</span>
+        <app-choice-toggle
+          formControlName="method"
+          label="The deceased will be transported in"
+          [choices]="methods"
+        />
+      </div>
+      <div class="tc-question">
+        <span class="form-label">Have you alerted the Receiving Funeral Home?</span>
+        <app-choice-toggle
+          formControlName="homeAlerted"
+          label="Have you alerted the Receiving Funeral Home?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="tc-removal-date">Removal Date</label>
+          <input id="tc-removal-date" type="date" formControlName="removalDate" />
+        </div>
+        <div class="form-field">
+          <label for="tc-pickup">Pickup Time</label>
+          <input id="tc-pickup" type="time" formControlName="pickupTime" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="tc-remove-from">Remove From</label>
+          <textarea id="tc-remove-from" rows="3" readonly [value]="data.collectFrom"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="tc-from-office">Telephone (Office Hours)</label>
+          <app-phone-field
+            formControlName="fromOffice"
+            inputId="tc-from-office"
+            label="Remove From telephone (office hours)"
+          />
+          @if (showError(controls.fromOffice)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="tc-from-after">Telephone (After Hours)</label>
+          <app-phone-field
+            formControlName="fromAfterHours"
+            inputId="tc-from-after"
+            label="Remove From telephone (after hours)"
+          />
+          @if (showError(controls.fromAfterHours)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="tc-take-to">Take To</label>
+          <textarea id="tc-take-to" rows="3" readonly [value]="takeTo"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="tc-to-office">Telephone (Office Hours)</label>
+          <app-phone-field
+            formControlName="toOffice"
+            inputId="tc-to-office"
+            label="Take To telephone (office hours)"
+          />
+          @if (showError(controls.toOffice)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="tc-to-after">Telephone (After Hours)</label>
+          <app-phone-field
+            formControlName="toAfterHours"
+            inputId="tc-to-after"
+            label="Take To telephone (after hours)"
+          />
+          @if (showError(controls.toAfterHours)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="tc-section">
+      <legend class="tc-heading">Accompanying Family Information</legend>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="tc-family-name">Name</label>
+          <input id="tc-family-name" type="text" formControlName="familyName" />
+        </div>
+        <div class="form-field">
+          <label for="tc-family-telephone">Telephone</label>
+          <app-phone-field
+            formControlName="familyTelephone"
+            inputId="tc-family-telephone"
+            label="Family telephone"
+          />
+          @if (showError(controls.familyTelephone)) {
+            <span class="field-error">Enter a valid number.</span>
+          }
+        </div>
+      </div>
+      <div class="tc-question">
+        <span class="form-label">Will there be a short prayer?</span>
+        <app-choice-toggle
+          formControlName="shortPrayer"
+          label="Will there be a short prayer?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="tc-question">
+        <span class="form-label"
+          >Have you advised the family that a sleepover may be required?</span
+        >
+        <app-choice-toggle
+          formControlName="sleepover"
+          label="Have you advised the family that a sleepover may be required?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="tc-question">
+        <span class="form-label"
+          >Have you advised the family that removal is ONLY to Receiving Funeral Home?</span
+        >
+        <app-choice-toggle
+          formControlName="removalToHome"
+          label="Have you advised the family that removal is ONLY to Receiving Funeral Home?"
+          [choices]="yesNo"
+        />
+      </div>
+      <div class="form-field">
+        <label for="tc-instructions">Special Instructions</label>
+        <textarea id="tc-instructions" rows="3" formControlName="instructions"></textarea>
+      </div>
+    </fieldset>
+  </app-record-dialog-frame>
+</form>

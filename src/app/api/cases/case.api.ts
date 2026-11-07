@@ -150,12 +150,84 @@ export interface CaseFinalFuneralRecord {
 /** The parts of the final funeral the case list shows (`GET CaseDetails` includes it all). */
 export type CaseFuneralSummary = Pick<CaseFinalFuneralRecord, 'BurialDate'>;
 
-/** A phase on the case; its tab shows when the service type allows it (more in phase 7d). */
-export interface CasePhaseSummary {
+/**
+ * Backend `CaseTransportDetails`: the Transport Operator Check List of one phase (one per phase:
+ * the database refuses a second). Saved inside its phase.
+ */
+export interface CaseTransportRecord {
+  readonly CaseTransportDetailsId: number;
+  readonly CaseDetailId: number;
   readonly CasePhaseDetailsId: number;
-  /** `phase1` … `phase4` */
-  readonly PhaseName: string | null;
+  readonly IsMortuaryFeesPaid: boolean | null;
+  /** `coffin`, `casket` or `transportCoffin` (v21 values). */
+  readonly DeceasedTransportMethod: string | null;
+  readonly IsReceivingFuneralHomeAlerted: boolean | null;
+  /** `DateOnly`: `yyyy-MM-dd`. */
+  readonly RemovalDate: string | null;
+  /** `TimeOnly`: `HH:mm:ss`. */
+  readonly PickupTime: string | null;
+  readonly FromOfficeTelephone: string | null;
+  readonly FromTelephone: string | null;
+  readonly ToOfficeTelephone: string | null;
+  readonly ToTelephone: string | null;
+  /** The accompanying family member. */
+  readonly Name: string | null;
+  readonly Telephone: string | null;
+  /** v21 spelling: a short prayer. */
+  readonly IsShortPayorRequired: boolean | null;
+  readonly IsAdvisedSleepoverRequired: boolean | null;
+  readonly IsAdvisedRemovalToFuneralHome: boolean | null;
+  readonly SpecialInstructions: string | null;
 }
+
+/**
+ * Backend `CasePhaseDetails`: one leg of moving the deceased, collected by one service provider
+ * and removed to another. Phase Costing (7d-2) edits its cost, authorisation and transport.
+ * `PhaseName`, `CollectFrom`, `ManagerName` and `RemoveTo` may not be null. Provider ids are 0
+ * when none is chosen.
+ */
+export interface CasePhaseRecord {
+  readonly CasePhaseDetailsId: number;
+  readonly CaseDetailId: number;
+  /** `phase1` … `phase4` */
+  readonly PhaseName: string;
+  readonly CollectFrom: string;
+  readonly CollectServiceProviderId: number;
+  readonly ManagerName: string;
+  readonly CollectPhysicalAddress: string | null;
+  readonly CollectStorageAddress: string | null;
+  readonly CollectTelephone: string | null;
+  readonly CollectFaxNumber: string | null;
+  readonly PhaseEndDate: string | null;
+  readonly IsActive: boolean;
+  readonly RemoveTo: string;
+  readonly RemoveServiceProviderId: number;
+  readonly FirstName: string | null;
+  readonly SurName: string | null;
+  readonly RemoveToPhysicalAddress: string | null;
+  readonly RemoveToStorageAddress: string | null;
+  readonly RemoveTelephone: string | null;
+  readonly RemoveFaxNumber: string | null;
+  readonly RemoveContactNumber: string | null;
+  /** `Yes` / `No` */
+  readonly UpliftFamily: string | null;
+  readonly Cost: number | null;
+  readonly RatePerKm: number | null;
+  readonly TotalKm: number | null;
+  readonly AdditionalCost: number | null;
+  readonly AdditionalCostNotes: string | null;
+  readonly AuthorisedDate: string | null;
+  readonly AuthorisedByUserId: number | null;
+  readonly AuthorisedByNumber: string | null;
+  readonly VehicleId: number | null;
+  readonly TransportOperatorId: number | null;
+  readonly IsTransportNotified: boolean | null;
+  readonly VehicleDispatched: string | null;
+  readonly CaseTransportDetails?: CaseTransportRecord | null;
+}
+
+/** The parts of a phase the tab strip needs. */
+export type CasePhaseSummary = Pick<CasePhaseRecord, 'CasePhaseDetailsId' | 'PhaseName'>;
 
 /**
  * Backend `CaseDetails`: one call to the call centre. `GET CaseDetails/{id}` also returns the
@@ -191,7 +263,7 @@ export interface CaseDetails {
   readonly CaseFinalFuneral: CaseFinalFuneralRecord | CaseFuneralSummary | null;
   readonly CaseCauseOfDeath?: CaseCauseOfDeathRecord | null;
   readonly CaseValidation?: readonly CaseValidationRecord[] | null;
-  readonly CasePhaseDetails?: readonly CasePhaseSummary[] | null;
+  readonly CasePhaseDetails?: readonly CasePhaseRecord[] | null;
 }
 
 /** The case fields a tab changes; everything else is sent back as loaded. */
@@ -259,11 +331,12 @@ export interface CaseInit {
  * - `GET CaseExit/{id}?status=` lets go of the case, setting its status (only for its holder)
  * - `GET CaseInit` lists clients with their services, and the tabs per service type
  *
- * `POST CaseValidation[/{id}]`, `POST CaseDeceasedInfo[/{id}]`, `POST CaseCauseOfDeath[/{id}]`
- * and `POST CaseFinalFuneral[/{id}]` create or replace a case's records (one deceased, cause of
- * death and final funeral per case: the database refuses a second); `POST CaseValidation/FetchPolicyDetails/{caseId}` asks the
- * client's policy system (only clients with an integration). Every replace overwrites the whole
- * row, so the record is always sent back complete.
+ * `POST CaseValidation[/{id}]`, `POST CaseDeceasedInfo[/{id}]`, `POST CaseCauseOfDeath[/{id}]`,
+ * `POST CaseFinalFuneral[/{id}]` and `POST CasePhaseDetails[/{id}]` create or replace a case's
+ * records (one deceased, cause of death and final funeral per case, and one transport check
+ * list per phase: the database refuses a second). `POST CaseValidation/FetchPolicyDetails/{caseId}`
+ * asks the client's policy system (only clients with an integration). Every replace overwrites
+ * the whole row, so the record is always sent back complete.
  */
 @Injectable({ providedIn: 'root' })
 export class CaseApi {
@@ -338,6 +411,33 @@ export class CaseApi {
       id ? `CaseFinalFuneral/${id}` : 'CaseFinalFuneral',
       columnsOf(record),
     );
+  }
+
+  /**
+   * Adds a phase. The backend needs its text columns not null; the rest is filled on its tab.
+   */
+  createPhase(caseId: number, phaseName: string, collectFrom: string): Observable<CasePhaseRecord> {
+    return this.http.post<CasePhaseRecord>('CasePhaseDetails', {
+      CaseDetailId: caseId,
+      PhaseName: phaseName,
+      IsActive: true,
+      CollectFrom: collectFrom,
+      CollectServiceProviderId: 0,
+      ManagerName: '',
+      RemoveTo: '',
+      RemoveServiceProviderId: 0,
+    });
+  }
+
+  /**
+   * Replaces the phase's columns. With `transport`, its check list is saved too (made when it
+   * has no id); without, the check list is left as it is.
+   */
+  savePhase(record: CasePhaseRecord, transport?: CaseTransportRecord): Observable<CasePhaseRecord> {
+    return this.http.post<CasePhaseRecord>(`CasePhaseDetails/${record.CasePhaseDetailsId}`, {
+      ...columnsOf(record),
+      ...(transport ? { CaseTransportDetails: transport } : {}),
+    });
   }
 
   fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {

@@ -35,15 +35,35 @@
           </div>
         </header>
 
-        <app-folder-tabs
-          #tabStrip
-          class="cd-tabs"
-          idPrefix="case"
-          label="Case"
-          [tabs]="tabs()"
-          [selected]="currentTab()?.id ?? ''"
-          (choose)="choose($event)"
-        />
+        <div class="cd-tab-bar">
+          <app-folder-tabs
+            #tabStrip
+            class="cd-tabs"
+            idPrefix="case"
+            label="Case"
+            [tabs]="tabs()"
+            [selected]="currentTab()?.id ?? ''"
+            (choose)="choose($event)"
+          />
+          @if (nextPhase()) {
+            <button
+              type="button"
+              class="cd-add-phase"
+              aria-label="Add Phase"
+              [matTooltip]="
+                canAddPhase()
+                  ? 'Add Phase'
+                  : workspace.readOnly()
+                    ? 'This case cannot be changed'
+                    : 'Select a Service Provider to enable Add'
+              "
+              [disabled]="!canAddPhase() || addingPhase()"
+              (click)="addPhase()"
+            >
+              +
+            </button>
+          }
+        </div>
         @if (currentTab(); as tab) {
           <section
             role="tabpanel"
@@ -69,6 +89,18 @@
               }
               @case ('final-funeral') {
                 <app-final-funeral-tab />
+              }
+              @case ('phase1') {
+                <app-phase-tab phase="phase1" />
+              }
+              @case ('phase2') {
+                <app-phase-tab phase="phase2" />
+              }
+              @case ('phase3') {
+                <app-phase-tab phase="phase3" />
+              }
+              @case ('phase4') {
+                <app-phase-tab phase="phase4" />
               }
               @default {
                 <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>

@@ -1,0 +1,22 @@
+.tc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 16px 0 0;
+  padding: 0;
+  border: none;
+}
+.tc-heading {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--app-navy);
+  font-size: 17px;
+  font-weight: 600;
+}
+.tc-question {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}

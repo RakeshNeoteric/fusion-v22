@@ -11,6 +11,8 @@ import {
   type CaseDetails,
   type CaseFinalFuneralRecord,
   type CaseInit,
+  type CasePhaseRecord,
+  type CaseTransportRecord,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
 import { ClientApi } from '@api/clients/client.api';
@@ -19,7 +21,7 @@ import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
-import { CASE_INIT, caseDetails } from '../../../../../../testing/case.fixtures';
+import { CASE_INIT, caseDetails, casePhase } from '../../../../../../testing/case.fixtures';
 import { CaseDetailsPage } from '../../case-details-page';
 
 const user = (id: number, first: string, last: string, email: string): DirectoryUser => ({
@@ -38,7 +40,7 @@ const INIT: CaseInit = {
     { ServiceTypeCode: 'FUN', TabNames: 'caller,policy-details,validation' },
     {
       ServiceTypeCode: 'AVS',
-      TabNames: 'caller,validation,deceased-info,cause-of-death,final-funeral',
+      TabNames: 'caller,validation,deceased-info,cause-of-death,final-funeral,phase1,phase2,phase3',
     },
   ],
 };
@@ -81,6 +83,8 @@ export function caseTabHarness() {
     saveDeceased: vi.fn(),
     saveCauseOfDeath: vi.fn(),
     saveFinalFuneral: vi.fn(),
+    createPhase: vi.fn(),
+    savePhase: vi.fn(),
     fetchPolicy: vi.fn(),
   };
   const clients = { get: vi.fn() };
@@ -106,6 +110,25 @@ export function caseTabHarness() {
     );
     api.saveFinalFuneral.mockImplementation((record: CaseFinalFuneralRecord) =>
       of({ ...record, CaseFinalFuneralId: record.CaseFinalFuneralId || 79 }),
+    );
+    api.createPhase.mockImplementation((caseId: number, name: string, collectFrom: string) =>
+      of(
+        casePhase({
+          CasePhaseDetailsId: 70,
+          CaseDetailId: caseId,
+          PhaseName: name,
+          CollectFrom: collectFrom,
+        }),
+      ),
+    );
+    // The backend echoes the phase with its check list as stored.
+    api.savePhase.mockImplementation((record: CasePhaseRecord, transport?: CaseTransportRecord) =>
+      of({
+        ...record,
+        CaseTransportDetails: transport
+          ? { ...transport, CaseTransportDetailsId: transport.CaseTransportDetailsId || 91 }
+          : (record.CaseTransportDetails ?? null),
+      }),
     );
     clients.get.mockReturnValue(of(null));
     TestBed.configureTestingModule({

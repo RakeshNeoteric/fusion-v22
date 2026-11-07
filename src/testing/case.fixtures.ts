@@ -1,10 +1,14 @@
 import type {
   CaseDeceasedRecord,
+  CasePhaseRecord,
+  CaseTransportRecord,
   CaseDetails,
   CaseInit,
   CaseInitService,
   CaseValidationRecord,
 } from '@api/cases/case.api';
+import type { ClientWithLinks } from '@api/clients/client.api';
+import type { ServiceProvider } from '@api/services/service-provider.api';
 
 export const caseService = (
   id: number,
@@ -135,3 +139,108 @@ export const caseValidation = (
   DeceaseId: null,
   ...extra,
 });
+
+export const casePhase = (extra: Partial<CasePhaseRecord> = {}): CasePhaseRecord => ({
+  CasePhaseDetailsId: 60,
+  CaseDetailId: 1,
+  PhaseName: 'phase1',
+  CollectFrom: '',
+  CollectServiceProviderId: 0,
+  ManagerName: '',
+  CollectPhysicalAddress: null,
+  CollectStorageAddress: null,
+  CollectTelephone: null,
+  CollectFaxNumber: null,
+  PhaseEndDate: null,
+  IsActive: true,
+  RemoveTo: '',
+  RemoveServiceProviderId: 0,
+  FirstName: null,
+  SurName: null,
+  RemoveToPhysicalAddress: null,
+  RemoveToStorageAddress: null,
+  RemoveTelephone: null,
+  RemoveFaxNumber: null,
+  RemoveContactNumber: null,
+  UpliftFamily: null,
+  Cost: null,
+  RatePerKm: null,
+  TotalKm: null,
+  AdditionalCost: null,
+  AdditionalCostNotes: null,
+  AuthorisedDate: null,
+  AuthorisedByUserId: null,
+  AuthorisedByNumber: null,
+  VehicleId: null,
+  TransportOperatorId: null,
+  IsTransportNotified: null,
+  VehicleDispatched: null,
+  CaseTransportDetails: null,
+  ...extra,
+});
+
+export const caseTransport = (extra: Partial<CaseTransportRecord> = {}): CaseTransportRecord => ({
+  CaseTransportDetailsId: 90,
+  CaseDetailId: 1,
+  CasePhaseDetailsId: 60,
+  IsMortuaryFeesPaid: null,
+  DeceasedTransportMethod: null,
+  IsReceivingFuneralHomeAlerted: null,
+  RemovalDate: null,
+  PickupTime: null,
+  FromOfficeTelephone: null,
+  FromTelephone: null,
+  ToOfficeTelephone: null,
+  ToTelephone: null,
+  Name: null,
+  Telephone: null,
+  IsShortPayorRequired: null,
+  IsAdvisedSleepoverRequired: null,
+  IsAdvisedRemovalToFuneralHome: null,
+  SpecialInstructions: null,
+  ...extra,
+});
+
+/** A service provider with one "Combined" contact (manager, telephone and fax). */
+export const serviceProvider = (
+  id: number,
+  name: string,
+  extra: Partial<ServiceProvider> = {},
+): ServiceProvider =>
+  ({
+    ServiceProviderId: id,
+    Name: name,
+    Province: 'Gauteng',
+    OfficeAddress: `${id} Main Road`,
+    StorageAddress: `${id} Cold Store`,
+    IsActive: true,
+    IsDeleted: false,
+    IsInternalServiceProvider: false,
+    RatePerKm: 12.5,
+    ContactDetails: [
+      {
+        Id: 1,
+        Type: 'Combined',
+        Code: '+27',
+        Value: '821234567',
+        Mobile: null,
+        Name: `Manager ${id}`,
+        Fax: '0114567890',
+        Email: null,
+      },
+    ],
+    ...extra,
+  }) as ServiceProvider;
+
+/** Client 1 with these service providers linked (`GET Client?Id=1`). */
+export const clientWithProviders = (...providers: ServiceProvider[]): ClientWithLinks =>
+  ({
+    ClientId: 1,
+    ClientServiceProvider: providers.map((dto, index) => ({
+      ClientServiceProviderId: index + 1,
+      ClientId: 1,
+      ServiceProviderId: dto.ServiceProviderId,
+      IsDeleted: false,
+      ServiceProviderDto: dto,
+    })),
+  }) as unknown as ClientWithLinks;

@@ -9,22 +9,15 @@ import {
   untracked,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import type { CaseDetails, CaseFinalFuneralRecord } from '@api/cases/case.api';
-import { ClientApi } from '@api/clients/client.api';
 import { dateOnly } from '@api/services/service-provider.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { displayStoredPhone, storedToE164 } from '@shared/reference/phone';
+import { type ClientProvider, findProviderByName } from '../../client-providers';
 import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
-import {
-  type FuneralParlour,
-  NO_PARLOUR,
-  type ParlourDetails,
-  findParlour,
-  funeralParlours,
-} from './funeral-parlours';
+import { NO_PARLOUR, type ParlourDetails, parlourDetails } from './funeral-parlours';
 
 /** The saved funeral, or a new one; the case list may have loaded only the burial date. */
 function savedFuneral(details: CaseDetails): CaseFinalFuneralRecord {
@@ -74,11 +67,10 @@ function savedDetails(record: CaseFinalFuneralRecord): ParlourDetails {
 })
 export class FinalFuneralTab extends CaseTabForm {
   private readonly workspace = inject(CaseWorkspace);
-  private readonly clients = inject(ClientApi);
   private readonly notifications = inject(NotificationService);
 
   protected readonly readOnly = this.workspace.readOnly;
-  protected readonly parlours = signal<readonly FuneralParlour[]>([]);
+  protected readonly parlours = signal<readonly ClientProvider[]>([]);
   /** The parlour's details as they will be saved. */
   protected readonly copied = signal<ParlourDetails>(NO_PARLOUR);
 
@@ -94,7 +86,7 @@ export class FinalFuneralTab extends CaseTabForm {
   /** A saved parlour the client no longer has: still shown, so saving keeps it. */
   protected readonly unlisted = computed(() => {
     const name = this.savedParlour();
-    return name && !findParlour(this.parlours(), name) ? name : '';
+    return name && !findProviderByName(this.parlours(), name) ? name : '';
   });
   private readonly savedParlour = signal('');
   private baseline = '';
@@ -119,9 +111,9 @@ export class FinalFuneralTab extends CaseTabForm {
   /** The user chose a parlour: its details are copied (none chosen: they are cleared). */
   protected parlourChanged(): void {
     const name = this.controls.parlour.value;
-    const parlour = findParlour(this.parlours(), name);
+    const parlour = findProviderByName(this.parlours(), name);
     const details = this.workspace.details();
-    if (parlour) this.copied.set(parlour);
+    if (parlour) this.copied.set(parlourDetails(parlour));
     else if (!name) this.copied.set(NO_PARLOUR);
     // The saved parlour the client no longer has: back to what was saved with it.
     else if (details) this.copied.set(savedDetails(savedFuneral(details)));
@@ -180,7 +172,7 @@ export class FinalFuneralTab extends CaseTabForm {
     this.savedParlour.set(name);
     this.form.reset(
       {
-        parlour: findParlour(this.parlours(), name)?.name ?? name,
+        parlour: findProviderByName(this.parlours(), name)?.name ?? name,
         burialDate: dateOnly(saved.BurialDate),
         mobile: storedToE164(saved.MobileNumber),
         priority: saved.Priority ?? '',
@@ -192,14 +184,12 @@ export class FinalFuneralTab extends CaseTabForm {
   }
 
   private async loadParlours(): Promise<void> {
-    const clientId = this.workspace.details()?.CaseClientId;
-    if (!clientId) return;
     try {
-      const parlours = funeralParlours(await firstValueFrom(this.clients.get(clientId)));
+      const parlours = await this.workspace.loadProviders();
       const unchanged = this.snapshot() === this.baseline;
       this.parlours.set(parlours);
       // The saved name may differ in case from the provider's: select the provider.
-      const match = findParlour(parlours, this.controls.parlour.value);
+      const match = findProviderByName(parlours, this.controls.parlour.value);
       if (match) this.controls.parlour.setValue(match.name, { emitEvent: false });
       if (unchanged) this.baseline = this.snapshot();
     } catch {

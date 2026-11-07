@@ -1,0 +1,161 @@
+<form class="tab-panel app-form" novalidate [formGroup]="form">
+  <fieldset class="tab-section">
+    <legend class="tab-heading">Collect From</legend>
+    <div class="form-field">
+      <label for="ph-collect-from">Collect From</label>
+      <input
+        id="ph-collect-from"
+        type="text"
+        readonly
+        [value]="collectFrom()"
+        placeholder="The body location, or where the phase before went"
+      />
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="ph-collect-provider">Service Provider</label>
+        <select
+          id="ph-collect-provider"
+          formControlName="collectProvider"
+          (change)="collectProviderChanged()"
+        >
+          <option [ngValue]="null">Select Service provider</option>
+          @for (id of unlisted(); track id) {
+            <option [ngValue]="id">Saved provider (no longer linked to the client)</option>
+          }
+          @for (provider of providers(); track provider.id) {
+            <option [ngValue]="provider.id">{{ provider.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="ph-manager">Manager's Name</label>
+        <input id="ph-manager" type="text" readonly [value]="collect().manager" />
+      </div>
+      <div class="form-field ph-action">
+        <button
+          type="button"
+          class="app-button"
+          [disabled]="readOnly() || notified() || busy()"
+          (click)="notify()"
+        >
+          {{ notified() ? 'Notified' : 'Notify' }}
+        </button>
+      </div>
+      <div class="form-field ph-action">
+        <button type="button" class="app-button ph-dark" (click)="openChecklist()">
+          Transport Operator CheckList
+        </button>
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="ph-collect-physical">Physical Address</label>
+        <textarea
+          id="ph-collect-physical"
+          rows="2"
+          readonly
+          [value]="collect().physicalAddress"
+        ></textarea>
+      </div>
+      <div class="form-field">
+        <label for="ph-collect-storage">Storage Address</label>
+        <textarea
+          id="ph-collect-storage"
+          rows="2"
+          readonly
+          [value]="collect().storageAddress"
+        ></textarea>
+      </div>
+      <div class="form-field">
+        <label for="ph-telephone">Telephone</label>
+        <app-phone-field formControlName="telephone" inputId="ph-telephone" label="Telephone" />
+        @if (showError(controls.telephone)) {
+          <span class="field-error">Enter a valid number.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="ph-fax">Fax Number</label>
+        <app-phone-field formControlName="fax" inputId="ph-fax" label="Fax Number" />
+        @if (showError(controls.fax)) {
+          <span class="field-error">Enter a valid number.</span>
+        }
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="tab-section">
+    <legend class="tab-heading">Remove To</legend>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="ph-remove-provider">Service Provider</label>
+        <select
+          id="ph-remove-provider"
+          formControlName="removeProvider"
+          (change)="removeProviderChanged()"
+        >
+          <option [ngValue]="null">Select Service provider</option>
+          @for (id of unlisted(); track id) {
+            <option [ngValue]="id">Saved provider (no longer linked to the client)</option>
+          }
+          @for (provider of providers(); track provider.id) {
+            <option [ngValue]="provider.id">{{ provider.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="ph-remove-physical">Physical Address</label>
+        <textarea
+          id="ph-remove-physical"
+          rows="2"
+          readonly
+          [value]="remove().physicalAddress"
+        ></textarea>
+      </div>
+      <div class="form-field">
+        <label for="ph-remove-storage">Storage Address</label>
+        <textarea
+          id="ph-remove-storage"
+          rows="2"
+          readonly
+          [value]="remove().storageAddress"
+        ></textarea>
+      </div>
+      <div class="form-field">
+        <label for="ph-remove-telephone">Telephone</label>
+        <input id="ph-remove-telephone" type="text" readonly [value]="removeTelephone()" />
+      </div>
+      <div class="form-field">
+        <label for="ph-remove-fax">Fax Number</label>
+        <input id="ph-remove-fax" type="text" readonly [value]="removeFax()" />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <span class="form-label" id="ph-uplift-label">Uplift Family</span>
+        <mat-slide-toggle formControlName="upliftFamily" aria-labelledby="ph-uplift-label" />
+      </div>
+      <div class="form-field">
+        <label for="ph-first">First Name</label>
+        <input id="ph-first" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="ph-surname">Surname</label>
+        <input id="ph-surname" type="text" formControlName="surname" />
+      </div>
+      <div class="form-field">
+        <label for="ph-contact">Contact Number</label>
+        <app-phone-field
+          formControlName="contactNumber"
+          inputId="ph-contact"
+          label="Contact Number"
+        />
+        @if (showError(controls.contactNumber)) {
+          <span class="field-error">Enter a valid number.</span>
+        }
+      </div>
+    </div>
+  </fieldset>
+</form>
