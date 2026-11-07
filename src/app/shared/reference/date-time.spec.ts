@@ -1,6 +1,19 @@
-import { dateOnly, displayDate, formatDateTime, localParts, utcMoment } from './date-time';
+import {
+  dateOnly,
+  displayDate,
+  formatDateTime,
+  localParts,
+  longDate,
+  utcMoment,
+} from './date-time';
 
 describe('date-time', () => {
+  it('writes dates out in full for printed documents', () => {
+    expect(longDate('2026-11-06T00:00:00')).toBe('06 November 2026');
+    expect(longDate('0001-01-01')).toBe('');
+    expect(longDate(null)).toBe('');
+  });
+
   it('treats .NET DateTime.MinValue as no date', () => {
     expect(dateOnly('0001-01-01T00:00:00')).toBe('');
     expect(dateOnly(null)).toBe('');

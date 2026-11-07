@@ -8,6 +8,7 @@ import type {
   CaseValidationRecord,
 } from '@api/cases/case.api';
 import type { ClientWithLinks } from '@api/clients/client.api';
+import type { CompanyAddress } from '@api/config/company-details.api';
 import type { ServiceProvider } from '@api/services/service-provider.api';
 
 export const caseService = (
@@ -26,7 +27,51 @@ export const caseService = (
 });
 
 /** `GET CaseInit`: Zulu Insure (Funeral, Groceries, a deleted and an inactive service), Acme, Gone. */
+const companyAddress = (
+  type: CompanyAddress['AddressType'],
+  extra: Partial<CompanyAddress> = {},
+): CompanyAddress => ({
+  AddressId: type === 'FMSPhysicalAddress' ? 1 : 2,
+  AddressType: type,
+  CompanyName: null,
+  ContactName: null,
+  AddressLine1: null,
+  AddressLine2: null,
+  City: null,
+  State: null,
+  PostalCode: null,
+  Country: 'ZA',
+  PhoneNumber: null,
+  Fax: null,
+  Email: null,
+  CompanyRegNo: null,
+  VatNumber: null,
+  LogoStoragePath: null,
+  IsSameAsPhysicalAddress: false,
+  ...extra,
+});
+
+/** The company's addresses, as Security / Company Details sets them up. */
+export const COMPANY_ADDRESSES: readonly CompanyAddress[] = [
+  companyAddress('FMSPhysicalAddress', {
+    CompanyName: 'Fusion Funerals',
+    AddressLine1: '28 Sloane Street',
+    City: 'Bryanston',
+    PostalCode: '2021',
+    PhoneNumber: '110046131',
+    Email: 'info@fusion.co.za',
+    CompanyRegNo: '2020/391135/07',
+    VatNumber: '4740294220',
+  }),
+  companyAddress('FMSPostalAddress', {
+    AddressLine1: 'P O Box 71516',
+    City: 'Bryanston',
+    PostalCode: '2021',
+  }),
+];
+
 export const CASE_INIT: CaseInit = {
+  Address: COMPANY_ADDRESSES,
   ClientDto: [
     {
       ClientId: 1,

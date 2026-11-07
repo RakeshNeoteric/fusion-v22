@@ -1,4 +1,7 @@
+import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
+import { capturePdfs, pdfTexts } from '../../../../../testing/pdf';
 import { caseTabHarness, held } from '../tabs/testing/case-tab-harness';
 
 const cost = (extra: Partial<CaseAdditionalCostRecord> = {}): CaseAdditionalCostRecord => ({
@@ -29,6 +32,13 @@ describe('Additional Cost', () => {
   const { api, notify, show, settle, fromMenu, element, type, press, text } = caseTabHarness();
 
   const open = () => fromMenu('Additional Cost');
+
+  const { printed } = capturePdfs();
+
+  const poButton = () =>
+    [...document.querySelectorAll<HTMLButtonElement>('app-additional-costing-dialog button')].find(
+      (button) => button.textContent?.trim() === 'Additional Cost PO',
+    );
 
   it('adds a cost and saves the case totals', async () => {
     await show(avs([cost()]));
@@ -100,5 +110,61 @@ describe('Additional Cost', () => {
     expect(document.querySelector('#ac-name')).toBeNull();
     expect(document.querySelector('button[aria-label="Delete Flowers"]')).toBeNull();
     expect(text()).toContain('Flowers');
+  });
+
+  it('prints the costs as a purchase order with the company, client and controller', async () => {
+    await show({
+      ...avs([cost(), cost({ CaseAdditionalCostId: 21, Description: 'Tea', Amount: 50 })]),
+      CaseReferenceNumber: 'REF-4',
+      CaseNumber: 'C-4',
+    });
+    await open();
+    poButton()?.click();
+    await settle();
+
+    expect(printed).toHaveLength(1);
+    expect(printed[0]?.images).toEqual({ logo: 'http://app/images/logo.png' });
+    const texts = pdfTexts(printed[0]?.content);
+    expect(texts).toEqual(
+      expect.arrayContaining([
+        'REF-4',
+        'C-4',
+        'P O Box 71516, Bryanston, 2021',
+        '2020/391135/07',
+        'Zulu Insure',
+        'Carl Ng',
+        'Flowers',
+        'Tea',
+        'R 350.00',
+      ]),
+    );
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(texts).toContain(
+      `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`,
+    );
+  });
+
+  it('numbers the order after the case when it has no reference yet (v21)', async () => {
+    await show({ ...avs([cost()]), CaseReferenceNumber: null, CaseNumber: null });
+    await open();
+    poButton()?.click();
+    await settle();
+    expect(pdfTexts(printed[0]?.content)).toEqual(expect.arrayContaining(['ACPO-4', '4']));
+  });
+
+  it('cannot print without costs, or while the case cannot be changed (v21)', async () => {
+    await show(avs());
+    await open();
+    expect(poButton()?.disabled).toBe(true);
+    TestBed.inject(MatDialog).closeAll();
+    await settle();
+
+    await show({ ...avs([cost()]), CaseOpenedBy: 'carl@x.com' });
+    await open();
+    expect(poButton()?.disabled).toBe(true);
+    poButton()?.click();
+    await settle();
+    expect(printed).toHaveLength(0);
   });
 });

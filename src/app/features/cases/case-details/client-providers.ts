@@ -18,6 +18,11 @@ export interface ClientProvider {
   /** Internal providers are costed by fixed cost, others by rate per km (7d-2). */
   readonly isInternal: boolean;
   readonly ratePerKm: number;
+  readonly vatNumber: string;
+  readonly companyRegNo: string;
+  readonly designationNumber: string;
+  /** From the provider's "Combined" contact (v21). */
+  readonly email: string;
 }
 
 /**
@@ -46,7 +51,7 @@ export function findProviderByName(
 }
 
 /**
- * v21: the manager, telephone and fax come from the provider's "Combined" contact (telephone,
+ * v21: the manager, telephone, fax and email come from the provider's "Combined" contact (telephone,
  * or its mobile when it has none).
  */
 function providerOf(provider: ServiceProvider): ClientProvider {
@@ -67,5 +72,9 @@ function providerOf(provider: ServiceProvider): ClientProvider {
     fax: storedToE164(combined?.Fax),
     isInternal: provider.IsInternalServiceProvider === true,
     ratePerKm: provider.RatePerKm,
+    vatNumber: provider.VATNumber?.trim() ?? '',
+    companyRegNo: provider.CompanyRegNo?.trim() ?? '',
+    designationNumber: provider.DesignationNumber?.trim() ?? '',
+    email: combined?.Email?.trim() ?? '',
   };
 }

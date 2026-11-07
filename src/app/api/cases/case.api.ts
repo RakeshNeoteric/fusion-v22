@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
+import type { CompanyAddress } from '@api/config/company-details.api';
 import type { CaseVoucherRecord } from '@api/vouchers/voucher.api';
 
 /** Backend `CaseStatus`, sent as its name. */
@@ -467,6 +468,8 @@ export interface ServiceTypeTabs {
 
 /** `GET CaseInit`: what the case screens pick from. */
 export interface CaseInit {
+  /** The company's physical and postal addresses (Security / Company Details). */
+  readonly Address: readonly CompanyAddress[] | null;
   readonly ClientDto: readonly CaseInitClient[] | null;
   readonly ServiceTypeBasedTabs: readonly ServiceTypeTabs[] | null;
 }

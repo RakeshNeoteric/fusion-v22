@@ -19,11 +19,15 @@ import { displayDate } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
+import { letterhead } from '@shared/pdf/letterhead';
+import { PDF_FONT, PdfRenderer } from '@shared/pdf/pdf-renderer';
 import { money } from '@shared/reference/money';
 import { displayStoredPhone } from '@shared/reference/phone';
 import type { ClientProvider } from '../client-providers';
 import { CaseWorkspace } from '../case-workspace';
 import { activePhases, caseTotals, isAuthorised, phaseTotal } from './costing-rules';
+import { removalDocument, removalOrder } from './removal-order';
+import { removalOrderPdf } from './removal-order-pdf';
 import { openTransport } from './transport-dialog';
 
 /** Today as `yyyy-MM-dd`, in local time. */
@@ -83,10 +87,13 @@ export class PhaseCostingDialog {
   private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialogRef = inject<MatDialogRef<PhaseCostingDialog>>(MatDialogRef);
+  private readonly pdf = inject(PdfRenderer);
 
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
+  /** The card whose removal document is being built. */
+  protected readonly printing = signal<number | null>(null);
   protected readonly cards = signal<readonly PhaseCard[]>([]);
   /** Bumped when a card's values change, so totals follow. */
   private readonly edits = signal(0);
@@ -247,6 +254,42 @@ export class PhaseCostingDialog {
       this.reset(card);
       this.notifications.success('Transport details saved.');
     });
+  }
+
+  /**
+   * v21 Removal Order (once the phase is authorised) or Removal Order Instructions (other
+   * providers), from the phase as saved, in a new tab. Like v21, also for a case that can only
+   * be viewed.
+   */
+  protected async printRemoval(card: PhaseCard, instructions: boolean): Promise<void> {
+    const details = this.workspace.details();
+    const directory = this.workspace.directory();
+    const phase = this.saved(card);
+    if (!details || !directory || !phase || this.printing() !== null) return;
+    if (!instructions && !this.authorised(card)) return;
+    const provider = this.provider(card);
+    const name = (id: number | null) => (id ? (this.users.displayName(id) ?? '') : '');
+    this.printing.set(card.id);
+    try {
+      const order = removalOrder({
+        document: removalDocument(provider, instructions),
+        details,
+        phase,
+        provider,
+        logoUrl: this.pdf.assetUrl('images/logo.png'),
+        letterhead: letterhead(directory.companyAddresses()),
+        clientName: directory.printedClientName(details.CaseClientId),
+        caseController: name(details.CaseControllerUserId),
+        authorisedBy: name(phase.AuthorisedByUserId),
+        operator:
+          this.operators().find((row) => row.TransportOperatorId === phase.TransportOperatorId)
+            ?.Name ?? '',
+        vehicle: this.vehicles().find((row) => row.VehicleId === phase.VehicleId)?.RegNumber ?? '',
+      });
+      await this.pdf.open(() => removalOrderPdf(order, PDF_FONT));
+    } finally {
+      this.printing.set(null);
+    }
   }
 
   /** Saves the phases' changed costs, then closes; stays open when one is wrong. */

@@ -12,6 +12,19 @@ export function displayDate(value: string | null | undefined): string {
   return `${day}/${month}/${year}`;
 }
 
+const LONG_DATE = new Intl.DateTimeFormat('en-ZA', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** `2026-11-06` → `06 November 2026` (v21 printed documents); '' for no date. */
+export function longDate(value: string | null | undefined): string {
+  const date = dateOnly(value);
+  return date ? LONG_DATE.format(new Date(`${date}T00:00:00Z`)) : '';
+}
+
 /**
  * A moment the backend stores in UTC. The frontend sends `toISOString()`, but the backend
  * returns it without a zone, so a value without one is read as UTC. Null when there is none or

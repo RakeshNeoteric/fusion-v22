@@ -6,6 +6,7 @@ import type {
   CasePhaseSummary,
   ServiceTypeTabs,
 } from '@api/cases/case.api';
+import type { CompanyAddress } from '@api/config/company-details.api';
 import type { MenuCode } from '@api/models/menu-code';
 import { statusLabel } from '@shared/reference/lookup-label';
 
@@ -152,6 +153,16 @@ export class CaseDirectory {
   clientName(clientId: number | null): string {
     const client = this.client(clientId);
     return client ? statusLabel(client.ClientName, client) : '';
+  }
+
+  /** The client's name as printed on documents (no status). */
+  printedClientName(clientId: number | null): string {
+    return this.client(clientId)?.ClientName.trim() ?? '';
+  }
+
+  /** The company's addresses, for its letterhead. */
+  companyAddresses(): readonly CompanyAddress[] {
+    return this.init.Address ?? [];
   }
 
   /** "Funeral", or with "(Inactive)" / "(Deleted)" (v21). */

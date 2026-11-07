@@ -84,7 +84,7 @@ describe('app routes', () => {
           provide: CaseApi,
           useValue: {
             list: () => of([]),
-            init: () => of({ ClientDto: [], ServiceTypeBasedTabs: [] }),
+            init: () => of({ Address: [], ClientDto: [], ServiceTypeBasedTabs: [] }),
             open: () =>
               of({ CaseDetailId: 4, CaseStatus: 'Active', CaseOpenedBy: null, CaseClientId: 1 }),
             exit: () => of(''),

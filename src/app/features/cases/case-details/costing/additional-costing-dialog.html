@@ -4,10 +4,11 @@
     <button
       type="button"
       class="app-button ac-dark"
-      disabled
-      matTooltip="Coming with the Phase 8 reports"
+      [disabled]="readOnly() || costs().length === 0 || printing()"
+      [title]="costs().length === 0 ? 'Add a cost first' : ''"
+      (click)="printPo()"
     >
-      Additional Cost PO
+      {{ printing() ? 'Creating PO…' : 'Additional Cost PO' }}
     </button>
   </div>
 

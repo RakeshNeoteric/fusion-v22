@@ -8,6 +8,7 @@ import {
   clientWithProviders,
   serviceProvider,
 } from '../../../../../testing/case.fixtures';
+import { capturePdfs, pdfTexts } from '../../../../../testing/pdf';
 import { caseTabHarness, held } from '../tabs/testing/case-tab-harness';
 import { dispatchedMoment } from './transport-dialog';
 
@@ -61,6 +62,11 @@ describe('Phase Costing', () => {
     await fromMenu('Phase Costing');
     await settle();
   };
+  const { printed } = capturePdfs();
+  const button = (label: string) =>
+    [...document.querySelectorAll<HTMLButtonElement>('.pc-actions button')].find(
+      (candidate) => candidate.textContent?.trim() === label,
+    );
   const savedPhase = (call = 0) => api.savePhase.mock.calls[call]?.[0] as CasePhaseRecord;
 
   beforeEach(() => {
@@ -175,6 +181,72 @@ describe('Phase Costing', () => {
     expect(element<HTMLButtonElement>('.pc-actions button').disabled).toBe(true);
     await press('Close');
     expect(api.savePhase).not.toHaveBeenCalled();
+  });
+
+  it('prints the removal order instructions for another provider, before authorising', async () => {
+    await show(avs({ TotalKm: 10, RatePerKm: 12.5, Cost: null, AdditionalCost: 5 }));
+    await open();
+    expect(button('Removal Order')?.disabled).toBe(true);
+
+    button('Removal Order Instructions')?.click();
+    await settle();
+    const texts = pdfTexts(printed[0]?.content);
+    expect(texts).toEqual(
+      expect.arrayContaining(['Removal Instruction', 'Phase 1', 'AVBOB - 1 Main Road', 'Carl Ng']),
+    );
+    expect(texts).not.toContain('BILLING DETAILS');
+  });
+
+  it("prints an authorised phase's removal order with what it costs", async () => {
+    await show(
+      avs({
+        TotalKm: 10,
+        RatePerKm: 12.5,
+        AdditionalCost: 5,
+        AuthorisedDate: '2026-11-05',
+        AuthorisedByUserId: 7,
+      }),
+    );
+    await open();
+    button('Removal Order')?.click();
+    await settle();
+    expect(pdfTexts(printed[0]?.content)).toEqual(
+      expect.arrayContaining([
+        'Removal Order',
+        'Jane Doe',
+        '05 November 2026',
+        'BILLING DETAILS',
+        'R 125.00',
+        'R 5.00',
+        'R 130.00',
+      ]),
+    );
+  });
+
+  it("prints an internal provider's order with its driver and vehicle, without instructions", async () => {
+    vehicles.listIncludingDeleted.mockReturnValue(
+      of([{ VehicleId: 3, RegNumber: 'CA 123', IsActive: true, IsDeleted: false }] as Vehicle[]),
+    );
+    operators.listIncludingDeleted.mockReturnValue(
+      of([
+        { TransportOperatorId: 5, Name: 'Sipho', IsActive: true, IsDeleted: false },
+      ] as TransportOperator[]),
+    );
+    await show(
+      avs({
+        CollectServiceProviderId: 2,
+        AuthorisedDate: '2026-11-05',
+        VehicleId: 3,
+        TransportOperatorId: 5,
+      }),
+    );
+    await open();
+    expect(button('Removal Order Instructions')).toBeUndefined();
+    button('Removal Order')?.click();
+    await settle();
+    expect(pdfTexts(printed[0]?.content)).toEqual(
+      expect.arrayContaining(['TRANSPORTER INFORMATION', 'Sipho', 'CA 123', 'DRIVER NOTES']),
+    );
   });
 
   it('is only offered on services with phases', async () => {

@@ -175,8 +175,8 @@
             <button
               type="button"
               class="app-button pc-dark"
-              disabled
-              matTooltip="Coming with the Phase 8 reports"
+              [disabled]="printing() !== null"
+              (click)="printRemoval(card, true)"
             >
               Removal Order Instructions
             </button>
@@ -184,10 +184,13 @@
           <button
             type="button"
             class="app-button pc-dark"
-            disabled
-            matTooltip="Coming with the Phase 8 reports"
+            [disabled]="!authorised(card) || printing() !== null"
+            [matTooltip]="
+              authorised(card) ? '' : 'Authorise the phase before printing its removal order'
+            "
+            (click)="printRemoval(card, false)"
           >
-            Removal Order
+            {{ printing() === card.id ? 'Creating PDF…' : 'Removal Order' }}
           </button>
         </div>
       </section>

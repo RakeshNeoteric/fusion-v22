@@ -55,8 +55,8 @@ describe('CaseApi', () => {
     const init = firstValueFrom(api.init());
     backend
       .expectOne({ method: 'GET', url: 'CaseInit' })
-      .flush({ ClientDto: [], ServiceTypeBasedTabs: [] });
-    expect(await init).toEqual({ ClientDto: [], ServiceTypeBasedTabs: [] });
+      .flush({ Address: [], ClientDto: [], ServiceTypeBasedTabs: [] });
+    expect(await init).toEqual({ Address: [], ClientDto: [], ServiceTypeBasedTabs: [] });
   });
 
   it('saves the case with its changes, without the records it includes', async () => {

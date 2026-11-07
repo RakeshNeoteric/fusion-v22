@@ -8,16 +8,20 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { type MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
+import { UserDirectoryService } from '@core/session/user-directory.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
+import { letterhead } from '@shared/pdf/letterhead';
+import { PDF_FONT, PdfRenderer } from '@shared/pdf/pdf-renderer';
 import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
 import { money, round2 } from '@shared/reference/money';
+import { localParts } from '@shared/reference/date-time';
 import { displayStoredPhone } from '@shared/reference/phone';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { CaseWorkspace } from '../case-workspace';
+import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {
@@ -34,7 +38,7 @@ function tidyAddress(address: string): string {
  */
 @Component({
   selector: 'app-additional-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip, PhoneField],
+  imports: [ReactiveFormsModule, MatDialogModule, PhoneField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './additional-costing-dialog.html',
   styleUrl: './additional-costing-dialog.css',
@@ -43,9 +47,12 @@ export class AdditionalCostingDialog {
   private readonly workspace = inject(CaseWorkspace);
   private readonly notifications = inject(NotificationService);
   private readonly confirm = inject(ConfirmService);
+  private readonly users = inject(UserDirectoryService);
+  private readonly pdf = inject(PdfRenderer);
 
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly busy = signal(false);
+  protected readonly printing = signal(false);
   protected readonly money = money;
   protected readonly phone = displayStoredPhone;
 
@@ -119,6 +126,38 @@ export class AdditionalCostingDialog {
       this.form.reset();
       this.notifications.success('Additional cost added successfully.');
     });
+  }
+
+  /**
+   * v21 "Additional Cost PO": the costs as a purchase order, in a new tab. Like v21, only while
+   * the case can be changed (the order is dated as approved today).
+   */
+  protected async printPo(): Promise<void> {
+    const order = this.order();
+    if (!order || this.readOnly() || this.printing()) return;
+    this.printing.set(true);
+    try {
+      await this.pdf.open(() => additionalCostPo(order, PDF_FONT));
+    } finally {
+      this.printing.set(false);
+    }
+  }
+
+  private order(): AdditionalCostOrder | null {
+    const details = this.workspace.details();
+    const directory = this.workspace.directory();
+    const costs = this.costs();
+    if (!details || !directory || costs.length === 0) return null;
+    return {
+      logoUrl: this.pdf.assetUrl('images/logo.png'),
+      letterhead: letterhead(directory.companyAddresses()),
+      reference: details.CaseReferenceNumber?.trim() || `ACPO-${details.CaseDetailId}`,
+      caseNumber: details.CaseNumber?.trim() || String(details.CaseDetailId),
+      dateApproved: localParts(new Date().toISOString()).date,
+      clientName: directory.printedClientName(details.CaseClientId),
+      caseController: this.users.displayName(details.CaseControllerUserId) ?? '',
+      costs,
+    };
   }
 
   /** v21 deleted without asking; the row is kept, marked deleted. */

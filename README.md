@@ -170,8 +170,7 @@ phase stamps the date and authoriser and locks it, keeping the rate it was autho
 costs are added and deleted (kept, marked deleted), not edited. Only authorised phases and
 non-deleted additional costs count toward the case's `PhaseTotal`, `AdditionalCostTotal` and
 `TotalCost`, which `CaseWorkspace.saveTotals` saves with the whole case record whenever they
-change. The vehicle dispatch time is stored in UTC and shown in local time. The Removal Order and
-Additional Cost PO PDFs come with the Phase 8 reports.
+change. The vehicle dispatch time is stored in UTC and shown in local time.
 
 Complaints (`tabs/complaints`) are logged in a popup by the signed-in user and then only viewed,
 as in v21. Documents (`tabs/documents`) has a row for each document the client asks for (its
@@ -217,6 +216,31 @@ reason of at least 5 characters) needs edit access; the decided voucher leaves t
 backend logs each decision against the voucher's id, which `GetReservedVouchers` leaves out, so it
 is looked up by code in the voucher event log (`GetVoucherByCode`). v21 loaded the case instead,
 which opened the case for the approver and added a "Case Opened" history note.
+
+PDFs are built in the browser with pdfmake (`shared/pdf`). `PdfRenderer` loads pdfmake on first
+use (a lazy chunk), sets the documents in Poppins (`public/fonts`) and opens the PDF in a new tab,
+opened during the click so pop-up blockers allow it. Fonts and images are given as URLs under the
+base href, which pdfmake fetches. `pdf-parts.ts` holds the v21 building blocks (labelled values,
+section titles, rounded boxes, outlined tables) and `letterhead.ts` the company's header from its
+addresses (Security / Company Details, sent with `CaseInit`); v21 printed made-up company details
+when none were set up. Each document is a function from what it prints to a pdfmake definition,
+next to its screen: Additional Cost's "Additional Cost PO" (`costing/additional-cost-po.ts`) prints
+a block per cost and the total, dated today, while the case can be changed (as in v21).
+
+Phase Costing prints a phase's removal documents from the phase as saved
+(`costing/removal-order.ts` gathers what they print, `removal-order-pdf.ts` lays it out). The
+Removal Order needs the phase authorised; it goes to the phase's collecting provider: an internal
+provider's order names the company's driver and vehicle and has the driver's notes, mileage and
+signature boxes, another provider's order names the provider and bills the phase (fixed cost +
+rate × km, plus its additional cost). Removal Order Instructions, for other providers only, is
+their order without the billing. Remove From and Take To are the phase's Collect From and Remove
+To, as on the Transport Operator Check List (v21's order had them the other way round). pdfmake
+cannot round a table's corners, so panels are drawn behind their content at a height worked out
+from their text (`estimateLines`).
+
+Claims is not migrated: v21's Claims screen (`/claims/claims`) was an empty placeholder, the
+backend has no claims endpoints, and no menu entry links to it. The backend's claimant import
+(`ClaimantManagement`) never had a screen. Claim Centre (Configuration) is a separate screen.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

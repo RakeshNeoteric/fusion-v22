@@ -44,7 +44,7 @@
                 "inject": false
               }
             ],
-            "allowedCommonJsDependencies": ["quill-delta"]
+            "allowedCommonJsDependencies": ["quill-delta", "pdfmake/build/pdfmake"]
           },
           "configurations": {
             "production": {
