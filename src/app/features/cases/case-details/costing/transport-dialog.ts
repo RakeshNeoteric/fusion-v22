@@ -1,0 +1,240 @@
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, type MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import type { CasePhaseRecord } from '@api/cases/case.api';
+import type { TransportOperator } from '@api/config/transport-operator.api';
+import type { Vehicle } from '@api/config/vehicle.api';
+import { NotificationService } from '@core/notifications/notification.service';
+import { ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
+import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
+
+/** The phase's transport, as Phase Costing saves it. */
+export type TransportValues = Pick<
+  CasePhaseRecord,
+  'VehicleId' | 'TransportOperatorId' | 'IsTransportNotified' | 'VehicleDispatched' | 'TotalKm'
+>;
+
+export interface TransportDialogData {
+  readonly phase: CasePhaseRecord;
+  readonly vehicles: readonly Vehicle[];
+  readonly operators: readonly TransportOperator[];
+  readonly readOnly: boolean;
+}
+
+interface Option {
+  readonly id: number;
+  readonly label: string;
+}
+
+/**
+ * Active records to pick from; the saved one stays listed, marked, when it is no longer active
+ * (v21).
+ */
+function options(
+  records: readonly { id: number; name: string; active: boolean; deleted: boolean }[],
+  selected: number | null,
+): Option[] {
+  return records
+    .filter((record) => (record.active && !record.deleted) || record.id === selected)
+    .map((record) => ({
+      id: record.id,
+      label: record.deleted
+        ? `${record.name} (Deleted)`
+        : record.active
+          ? record.name
+          : `${record.name} (Inactive)`,
+    }));
+}
+
+/**
+ * The stored dispatch moment is UTC (v21 sent `toISOString()`; the backend returns it without a
+ * zone). Shown and entered in local time.
+ */
+export function dispatchedParts(stored: string | null): { date: string; time: string } {
+  if (!stored) return { date: '', time: '' };
+  const moment = new Date(/[zZ]|[+-]\d{2}:\d{2}$/.test(stored) ? stored : `${stored}Z`);
+  if (Number.isNaN(moment.getTime())) return { date: '', time: '' };
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    date: `${moment.getFullYear()}-${pad(moment.getMonth() + 1)}-${pad(moment.getDate())}`,
+    time: `${pad(moment.getHours())}:${pad(moment.getMinutes())}`,
+  };
+}
+
+/** Local date and time → the UTC moment to store; null without a date. */
+export function dispatchedMoment(date: string, time: string): string | null {
+  if (!date) return null;
+  const moment = new Date(`${date}T${time || '00:00'}:00`);
+  return Number.isNaN(moment.getTime()) ? null : moment.toISOString();
+}
+
+/**
+ * v21 Transport Details of a phase collected by an internal provider: the vehicle and operator,
+ * whether the operator was told, when the vehicle left and how far it goes.
+ */
+@Component({
+  selector: 'app-transport-dialog',
+  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <form class="app-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <app-record-dialog-frame
+        title="Transport Details"
+        saveLabel="Save"
+        [isNew]="false"
+        [readOnly]="data.readOnly"
+      >
+        <div class="form-row">
+          <div class="form-field">
+            <label for="tr-vehicle">Vehicle <span class="required">*</span></label>
+            <select id="tr-vehicle" formControlName="vehicle">
+              <option [ngValue]="null">Select Vehicle</option>
+              @for (vehicle of vehicles; track vehicle.id) {
+                <option [ngValue]="vehicle.id">{{ vehicle.label }}</option>
+              }
+            </select>
+            @if (showError(form.controls.vehicle)) {
+              <span class="field-error">Vehicle is required.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="tr-operator">Transport Operator <span class="required">*</span></label>
+            <select id="tr-operator" formControlName="operator">
+              <option [ngValue]="null">Select Operator</option>
+              @for (operator of operators; track operator.id) {
+                <option [ngValue]="operator.id">{{ operator.label }}</option>
+              }
+            </select>
+            @if (showError(form.controls.operator)) {
+              <span class="field-error">Transport Operator is required.</span>
+            }
+          </div>
+          <div class="form-field">
+            <span class="form-label">Transport Notified</span>
+            <app-choice-toggle
+              formControlName="notified"
+              label="Transport Notified"
+              [choices]="yesNo"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="tr-date">Vehicle Dispatched</label>
+            <input id="tr-date" type="date" formControlName="date" />
+          </div>
+          <div class="form-field">
+            <label for="tr-time">Time</label>
+            <input id="tr-time" type="time" formControlName="time" />
+            @if (form.hasError('timeWithoutDate') && form.controls.time.dirty) {
+              <span class="field-error">Enter the date the vehicle was dispatched.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="tr-km">Total Distance (km)</label>
+            <input
+              id="tr-km"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Enter Distance"
+              formControlName="km"
+            />
+            @if (showError(form.controls.km)) {
+              <span class="field-error">Enter a distance from 0 to 9999.99 km.</span>
+            }
+          </div>
+        </div>
+      </app-record-dialog-frame>
+    </form>
+  `,
+})
+export class TransportDialog {
+  protected readonly data = inject<TransportDialogData>(MAT_DIALOG_DATA);
+  private readonly notifications = inject(NotificationService);
+  private readonly dialogRef = inject<MatDialogRef<TransportDialog, TransportValues>>(MatDialogRef);
+
+  protected readonly yesNo = YES_NO;
+  protected readonly vehicles = options(
+    this.data.vehicles.map((vehicle) => ({
+      id: vehicle.VehicleId,
+      name: vehicle.RegNumber,
+      active: vehicle.IsActive,
+      deleted: vehicle.IsDeleted === true,
+    })),
+    this.data.phase.VehicleId,
+  );
+  protected readonly operators = options(
+    this.data.operators.map((operator) => ({
+      id: operator.TransportOperatorId,
+      name: operator.Name,
+      active: operator.IsActive,
+      deleted: operator.IsDeleted === true,
+    })),
+    this.data.phase.TransportOperatorId,
+  );
+
+  private readonly dispatched = dispatchedParts(this.data.phase.VehicleDispatched);
+  protected readonly form = new FormGroup(
+    {
+      vehicle: new FormControl<number | null>(this.data.phase.VehicleId, Validators.required),
+      operator: new FormControl<number | null>(
+        this.data.phase.TransportOperatorId,
+        Validators.required,
+      ),
+      notified: new FormControl<boolean>(this.data.phase.IsTransportNotified === true, {
+        nonNullable: true,
+      }),
+      date: new FormControl(this.dispatched.date, { nonNullable: true }),
+      time: new FormControl(this.dispatched.time, { nonNullable: true }),
+      km: new FormControl<number | null>(this.data.phase.TotalKm, [
+        Validators.min(0),
+        Validators.max(9999.99),
+      ]),
+    },
+    {
+      // v21 dropped a time entered without a date.
+      validators: (group) =>
+        group.get('time')?.value && !group.get('date')?.value ? { timeWithoutDate: true } : null,
+    },
+  );
+
+  constructor() {
+    if (this.data.readOnly) this.form.disable();
+  }
+
+  protected showError(control: FormControl<unknown>): boolean {
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  protected save(): void {
+    if (this.data.readOnly) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.form.controls.time.markAsDirty();
+      this.notifications.warning('Please correct the highlighted fields.');
+      return;
+    }
+    const value = this.form.getRawValue();
+    this.dialogRef.close({
+      VehicleId: value.vehicle,
+      TransportOperatorId: value.operator,
+      IsTransportNotified: value.notified,
+      VehicleDispatched: dispatchedMoment(value.date, value.time),
+      TotalKm: value.km,
+    });
+  }
+}
+
+export async function openTransport(
+  dialog: MatDialog,
+  data: TransportDialogData,
+): Promise<TransportValues | null> {
+  const ref = dialog.open<TransportDialog, TransportDialogData, TransportValues>(TransportDialog, {
+    data,
+    width: '900px',
+    maxWidth: '95vw',
+  });
+  return (await firstValueFrom(ref.afterClosed())) ?? null;
+}

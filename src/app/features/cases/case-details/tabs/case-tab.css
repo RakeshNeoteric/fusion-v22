@@ -120,3 +120,8 @@
   font-size: 18px;
   font-weight: 600;
 }
+/* A field on its own line keeps its height (form fields grow to fill a row, not a column). */
+.tab-panel > .form-field,
+.tab-section > .form-field {
+  flex: none;
+}

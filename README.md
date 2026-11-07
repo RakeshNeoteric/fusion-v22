@@ -160,6 +160,17 @@ where the phase before removed the deceased to. A phase saves when the mouse lea
 as in v21) as well as before another tab opens. Its saves send the whole row, so Phase Costing's
 values are kept; the Transport Operator Check List is saved inside its phase.
 
+Phase Costing and Additional Cost (`case-details/costing`) open from the case header. A phase's
+total is fixed + rate × km + additional, rounded to cents (`costing-rules.ts`). An internal
+provider's phase takes the provider's rate and the Transport distance, and only its fixed cost is
+entered; an external provider's phase takes a rate and distance, not a fixed cost. Authorising a
+phase stamps the date and authoriser and locks it, keeping the rate it was authorised at. Additional
+costs are added and deleted (kept, marked deleted), not edited. Only authorised phases and
+non-deleted additional costs count toward the case's `PhaseTotal`, `AdditionalCostTotal` and
+`TotalCost`, which `CaseWorkspace.saveTotals` saves with the whole case record whenever they
+change. The vehicle dispatch time is stored in UTC and shown in local time. The Removal Order and
+Additional Cost PO PDFs come with the Phase 8 reports.
+
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
 `data.breadcrumb` is shown.

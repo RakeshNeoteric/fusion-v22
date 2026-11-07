@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import {
   CaseApi,
+  type CaseAdditionalCostRecord,
   type CaseCauseOfDeathRecord,
   type CaseDeceasedRecord,
   type CaseDetails,
@@ -16,6 +17,8 @@ import {
   type CaseValidationRecord,
 } from '@api/cases/case.api';
 import { ClientApi } from '@api/clients/client.api';
+import { TransportOperatorApi } from '@api/config/transport-operator.api';
+import { VehicleApi } from '@api/config/vehicle.api';
 import type { DirectoryUser } from '@api/models/app.models';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
@@ -85,9 +88,12 @@ export function caseTabHarness() {
     saveFinalFuneral: vi.fn(),
     createPhase: vi.fn(),
     savePhase: vi.fn(),
+    saveAdditionalCost: vi.fn(),
     fetchPolicy: vi.fn(),
   };
   const clients = { get: vi.fn() };
+  const vehicles = { listIncludingDeleted: vi.fn() };
+  const operators = { listIncludingDeleted: vi.fn() };
   const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage> | undefined;
 
@@ -130,13 +136,20 @@ export function caseTabHarness() {
           : (record.CaseTransportDetails ?? null),
       }),
     );
+    api.saveAdditionalCost.mockImplementation((record: CaseAdditionalCostRecord) =>
+      of({ ...record, CaseAdditionalCostId: record.CaseAdditionalCostId || 95 }),
+    );
     clients.get.mockReturnValue(of(null));
+    vehicles.listIncludingDeleted.mockReturnValue(of([]));
+    operators.listIncludingDeleted.mockReturnValue(of([]));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         provideAppIcons(),
         { provide: CaseApi, useValue: api },
         { provide: ClientApi, useValue: clients },
+        { provide: VehicleApi, useValue: vehicles },
+        { provide: TransportOperatorApi, useValue: operators },
         { provide: NotificationService, useValue: notify },
         {
           provide: SessionService,
@@ -224,6 +237,8 @@ export function caseTabHarness() {
   return {
     api,
     clients,
+    vehicles,
+    operators,
     notify,
     show,
     settle,

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  afterRenderEffect,
   inject,
   input,
   output,
@@ -16,7 +17,8 @@ export interface FolderTab {
  * v21 workspace tabs: slanted folder tabs over a teal bar. Only the tab strip; the page shows
  * the panels (`role="tabpanel"`, `[id]="panelId(tab)"`, `[attr.aria-labelledby]="tabId(tab)"`).
  * Choosing a tab only asks: the page decides whether to switch (e.g. after saving first), so
- * `selected` is an input, not a model.
+ * `selected` is an input, not a model. The tabs stay on one line; when they do not fit, the
+ * strip scrolls sideways and keeps the selected tab in view.
  */
 @Component({
   selector: 'app-folder-tabs',
@@ -47,10 +49,13 @@ export interface FolderTab {
     }
     .ft-strip {
       display: flex;
-      flex-wrap: wrap;
       gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: thin;
     }
     .ft-tab {
+      flex: none;
+      white-space: nowrap;
       padding: 10px 34px 10px 8px;
       border: 1px solid #ccc;
       border-bottom: none;
@@ -92,6 +97,15 @@ export class FolderTabs {
   /** Accessible name of the tab list. */
   readonly label = input('Sections');
   readonly choose = output<string>();
+
+  constructor() {
+    // Keep the selected tab in view when the strip scrolls (e.g. a phase just added).
+    afterRenderEffect(() => {
+      const selected = this.selected();
+      const tab = this.host.nativeElement.querySelector<HTMLElement>(`#${this.tabId(selected)}`);
+      tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    });
+  }
 
   tabId(id: string): string {
     return `${this.idPrefix()}-tab-${id}`;

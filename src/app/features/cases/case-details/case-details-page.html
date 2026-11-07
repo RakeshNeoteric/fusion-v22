@@ -23,6 +23,26 @@
           </h1>
           <div class="cd-actions">
             <!-- Vehicle Tracker, Case Stages, Abort and View More come in phase 7f. -->
+            @if (hasCosting()) {
+              <button
+                type="button"
+                class="cd-action"
+                aria-label="Phase Costing"
+                matTooltip="Phase Costing"
+                (click)="openPhaseCosting()"
+              >
+                <mat-icon svgIcon="calculate" />
+              </button>
+              <button
+                type="button"
+                class="cd-action"
+                aria-label="Additional Cost"
+                matTooltip="Additional Cost"
+                (click)="openAdditionalCosting()"
+              >
+                <mat-icon svgIcon="payments" />
+              </button>
+            }
             <button
               type="button"
               class="cd-action"

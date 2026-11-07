@@ -226,6 +226,27 @@ export interface CasePhaseRecord {
   readonly CaseTransportDetails?: CaseTransportRecord | null;
 }
 
+/**
+ * Backend `CaseAdditionalCost`: a cost outside the phases, paid to another provider. Rows are
+ * only added; "Delete" saves the row back with `IsDeleted: true`. The text columns may not be
+ * null.
+ */
+export interface CaseAdditionalCostRecord {
+  readonly CaseAdditionalCostId: number;
+  readonly CaseDetailId: number;
+  readonly ServiceProviderName: string;
+  readonly ServiceProviderAddress: string;
+  readonly VATNumber: string;
+  readonly CompanyRegNo: string;
+  readonly Email: string;
+  /** International format, e.g. `+27 82 123 4567`, as v21 stored it. */
+  readonly Telephone: string;
+  readonly Description: string;
+  /** Rand, up to 99,999,999.99. */
+  readonly Amount: number;
+  readonly IsDeleted: boolean | null;
+}
+
 /** The parts of a phase the tab strip needs. */
 export type CasePhaseSummary = Pick<CasePhaseRecord, 'CasePhaseDetailsId' | 'PhaseName'>;
 
@@ -264,6 +285,13 @@ export interface CaseDetails {
   readonly CaseCauseOfDeath?: CaseCauseOfDeathRecord | null;
   readonly CaseValidation?: readonly CaseValidationRecord[] | null;
   readonly CasePhaseDetails?: readonly CasePhaseRecord[] | null;
+  readonly CaseAdditionalCosts?: readonly CaseAdditionalCostRecord[] | null;
+  /** Authorised phases' costs, kept by Phase Costing (decimal(8,2)). */
+  readonly PhaseTotal?: number | null;
+  /** The additional costs (decimal(8,2)). */
+  readonly AdditionalCostTotal?: number | null;
+  /** Phases and additional costs (decimal(8,2)). */
+  readonly TotalCost?: number | null;
 }
 
 /** The case fields a tab changes; everything else is sent back as loaded. */
@@ -279,6 +307,9 @@ export type CaseChanges = Partial<
     | 'IsPolicyHolder'
     | 'CaseReferenceGivenToCaller'
     | 'ContactDetails'
+    | 'PhaseTotal'
+    | 'AdditionalCostTotal'
+    | 'TotalCost'
   >
 >;
 
@@ -332,7 +363,8 @@ export interface CaseInit {
  * - `GET CaseInit` lists clients with their services, and the tabs per service type
  *
  * `POST CaseValidation[/{id}]`, `POST CaseDeceasedInfo[/{id}]`, `POST CaseCauseOfDeath[/{id}]`,
- * `POST CaseFinalFuneral[/{id}]` and `POST CasePhaseDetails[/{id}]` create or replace a case's
+ * `POST CaseFinalFuneral[/{id}]`, `POST CasePhaseDetails[/{id}]` and `POST CaseAdditionalCost[/{id}]`
+ * create or replace a case's
  * records (one deceased, cause of death and final funeral per case, and one transport check
  * list per phase: the database refuses a second). `POST CaseValidation/FetchPolicyDetails/{caseId}`
  * asks the client's policy system (only clients with an integration). Every replace overwrites
@@ -438,6 +470,15 @@ export class CaseApi {
       ...columnsOf(record),
       ...(transport ? { CaseTransportDetails: transport } : {}),
     });
+  }
+
+  /** Adds the cost, or (with its id) saves it back whole, e.g. deleted. */
+  saveAdditionalCost(record: CaseAdditionalCostRecord): Observable<CaseAdditionalCostRecord> {
+    const id = record.CaseAdditionalCostId;
+    return this.http.post<CaseAdditionalCostRecord>(
+      id ? `CaseAdditionalCost/${id}` : 'CaseAdditionalCost',
+      columnsOf(record),
+    );
   }
 
   fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {

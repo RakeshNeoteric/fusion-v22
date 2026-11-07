@@ -1,0 +1,140 @@
+<h2 mat-dialog-title>Additional Cost</h2>
+<mat-dialog-content class="app-form ac-content">
+  <div class="ac-toolbar">
+    <button
+      type="button"
+      class="app-button ac-dark"
+      disabled
+      matTooltip="Coming with the Phase 8 reports"
+    >
+      Additional Cost PO
+    </button>
+  </div>
+
+  @if (!readOnly()) {
+    <form class="ac-form" [formGroup]="form" (ngSubmit)="add()" novalidate>
+      <h3 class="ac-heading">New Additional Cost Details:</h3>
+      <div class="ac-grid">
+        <div class="form-field">
+          <label for="ac-name">Service Provider Name <span class="required">*</span></label>
+          <input id="ac-name" type="text" formControlName="name" />
+          @if (showError(controls.name)) {
+            <span class="field-error">Name is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ac-reg">Company Reg. No</label>
+          <input id="ac-reg" type="text" formControlName="companyRegNo" />
+        </div>
+        <div class="form-field">
+          <label for="ac-vat">VAT Number</label>
+          <input id="ac-vat" type="text" formControlName="vatNumber" />
+        </div>
+        <div class="form-field">
+          <label for="ac-address">Address <span class="required">*</span></label>
+          <textarea id="ac-address" rows="2" formControlName="address"></textarea>
+          @if (showError(controls.address)) {
+            <span class="field-error">Address is required.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ac-telephone">Contact <span class="required">*</span></label>
+          <app-phone-field formControlName="telephone" inputId="ac-telephone" label="Contact" />
+          @if (showError(controls.telephone)) {
+            <span class="field-error">Contact number is required and must be valid.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ac-email">Email <span class="required">*</span></label>
+          <input id="ac-email" type="email" formControlName="email" />
+          @if (showError(controls.email)) {
+            <span class="field-error">
+              {{
+                controls.email.hasError('pattern')
+                  ? 'Enter a valid email address.'
+                  : 'Email is required.'
+              }}
+            </span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ac-amount">Cost <span class="required">*</span></label>
+          <input id="ac-amount" type="number" min="0" step="0.01" formControlName="amount" />
+          @if (showError(controls.amount)) {
+            <span class="field-error">Enter a cost above 0.</span>
+          }
+        </div>
+        <div class="form-field ac-wide">
+          <label for="ac-description">Description <span class="required">*</span></label>
+          <input id="ac-description" type="text" maxlength="200" formControlName="description" />
+          @if (showError(controls.description)) {
+            <span class="field-error">Description is required.</span>
+          }
+        </div>
+      </div>
+      <div class="ac-actions">
+        <button type="submit" class="app-button" [disabled]="busy()">Add</button>
+      </div>
+    </form>
+  }
+
+  <table class="ac-table">
+    <caption>
+      Additional costs
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Service Provider</th>
+        <th scope="col">VAT Number</th>
+        <th scope="col">Company Reg. No</th>
+        <th scope="col">Email</th>
+        <th scope="col">Contact</th>
+        <th scope="col" class="ac-number">Cost</th>
+        <th scope="col">Description</th>
+        @if (!readOnly()) {
+          <th scope="col"><span class="ac-hidden">Delete</span></th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (cost of costs(); track cost.CaseAdditionalCostId) {
+        <tr>
+          <td>{{ cost.ServiceProviderName }}</td>
+          <td>{{ cost.VATNumber }}</td>
+          <td>{{ cost.CompanyRegNo }}</td>
+          <td>{{ cost.Email }}</td>
+          <td>{{ phone(cost.Telephone) }}</td>
+          <td class="ac-number">{{ money(cost.Amount) }}</td>
+          <td>{{ cost.Description }}</td>
+          @if (!readOnly()) {
+            <td>
+              <button
+                type="button"
+                class="ac-delete"
+                [disabled]="busy()"
+                [attr.aria-label]="'Delete ' + cost.Description"
+                (click)="remove(cost)"
+              >
+                Delete
+              </button>
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="readOnly() ? 7 : 8" class="ac-none">No additional costs yet.</td>
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row" colspan="5">Total</th>
+        <td class="ac-number">{{ money(total()) }}</td>
+        <td [attr.colspan]="readOnly() ? 1 : 2"></td>
+      </tr>
+    </tfoot>
+  </table>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button type="button" class="app-button" mat-dialog-close>Close</button>
+</mat-dialog-actions>

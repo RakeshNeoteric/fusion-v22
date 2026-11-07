@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  Injector,
   computed,
   effect,
   inject,
@@ -11,6 +12,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
@@ -19,7 +21,9 @@ import { CaseApi } from '@api/cases/case.api';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
 import { NotificationService } from '@core/notifications/notification.service';
-import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs } from '../case-setup';
+import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs, isPhaseKey } from '../case-setup';
+import { openAdditionalCosting } from './costing/additional-costing-dialog';
+import { openPhaseCosting } from './costing/phase-costing-dialog';
 import { CallerTab } from './tabs/caller/caller-tab';
 import { PolicyDetailsTab } from './tabs/policy-details/policy-details-tab';
 import { ValidationTab } from './tabs/validation/validation-tab';
@@ -70,6 +74,8 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   private readonly api = inject(CaseApi);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
+  private readonly injector = inject(Injector);
   protected readonly workspace = inject(CaseWorkspace);
 
   /** `?id=` (v21 also used `?caseDetailId=` right after creating a case). */
@@ -104,6 +110,8 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     () => !this.workspace.readOnly() && (this.phaseTab()?.readyForNext() ?? true),
   );
   protected readonly addingPhase = signal(false);
+  /** v21 offered Phase Costing and Additional Cost only on services with phases. */
+  protected readonly hasCosting = computed(() => this.workspace.allowedTabs().some(isPhaseKey));
 
   constructor() {
     effect(() => {
@@ -160,6 +168,16 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     } finally {
       this.addingPhase.set(false);
     }
+  }
+
+  /** v21 Phase Costing: the open tab is saved first, so the costs see its changes. */
+  protected async openPhaseCosting(): Promise<void> {
+    if (!(await this.saveTab())) return;
+    await openPhaseCosting(this.dialog, this.injector);
+  }
+
+  protected async openAdditionalCosting(): Promise<void> {
+    await openAdditionalCosting(this.dialog, this.injector);
   }
 
   /** v21 Exit: saves the open tab and goes back to the cases (the call questions come in 7f). */

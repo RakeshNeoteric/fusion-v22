@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   CaseApi,
+  type CaseAdditionalCostRecord,
   type CaseCauseOfDeathRecord,
   type CaseChanges,
   type CaseDeceasedRecord,
@@ -16,6 +17,7 @@ import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService, displayNameOf } from '@core/session/user-directory.service';
 import { type CaseDirectory, isFinished } from '../case-setup';
 import { type ClientProvider, clientProviders } from './client-providers';
+import { caseTotals } from './costing/costing-rules';
 
 /**
  * The case open on the Case Details page, shared by its header and tabs (provided by the page).
@@ -141,6 +143,32 @@ export class CaseWorkspace {
     const saved = await firstValueFrom(this.api.savePhase(record, transport));
     this.keepPhase(saved);
     return saved;
+  }
+
+  /** Adds an additional cost, or saves one back whole (e.g. deleted). */
+  async saveAdditionalCost(record: CaseAdditionalCostRecord): Promise<CaseAdditionalCostRecord> {
+    const saved = await firstValueFrom(this.api.saveAdditionalCost(record));
+    const details = this.require();
+    const others = (details.CaseAdditionalCosts ?? []).filter(
+      (cost) => cost.CaseAdditionalCostId !== saved.CaseAdditionalCostId,
+    );
+    this.loaded.set({ ...details, CaseAdditionalCosts: [...others, saved] });
+    return saved;
+  }
+
+  /**
+   * Saves the case's cost totals when they changed: authorised phases and additional costs
+   * (v21 saved them with only part of the case, wiping the rest).
+   */
+  async saveTotals(): Promise<void> {
+    const details = this.require();
+    if (this.readOnly()) return;
+    const totals = caseTotals(details);
+    const unchanged =
+      (details.PhaseTotal ?? 0) === totals.PhaseTotal &&
+      (details.AdditionalCostTotal ?? 0) === totals.AdditionalCostTotal &&
+      (details.TotalCost ?? 0) === totals.TotalCost;
+    if (!unchanged) await this.saveCase(totals);
   }
 
   private keepPhase(saved: CasePhaseRecord): void {
