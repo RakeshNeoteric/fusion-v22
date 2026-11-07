@@ -3,8 +3,8 @@ import { firstValueFrom } from 'rxjs';
 import { CaseApi, type CaseNoteType, type CaseStatus } from '@api/cases/case.api';
 import { RatingQuestionOptionApi } from '@api/config/rating-question-option.api';
 import { RatingQuestionTypeApi } from '@api/config/rating-question-type.api';
-import { SessionService } from '@core/session/session.service';
 import { isFinished } from '../../case-setup';
+import { CaseCommunication } from '../communication/case-communication';
 import { CaseWorkspace } from '../case-workspace';
 import { type RatingQuestionRow, ratingQuestions, ratingRecords } from './rating-rules';
 
@@ -25,7 +25,7 @@ export class CaseHeldElsewhereError extends Error {
 export class CaseLifecycle {
   private readonly api = inject(CaseApi);
   private readonly workspace = inject(CaseWorkspace);
-  private readonly session = inject(SessionService);
+  private readonly communication = inject(CaseCommunication);
   private readonly ratingTypes = inject(RatingQuestionTypeApi);
   private readonly ratingOptions = inject(RatingQuestionOptionApi);
 
@@ -113,16 +113,7 @@ export class CaseLifecycle {
   }
 
   private async note(type: CaseNoteType, text: string): Promise<void> {
-    await firstValueFrom(
-      this.api.addHistory({
-        CaseHistoryId: 0,
-        CaseDetailId: this.require().CaseDetailId,
-        NoteType: type,
-        Note: text,
-        CreatedDate: new Date().toISOString(),
-        CreatedByUserId: this.session.user()?.id ?? 0,
-      }),
-    );
+    await firstValueFrom(this.api.addHistory(this.communication.note(type, text)));
   }
 
   private require() {

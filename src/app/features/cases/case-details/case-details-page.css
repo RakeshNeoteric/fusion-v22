@@ -125,3 +125,20 @@
   opacity: 0.45;
   cursor: default;
 }
+/* v21 Case Stages / Vehicle Tracker: a panel under the header. */
+.cd-panel-drop {
+  margin-top: -32px;
+  padding: 16px 20px;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  box-shadow: 0 0 5px #e0e0e0;
+}
+.cd-panel-drop h2 {
+  margin: 0 0 8px;
+  color: var(--app-teal);
+  font-size: 16px;
+}
+.cd-panel-drop p {
+  margin: 0;
+  color: #5f6b6b;
+}

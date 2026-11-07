@@ -1,0 +1,66 @@
+.ch-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ch-filter {
+  max-width: 280px;
+}
+.ch-failed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ch-details {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+.ch-details-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ch-details-head h3 {
+  margin: 0;
+  color: var(--app-teal);
+  font-size: 16px;
+}
+.ch-details-close {
+  border: none;
+  background: none;
+  color: red;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ch-details dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 12px 0;
+}
+.ch-details dt {
+  color: #5f6b6b;
+}
+.ch-details dd {
+  margin: 0;
+  font-weight: 600;
+}
+.ch-details h4 {
+  margin: 0 0 6px;
+}
+.ch-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgb(5 185 188 / 15%);
+}
+/* Notes keep their line breaks. */
+.ch-note {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

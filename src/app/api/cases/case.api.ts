@@ -301,6 +301,33 @@ export const CASE_NOTE_TYPES = [
 ] as const;
 export type CaseNoteType = (typeof CASE_NOTE_TYPES)[number];
 
+/** Notes a user adds by hand (v21 New Note). `Note` would also text the caller (backend). */
+export const MANUAL_NOTE_TYPES = [
+  'Admin',
+  'Inbound',
+  'Outbound',
+] as const satisfies readonly CaseNoteType[];
+
+/** Backend `CaseOperation`: what `Operation/{id}` does for the case. */
+type CaseOperation = 'TransportNotify' | 'SMS' | 'EMail';
+
+/** An SMS about the case. */
+export interface CaseSms {
+  /** E.164, e.g. `+27821234567`. */
+  readonly receiver: string;
+  readonly body: string;
+}
+
+/** An email about the case. */
+export interface CaseEmail {
+  readonly from: string;
+  readonly to: readonly string[];
+  readonly cc: readonly string[];
+  readonly subject: string;
+  readonly text: string;
+  readonly html: string;
+}
+
 /**
  * Backend `CaseHistory`: a note in the case's history. Adding some notes also changes the
  * case's status (backend): `CaseAbort` aborts it; `CaseReopen` and `CaseReAssign` make it
@@ -613,6 +640,33 @@ export class CaseApi {
     );
   }
 
+  /** Sends an SMS about the case (backend `Operation`, SMS: logged as an `SMS` history note). */
+  sendSms(details: CaseDetails, sms: CaseSms): Observable<unknown> {
+    return this.operation(details, 'SMS', { SMS: { Receiver: sms.receiver, Body: sms.body } });
+  }
+
+  /**
+   * Sends an email about the case (backend `Operation`, EMail: logged as an `Email` history
+   * note). The backend sends from its own address and copies the signed-in user; it does not
+   * attach files (`AttachmentUris` is ignored), so none are sent.
+   */
+  sendEmail(details: CaseDetails, email: CaseEmail): Observable<unknown> {
+    return this.operation(details, 'EMail', {
+      EmailLogger: {
+        // The backend stores the email under this key and does not make one up.
+        Guid: crypto.randomUUID(),
+        // Required by the backend, which replaces it with its own sender.
+        FromEmail: email.from,
+        ToEmails: email.to,
+        CCEmails: email.cc,
+        Subject: email.subject,
+        PlainText: email.text,
+        HtmlContent: email.html,
+        FMSReferenceKey: details.CaseReferenceNumber ?? String(details.CaseDetailId),
+      },
+    });
+  }
+
   fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {
     return this.http.post<PolicyMatch[]>(`CaseValidation/FetchPolicyDetails/${caseId}`, {
       CaseDetailId: caseId,
@@ -621,6 +675,24 @@ export class CaseApi {
       PolicyNumber: search.policyNumber,
       DateOfDeath: search.dateOfDeath,
     });
+  }
+
+  private operation(
+    details: CaseDetails,
+    operation: CaseOperation,
+    payload: object,
+  ): Observable<unknown> {
+    return this.http.post(
+      `Operation/${details.CaseDetailId}`,
+      {
+        CaseDetailId: details.CaseDetailId,
+        CaseStatus: details.CaseStatus,
+        CaseReferenceNumber: details.CaseReferenceNumber,
+        CaseNumber: details.CaseNumber,
+        ...payload,
+      },
+      { params: { Operation: operation } },
+    );
   }
 }
 

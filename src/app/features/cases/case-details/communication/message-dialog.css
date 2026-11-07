@@ -1,0 +1,16 @@
+.ms-kind {
+  display: flex;
+  gap: 24px;
+  margin: 8px 0 16px;
+}
+.ms-kind label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.ms-note {
+  margin: 0 0 12px;
+  color: #5f6b6b;
+  font-size: 13px;
+}

@@ -178,7 +178,7 @@ as in v21. Documents (`tabs/documents`) has a row for each document the client a
 Documents links): the client's template, and the file uploaded for it on this case. An upload is
 one form post with the file; uploading again replaces the case's file (after asking), and the
 backend deletes the old one. Moments the backend stores in UTC are shown in local time with
-`shared/reference/date-time.ts`. Emailing documents comes with SMS / Email (7f-2).
+`shared/reference/date-time.ts`.
 
 Voucher/SMS (`tabs/voucher`) requests vouchers through `api/vouchers/voucher.api.ts`. The
 provider and the limits (amount and number of vouchers) come from the client's link to the case's
@@ -200,6 +200,16 @@ and rebuilds the open tab, so no form keeps the old one. Case Rating offers the 
 each question's type (Configuration / Rating Question Options) and saves the caller's name and
 number with the answers. Phase Costing, Additional Cost, Case Rating, Re-Open and Re-Assign are in
 the header's View More menu, as in v21.
+
+Contact History, SMS / Email and notes live in `case-details/communication` (`CaseCommunication`,
+provided by the page). Contact History reloads the case's history when it opens (others, and the
+backend, add to it), lists it newest first and filters it by type; New Note adds an Admin,
+Inbound or Outbound note (`Note` would also text the caller). SMS and email go through the
+backend's case `Operation`, which logs them in the history; the SMS goes to the main caller's
+number and the email to the callers' addresses by default. The backend sends email from its own
+address, copying the signed-in user, and does not attach files, so the Documents tab's Email
+names the client's documents in the message. Case Stages and Vehicle Tracker drop down under the
+header; v21 showed fixed pictures there, and the backend has no data for them yet.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

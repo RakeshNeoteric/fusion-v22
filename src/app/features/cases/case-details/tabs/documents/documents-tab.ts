@@ -1,5 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatTooltip } from '@angular/material/tooltip';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Injector,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import type { ClientDocumentLink } from '@api/clients/client-links.api';
 import { DocumentTypeApi } from '@api/config/document.api';
@@ -9,6 +16,12 @@ import { formatDateTime } from '@shared/reference/date-time';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
 import { CaseWorkspace } from '../../case-workspace';
+import {
+  MessageDialog,
+  type MessageDialogData,
+  type MessageKind,
+} from '../../communication/message-dialog';
+import { openCaseDialog } from '../../lifecycle/open-case-dialog';
 import { type DocumentRow, documentRows, uploadedFileName } from './document-rows';
 
 /**
@@ -17,7 +30,7 @@ import { type DocumentRow, documentRows, uploadedFileName } from './document-row
  */
 @Component({
   selector: 'app-documents-tab',
-  imports: [LinkTable, LinkCell, MatTooltip],
+  imports: [LinkTable, LinkCell],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../case-tab.css',
   styles: `
@@ -53,10 +66,14 @@ import { type DocumentRow, documentRows, uploadedFileName } from './document-row
   `,
   template: `
     <div class="doc-bar">
-      <!-- matTooltip needs a wrapper: a disabled button gets no pointer events. -->
-      <span matTooltip="Coming with the header actions (phase 7f)">
-        <button type="button" class="app-button" disabled>Email</button>
-      </span>
+      <button
+        type="button"
+        class="app-button"
+        [disabled]="workspace.readOnly() || state() !== 'ready' || rows().length === 0"
+        (click)="email()"
+      >
+        Email
+      </button>
     </div>
     @switch (state()) {
       @case ('loading') {
@@ -148,6 +165,8 @@ export class DocumentsTab {
   private readonly confirm = inject(ConfirmService);
   private readonly notifications = inject(NotificationService);
   protected readonly viewer = inject(FileViewer);
+  private readonly dialog = inject(MatDialog);
+  private readonly injector = inject(Injector);
 
   protected readonly fileName = storedFileName;
   protected readonly state = signal<'loading' | 'failed' | 'ready'>('loading');
@@ -179,6 +198,17 @@ export class DocumentsTab {
 
   constructor() {
     void this.load();
+  }
+
+  /** v21 Email: an email to the callers about the client's documents for the case. */
+  protected async email(): Promise<void> {
+    if (this.workspace.readOnly()) return;
+    await openCaseDialog<MessageDialog, MessageKind, MessageDialogData>(
+      this.dialog,
+      this.injector,
+      MessageDialog,
+      { width: '800px', data: { kind: 'email', documents: this.rows() } },
+    );
   }
 
   protected uploadedName(row: DocumentRow): string {

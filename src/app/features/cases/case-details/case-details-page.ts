@@ -45,6 +45,13 @@ import { VoucherTab } from './tabs/voucher/voucher-tab';
 import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
+import { CaseCommunication } from './communication/case-communication';
+import { ContactHistoryDialog } from './communication/contact-history-dialog';
+import {
+  MessageDialog,
+  type MessageDialogData,
+  type MessageKind,
+} from './communication/message-dialog';
 import { CaseHeldElsewhereError, CaseLifecycle } from './lifecycle/case-lifecycle';
 import { type ExitChoice, ExitDialog } from './lifecycle/exit-dialog';
 import { openCaseDialog } from './lifecycle/open-case-dialog';
@@ -54,6 +61,9 @@ import { ReassignDialog } from './lifecycle/reassign-dialog';
 import { type ReasonAction, ReasonDialog } from './lifecycle/reason-dialog';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
+
+/** v21 header panels that drop down under the header. */
+type HeaderPanel = 'stages' | 'tracker';
 
 /**
  * v21 Call Centre / Case Details: the case header and the tabs its service type allows.
@@ -81,7 +91,7 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
     VoucherTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [CaseWorkspace, CaseLifecycle],
+  providers: [CaseWorkspace, CaseLifecycle, CaseCommunication],
   templateUrl: './case-details-page.html',
   styleUrl: './case-details-page.css',
 })
@@ -108,6 +118,8 @@ export class CaseDetailsPage implements HasUnsavedChanges {
    * read-only changes (re-open) by themselves.
    */
   protected readonly tabRevision = signal(0);
+  /** The header panel open under the header (v21 Case Stages / Vehicle Tracker). */
+  protected readonly panel = signal<HeaderPanel | null>(null);
   /** An exit, abort or close is under way. */
   protected readonly leaving = signal(false);
   protected readonly finished = computed(() => {
@@ -248,6 +260,31 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       { width: '800px' },
     );
     if (done) this.rebuildTab();
+  }
+
+  protected togglePanel(panel: HeaderPanel): void {
+    this.panel.update((open) => (open === panel ? null : panel));
+  }
+
+  /** v21 Contact History. */
+  protected async openContactHistory(): Promise<void> {
+    await openCaseDialog<ContactHistoryDialog, never>(
+      this.dialog,
+      this.injector,
+      ContactHistoryDialog,
+      { width: '1000px' },
+    );
+  }
+
+  /** v21 SMS / Email. */
+  protected async openMessage(): Promise<void> {
+    if (this.workspace.readOnly()) return;
+    await openCaseDialog<MessageDialog, MessageKind, MessageDialogData>(
+      this.dialog,
+      this.injector,
+      MessageDialog,
+      { width: '800px', data: { kind: 'sms' } },
+    );
   }
 
   /** v21 Case Rating; closing the case from it leaves the case. */

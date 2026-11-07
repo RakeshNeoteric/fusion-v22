@@ -1,0 +1,119 @@
+<form [formGroup]="form()" (ngSubmit)="send()" novalidate>
+  <app-record-dialog-frame
+    title="SMS / Email"
+    [isNew]="true"
+    saveLabel="Send"
+    [readOnly]="readOnly"
+    [saving]="saving()"
+  >
+    <app-case-identity idPrefix="ms" />
+    <div class="ms-kind" role="radiogroup" aria-label="Send">
+      <label>
+        <input type="radio" name="ms-kind" value="sms" [formControl]="kind" />
+        SMS
+      </label>
+      <label>
+        <input type="radio" name="ms-kind" value="email" [formControl]="kind" />
+        Email
+      </label>
+    </div>
+
+    @if (current() === 'sms') {
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ms-mobile">Mobile Number <span class="required">*</span></label>
+          <app-phone-field
+            inputId="ms-mobile"
+            label="Mobile Number"
+            [formControl]="sms.controls.mobile"
+          />
+          @if (showError(sms.controls.mobile)) {
+            <span class="field-error">Enter a valid mobile number.</span>
+          }
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ms-sms-text">SMS Text <span class="required">*</span></label>
+          <textarea
+            id="ms-sms-text"
+            rows="8"
+            maxlength="1600"
+            placeholder="Type here..."
+            [formControl]="sms.controls.text"
+          ></textarea>
+          @if (showError(sms.controls.text)) {
+            <span class="field-error">SMS text is required.</span>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ms-to">To <span class="required">*</span></label>
+          <input
+            id="ms-to"
+            type="text"
+            placeholder="name@example.com, …"
+            [formControl]="email.controls.to"
+          />
+          @if (showError(email.controls.to)) {
+            <span class="field-error">
+              @if (badEmails(email.controls.to); as bad) {
+                Not an email address: {{ bad }}
+              } @else {
+                Enter at least one email address.
+              }
+            </span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ms-cc">Cc</label>
+          <input id="ms-cc" type="text" [formControl]="email.controls.cc" />
+          @if (showError(email.controls.cc)) {
+            <span class="field-error"
+              >Not an email address: {{ badEmails(email.controls.cc) }}</span
+            >
+          }
+        </div>
+      </div>
+      <!-- v21 had a From field the backend ignores: it sends from its own address. -->
+      <p class="ms-note">Sent from the Fusion Edge address; a copy goes to you.</p>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ms-subject">Subject <span class="required">*</span></label>
+          <input
+            id="ms-subject"
+            type="text"
+            maxlength="200"
+            [formControl]="email.controls.subject"
+          />
+          @if (showError(email.controls.subject)) {
+            <span class="field-error">Subject is required.</span>
+          }
+        </div>
+      </div>
+      @if (documents.length > 0) {
+        <p class="ms-note" role="note">
+          Files cannot be attached yet (the backend does not send attachments), so the email names
+          the documents.
+        </p>
+      }
+      <div class="form-row">
+        <div class="form-field">
+          <label for="ms-email-text">Message <span class="required">*</span></label>
+          <textarea
+            id="ms-email-text"
+            rows="10"
+            maxlength="8000"
+            placeholder="Type your message..."
+            [formControl]="email.controls.text"
+          ></textarea>
+          @if (showError(email.controls.text)) {
+            <span class="field-error">Message is required.</span>
+          }
+        </div>
+      </div>
+    }
+  </app-record-dialog-frame>
+</form>

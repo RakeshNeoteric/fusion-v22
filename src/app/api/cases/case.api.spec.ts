@@ -163,4 +163,85 @@ describe('CaseApi', () => {
     expect(body.has('FileStoragePath')).toBe(false);
     created.flush(null);
   });
+
+  it('adds history notes without an id (an id would replace that entry)', () => {
+    const note = {
+      CaseHistoryId: 0,
+      CaseDetailId: 4,
+      NoteType: 'Admin' as const,
+      Note: 'Called',
+      CreatedDate: '2026-11-06T10:00:00.000Z',
+      CreatedByUserId: 7,
+    };
+    void firstValueFrom(api.addHistory(note));
+    const request = backend.expectOne({ method: 'POST', url: 'CaseHistory' });
+    expect(request.request.body).toEqual(note);
+    request.flush(note);
+  });
+
+  it('saves ratings, closing the case only when asked', () => {
+    void firstValueFrom(api.saveRatings([], false));
+    const saved = backend.expectOne({ method: 'POST', url: 'CaseRating' });
+    expect(saved.request.params.keys()).toEqual([]);
+    saved.flush([]);
+
+    void firstValueFrom(api.saveRatings([], true));
+    const closed = backend.expectOne((request) => request.url === 'CaseRating');
+    expect(closed.request.params.get('caseStatus')).toBe('Closed');
+    closed.flush([]);
+  });
+
+  it('sends an SMS and an email through the case operation', () => {
+    const details = caseDetails({
+      CaseDetailId: 4,
+      CaseStatus: 'Pending',
+      CaseReferenceNumber: 'REF1',
+      CaseNumber: '0000004',
+    });
+    const header = {
+      CaseDetailId: 4,
+      CaseStatus: 'Pending',
+      CaseReferenceNumber: 'REF1',
+      CaseNumber: '0000004',
+    };
+
+    void firstValueFrom(api.sendSms(details, { receiver: '+27821234567', body: 'Hi' }));
+    const sms = backend.expectOne((request) => request.url === 'Operation/4');
+    expect(sms.request.method).toBe('POST');
+    expect(sms.request.params.get('Operation')).toBe('SMS');
+    expect(sms.request.body).toEqual({
+      ...header,
+      SMS: { Receiver: '+27821234567', Body: 'Hi' },
+    });
+    sms.flush(null);
+
+    void firstValueFrom(
+      api.sendEmail(details, {
+        from: 'jane@example.com',
+        to: ['ann@x.com'],
+        cc: [],
+        subject: 'Update',
+        text: 'Hello',
+        html: 'Hello',
+      }),
+    );
+    const email = backend.expectOne((request) => request.url === 'Operation/4');
+    expect(email.request.params.get('Operation')).toBe('EMail');
+    const body = email.request.body as { EmailLogger: { Guid: string } };
+    expect(body).toEqual({
+      ...header,
+      EmailLogger: {
+        Guid: body.EmailLogger.Guid,
+        FromEmail: 'jane@example.com',
+        ToEmails: ['ann@x.com'],
+        CCEmails: [],
+        Subject: 'Update',
+        PlainText: 'Hello',
+        HtmlContent: 'Hello',
+        FMSReferenceKey: 'REF1',
+      },
+    });
+    expect(body.EmailLogger.Guid).toMatch(/^[0-9a-f-]{36}$/);
+    email.flush(null);
+  });
 });

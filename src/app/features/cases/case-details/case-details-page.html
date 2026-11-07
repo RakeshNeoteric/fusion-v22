@@ -25,7 +25,28 @@
             }
           </h1>
           <div class="cd-actions">
-            <!-- Vehicle Tracker and Case Stages come in phase 7f-2. -->
+            <button
+              type="button"
+              class="cd-action"
+              aria-label="Vehicle Tracker"
+              matTooltip="Vehicle Tracker"
+              aria-controls="cd-panel-tracker"
+              [attr.aria-expanded]="panel() === 'tracker'"
+              (click)="togglePanel('tracker')"
+            >
+              <mat-icon svgIcon="local-shipping" />
+            </button>
+            <button
+              type="button"
+              class="cd-action"
+              aria-label="Case Stages"
+              matTooltip="Case Stages"
+              aria-controls="cd-panel-stages"
+              [attr.aria-expanded]="panel() === 'stages'"
+              (click)="togglePanel('stages')"
+            >
+              <mat-icon svgIcon="timeline" />
+            </button>
             <button
               type="button"
               class="cd-action"
@@ -55,8 +76,12 @@
             >
               <mat-icon svgIcon="apps" />
             </button>
-            <!-- v21 "View More"; Contact History and SMS / Email come in phase 7f-2. -->
+            <!-- v21 "View More". -->
             <mat-menu #moreMenu="matMenu" xPosition="before">
+              <button mat-menu-item type="button" (click)="openContactHistory()">
+                <mat-icon svgIcon="event-note" />
+                <span>Contact History</span>
+              </button>
               <button mat-menu-item type="button" (click)="openRating()">
                 <mat-icon svgIcon="star" />
                 <span>Case Rating</span>
@@ -71,6 +96,15 @@
                   <span>Phase Costing</span>
                 </button>
               }
+              <button
+                mat-menu-item
+                type="button"
+                [disabled]="workspace.readOnly()"
+                (click)="openMessage()"
+              >
+                <mat-icon svgIcon="chat" />
+                <span>SMS / Email</span>
+              </button>
               @if (finished()) {
                 <button
                   mat-menu-item
@@ -94,6 +128,22 @@
             </mat-menu>
           </div>
         </header>
+        @switch (panel()) {
+          @case ('stages') {
+            <!-- v21 showed a fixed stepper (only "Case Initiation" ever done): not real data. -->
+            <section id="cd-panel-stages" class="cd-panel-drop" aria-label="Case Stages">
+              <h2>Case Stages</h2>
+              <p>Case stages are not recorded by the backend yet, so they cannot be shown.</p>
+            </section>
+          }
+          @case ('tracker') {
+            <!-- v21 showed a fixed map picture: not real data. -->
+            <section id="cd-panel-tracker" class="cd-panel-drop" aria-label="Vehicle Tracker">
+              <h2>Vehicle Tracker</h2>
+              <p>Vehicle tracking is not connected yet, so no vehicles can be shown.</p>
+            </section>
+          }
+        }
 
         <div class="cd-tab-bar">
           <app-folder-tabs

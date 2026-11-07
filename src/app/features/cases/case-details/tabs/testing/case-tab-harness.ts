@@ -101,6 +101,8 @@ export function caseTabHarness() {
     uploadDocument: vi.fn(),
     addHistory: vi.fn(),
     saveRatings: vi.fn(),
+    sendSms: vi.fn(),
+    sendEmail: vi.fn(),
     fetchPolicy: vi.fn(),
   };
   const clients = { get: vi.fn() };
@@ -161,6 +163,8 @@ export function caseTabHarness() {
     api.uploadDocument.mockReturnValue(of(null));
     api.addHistory.mockImplementation((record: object) => of({ ...record, CaseHistoryId: 97 }));
     api.saveRatings.mockReturnValue(of([]));
+    api.sendSms.mockReturnValue(of(null));
+    api.sendEmail.mockReturnValue(of(null));
     ratingTypes.listIncludingDeleted.mockReturnValue(of([]));
     ratingOptions.listIncludingDeleted.mockReturnValue(of([]));
     clients.get.mockReturnValue(of(null));
