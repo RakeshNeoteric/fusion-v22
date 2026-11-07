@@ -41,11 +41,15 @@ export const EDITABLE_GRID_MODULES: Module[] = [
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 
-/** Read-only lists that group, sort and search their rows themselves (Cases). */
+/**
+ * Read-only lists (Cases, Voucher Approval) and the base of the report tables. Every grid styles
+ * its rows or cells, so both style modules are always included.
+ */
 export const LIST_GRID_MODULES: Module[] = [
   ClientSideRowModelModule,
   PaginationModule,
   RowStyleModule,
+  CellStyleModule,
   ColumnAutoSizeModule,
   ...(isDevMode() ? [ValidationModule] : []),
 ];
