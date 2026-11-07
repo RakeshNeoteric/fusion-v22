@@ -102,10 +102,53 @@ export interface PolicySearch {
   readonly dateOfDeath: string | null;
 }
 
-/** The parts of the final funeral the case list shows (more in phase 7c). */
-export interface CaseFuneralSummary {
-  readonly BurialDate: string | null;
+/** The causes of death v21 offers; the text is what is stored. */
+export const CAUSES_OF_DEATH = ['COVID-19', 'Natural', 'Unknown', 'Unnatural'] as const;
+
+/**
+ * Backend `CaseCauseOfDeath`: one per case. The mortuary and post-mortem fields only apply to an
+ * unnatural death.
+ */
+export interface CaseCauseOfDeathRecord {
+  readonly CaseCauseOfDeathId: number;
+  readonly CaseDetailId: number;
+  readonly CauseOfDeathDescription: string | null;
+  readonly BodyNumber: string | null;
+  readonly TelephoneNumber: string | null;
+  readonly CauseOfDeathNotes: string | null;
+  readonly MortuaryState: string | null;
+  readonly IsPostMortemDone: boolean | null;
+  readonly PostMortemPlace: string | null;
+  /** kg, up to 999.99. */
+  readonly BodyWeight: number | null;
+  /** `DateOnly`: `yyyy-MM-dd`. */
+  readonly ReleaseDate: string | null;
+  /** `TimeOnly`: `HH:mm` (the backend may echo `HH:mm:ss`). */
+  readonly ReleaseTime: string | null;
 }
+
+/**
+ * Backend `CaseFinalFuneral`: one per case. `FuneralParlour` holds the service provider's
+ * **name**; province, manager, addresses, telephone and fax are copied from that provider.
+ */
+export interface CaseFinalFuneralRecord {
+  readonly CaseFinalFuneralId: number;
+  readonly CaseDetailId: number;
+  readonly FuneralHomeName: string | null;
+  readonly FuneralParlour: string | null;
+  readonly FuneralProvince: string | null;
+  readonly ManagerName: string | null;
+  readonly BurialDate: string | null;
+  readonly PhysicalAddress: string | null;
+  readonly StorageAddress: string | null;
+  readonly TelephoneNumber: string | null;
+  readonly FaxNumber: string | null;
+  readonly MobileNumber: string | null;
+  readonly Priority: string | null;
+}
+
+/** The parts of the final funeral the case list shows (`GET CaseDetails` includes it all). */
+export type CaseFuneralSummary = Pick<CaseFinalFuneralRecord, 'BurialDate'>;
 
 /** A phase on the case; its tab shows when the service type allows it (more in phase 7d). */
 export interface CasePhaseSummary {
@@ -144,7 +187,9 @@ export interface CaseDetails {
   readonly CaseReferenceGivenToCaller?: boolean | null;
   readonly ContactDetails: readonly CaseContact[] | null;
   readonly CaseDeceasedInfo: CaseDeceasedRecord | null;
-  readonly CaseFinalFuneral: CaseFuneralSummary | null;
+  /** The whole record on `GET CaseDetails/{id}`; the list only uses its burial date. */
+  readonly CaseFinalFuneral: CaseFinalFuneralRecord | CaseFuneralSummary | null;
+  readonly CaseCauseOfDeath?: CaseCauseOfDeathRecord | null;
   readonly CaseValidation?: readonly CaseValidationRecord[] | null;
   readonly CasePhaseDetails?: readonly CasePhaseSummary[] | null;
 }
@@ -214,8 +259,9 @@ export interface CaseInit {
  * - `GET CaseExit/{id}?status=` lets go of the case, setting its status (only for its holder)
  * - `GET CaseInit` lists clients with their services, and the tabs per service type
  *
- * `POST CaseValidation[/{id}]` and `POST CaseDeceasedInfo[/{id}]` create or replace a case's
- * validation and deceased records; `POST CaseValidation/FetchPolicyDetails/{caseId}` asks the
+ * `POST CaseValidation[/{id}]`, `POST CaseDeceasedInfo[/{id}]`, `POST CaseCauseOfDeath[/{id}]`
+ * and `POST CaseFinalFuneral[/{id}]` create or replace a case's records (one deceased, cause of
+ * death and final funeral per case: the database refuses a second); `POST CaseValidation/FetchPolicyDetails/{caseId}` asks the
  * client's policy system (only clients with an integration). Every replace overwrites the whole
  * row, so the record is always sent back complete.
  */
@@ -274,6 +320,22 @@ export class CaseApi {
     const id = record.CaseDeceasedInfoId;
     return this.http.post<CaseDeceasedRecord>(
       id ? `CaseDeceasedInfo/${id}` : 'CaseDeceasedInfo',
+      columnsOf(record),
+    );
+  }
+
+  saveCauseOfDeath(record: CaseCauseOfDeathRecord): Observable<CaseCauseOfDeathRecord> {
+    const id = record.CaseCauseOfDeathId;
+    return this.http.post<CaseCauseOfDeathRecord>(
+      id ? `CaseCauseOfDeath/${id}` : 'CaseCauseOfDeath',
+      columnsOf(record),
+    );
+  }
+
+  saveFinalFuneral(record: CaseFinalFuneralRecord): Observable<CaseFinalFuneralRecord> {
+    const id = record.CaseFinalFuneralId;
+    return this.http.post<CaseFinalFuneralRecord>(
+      id ? `CaseFinalFuneral/${id}` : 'CaseFinalFuneral',
       columnsOf(record),
     );
   }

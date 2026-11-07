@@ -61,6 +61,15 @@
               @case ('validation') {
                 <app-validation-tab />
               }
+              @case ('deceased-info') {
+                <app-deceased-info-tab />
+              }
+              @case ('cause-of-death') {
+                <app-cause-of-death-tab />
+              }
+              @case ('final-funeral') {
+                <app-final-funeral-tab />
+              }
               @default {
                 <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>
               }

@@ -4,7 +4,7 @@ import { type FormControl, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import type { CaseDeceasedRecord, CaseDetails, CaseValidationRecord } from '@api/cases/case.api';
 import { dateOnly } from '@api/services/service-provider.api';
-import { birthDateFromSaId, saIdValidator } from '@shared/reference/sa-id';
+import { birthDateFromSaId, genderFromSaId, saIdValidator } from '@shared/reference/sa-id';
 import type { CaseWorkspace } from '../case-workspace';
 
 /**
@@ -137,7 +137,7 @@ export function deceasedValues(details: CaseDetails): Required<DeceasedValues> {
 
 /** The case's deceased record (a new one if it has none) with `values` applied. */
 export function withDeceased(details: CaseDetails, values: DeceasedValues): CaseDeceasedRecord {
-  const base = details.CaseDeceasedInfo ?? newDeceased(details);
+  const base = savedDeceased(details);
   const idNumber = text(values.idNumber, base.IdNumber);
   return {
     ...base,
@@ -146,39 +146,43 @@ export function withDeceased(details: CaseDetails, values: DeceasedValues): Case
     IsIdNumberAvailable: values.hasId === undefined ? base.IsIdNumberAvailable : values.hasId,
     IdNumber: idNumber,
     PassportNumber: text(values.passport, base.PassportNumber),
-    // v21: the date of birth follows a valid South African ID number.
+    // v21: the date of birth and sex follow a valid South African ID number.
     DeceasedDateOfBirth:
       values.dateOfBirth || birthDateFromSaId(idNumber) || base.DeceasedDateOfBirth,
+    Gender: genderFromSaId(idNumber) || base.Gender,
     RelationshipToPolicyHolder:
       values.relationship === undefined ? base.RelationshipToPolicyHolder : values.relationship,
   };
 }
 
-function newDeceased(details: CaseDetails): CaseDeceasedRecord {
-  return {
-    CaseDeceasedInfoId: 0,
-    CaseDetailId: details.CaseDetailId,
-    PolicyNumber: policyHolderRecord(details)?.PolicyNumber ?? null,
-    Initials: null,
-    FirstName: null,
-    LastName: null,
-    RelationshipToPolicyHolder: null,
-    IsIdNumberAvailable: null,
-    IdNumber: null,
-    PassportNumber: null,
-    Gender: null,
-    DeceasedDateOfBirth: null,
-    DeceasedDateOfDeath: null,
-    PlaceOfDeath: null,
-    DeathProvince: null,
-    BodyLocation: null,
-    BodyLocationProvince: null,
-    LocationType: null,
-    TelephoneNumber: null,
-    BurialTown: null,
-    BurialTownProvince: null,
-    Country: 'ZA',
-  };
+/** The case's deceased record, or a new one (country South Africa, v21) if it has none. */
+export function savedDeceased(details: CaseDetails): CaseDeceasedRecord {
+  return (
+    details.CaseDeceasedInfo ?? {
+      CaseDeceasedInfoId: 0,
+      CaseDetailId: details.CaseDetailId,
+      PolicyNumber: policyHolderRecord(details)?.PolicyNumber ?? null,
+      Initials: null,
+      FirstName: null,
+      LastName: null,
+      RelationshipToPolicyHolder: null,
+      IsIdNumberAvailable: null,
+      IdNumber: null,
+      PassportNumber: null,
+      Gender: null,
+      DeceasedDateOfBirth: null,
+      DeceasedDateOfDeath: null,
+      PlaceOfDeath: null,
+      DeathProvince: null,
+      BodyLocation: null,
+      BodyLocationProvince: null,
+      LocationType: null,
+      TelephoneNumber: null,
+      BurialTown: null,
+      BurialTownProvince: null,
+      Country: 'ZA',
+    }
+  );
 }
 
 const HOLDER_FIELDS = [

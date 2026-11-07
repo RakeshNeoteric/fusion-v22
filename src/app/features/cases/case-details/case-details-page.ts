@@ -22,6 +22,9 @@ import { type CaseTab, type CaseTabKey, CaseDirectory, caseTabs } from '../case-
 import { CallerTab } from './tabs/caller/caller-tab';
 import { PolicyDetailsTab } from './tabs/policy-details/policy-details-tab';
 import { ValidationTab } from './tabs/validation/validation-tab';
+import { DeceasedInfoTab } from './tabs/deceased-info/deceased-info-tab';
+import { CauseOfDeathTab } from './tabs/cause-of-death/cause-of-death-tab';
+import { FinalFuneralTab } from './tabs/final-funeral/final-funeral-tab';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
 
@@ -29,9 +32,6 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /** Which sub-phase of the migration builds each tab (shown until it is built). */
 const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
-  'deceased-info': '7c',
-  'cause-of-death': '7c',
-  'final-funeral': '7c',
   phase1: '7d',
   phase2: '7d',
   phase3: '7d',
@@ -57,6 +57,9 @@ const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
     CallerTab,
     PolicyDetailsTab,
     ValidationTab,
+    DeceasedInfoTab,
+    CauseOfDeathTab,
+    FinalFuneralTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CaseWorkspace],

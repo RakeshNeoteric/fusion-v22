@@ -1,0 +1,75 @@
+<form class="tab-panel app-form" novalidate [formGroup]="form">
+  <div class="tab-grid tab-grid-3">
+    <div class="form-field">
+      <label for="cod-cause">Cause of Death <span class="required">*</span></label>
+      <select id="cod-cause" formControlName="cause">
+        <option [ngValue]="null">Select cause of death</option>
+        @for (cause of causes; track cause) {
+          <option [ngValue]="cause">{{ cause }}</option>
+        }
+      </select>
+      @if (showError(controls.cause)) {
+        <span class="field-error">Cause of Death is required.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="cod-body-number">Body Number</label>
+      <input id="cod-body-number" type="text" formControlName="bodyNumber" />
+    </div>
+    <div class="form-field">
+      <label for="cod-telephone">Telephone Number</label>
+      <app-phone-field
+        formControlName="telephone"
+        inputId="cod-telephone"
+        label="Telephone Number"
+      />
+      @if (showError(controls.telephone)) {
+        <span class="field-error">Enter a valid number.</span>
+      }
+    </div>
+  </div>
+  <div class="form-field">
+    <label for="cod-notes">Notes</label>
+    <textarea id="cod-notes" rows="4" placeholder="Notes..." formControlName="notes"></textarea>
+  </div>
+
+  @if (unnatural()) {
+    <div class="tab-grid tab-grid-3">
+      <div class="form-field">
+        <label for="cod-mortuary">State Mortuary <span class="required">*</span></label>
+        <input id="cod-mortuary" type="text" formControlName="mortuary" />
+        @if (showError(controls.mortuary)) {
+          <span class="field-error">State Mortuary is required for an unnatural death.</span>
+        }
+      </div>
+      <div class="form-field">
+        <span class="form-label" id="cod-post-mortem-label">Post Mortem done?</span>
+        <mat-slide-toggle
+          formControlName="postMortemDone"
+          aria-labelledby="cod-post-mortem-label"
+        />
+      </div>
+    </div>
+    <div class="tab-grid tab-grid-4">
+      <div class="form-field">
+        <label for="cod-post-mortem-place">Post Mortem done where ?</label>
+        <input id="cod-post-mortem-place" type="text" formControlName="postMortemPlace" />
+      </div>
+      <div class="form-field">
+        <label for="cod-weight">Body Weight (kg)</label>
+        <input id="cod-weight" type="text" inputmode="decimal" formControlName="bodyWeight" />
+        @if (showError(controls.bodyWeight)) {
+          <span class="field-error">Enter a weight up to 999.99 kg.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label for="cod-release-date">Release Date</label>
+        <input id="cod-release-date" type="date" formControlName="releaseDate" />
+      </div>
+      <div class="form-field">
+        <label for="cod-release-time">Release Time</label>
+        <input id="cod-release-time" type="time" formControlName="releaseTime" />
+      </div>
+    </div>
+  }
+</form>

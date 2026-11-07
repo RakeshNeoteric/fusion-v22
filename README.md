@@ -147,6 +147,10 @@ backend replaces whole rows, so saves always send the full record with the tab's
 (`CaseApi.update`, `tabs/case-records.ts`). Tab specs drive the real page through
 `tabs/testing/case-tab-harness.ts`; `testing/` folders are left out of the app build. The policy holder lives on the newest `CaseValidation`
 row; a row with a validation method is never changed, so later edits add a new row.
+A case has at most one deceased, cause of death and final funeral record (the database refuses a
+second), so their tabs update the loaded record and only create one when the case has none.
+Final Funeral stores the parlour's **name** and copies its details when the user picks it; saved
+details are shown as saved, and a parlour no longer linked to the client stays selectable.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

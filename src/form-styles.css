@@ -30,6 +30,8 @@
     input[type='tel'],
     input[type='email'],
     input[type='number'],
+    input[type='date'],
+    input[type='time'],
     input:not([type]),
     select,
     textarea

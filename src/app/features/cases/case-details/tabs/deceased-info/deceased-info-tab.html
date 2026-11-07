@@ -1,0 +1,188 @@
+<form class="tab-panel app-form" novalidate [formGroup]="form">
+  <div class="tab-grid tab-grid-4">
+    <div class="form-field">
+      <label for="di-policy">Policy Number <span class="required">*</span></label>
+      <input
+        id="di-policy"
+        type="text"
+        placeholder="Enter policy number"
+        formControlName="policyNumber"
+      />
+      @if (showError(controls.policyNumber)) {
+        <span class="field-error">Policy Number is required.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="di-initials">Initials</label>
+      <input id="di-initials" type="text" maxlength="10" formControlName="initials" />
+    </div>
+    <div class="form-field">
+      <label for="di-first">First Name</label>
+      <input id="di-first" type="text" placeholder="Enter first name" formControlName="firstName" />
+    </div>
+    <div class="form-field">
+      <label for="di-surname">Surname</label>
+      <input id="di-surname" type="text" placeholder="Enter surname" formControlName="surname" />
+    </div>
+    <div class="form-field">
+      <label for="di-relationship">Relationship to Policyholder</label>
+      <select id="di-relationship" formControlName="relationship">
+        <option [ngValue]="null">Select Relationship</option>
+        @for (relationship of relationships; track relationship.value) {
+          <option [ngValue]="relationship.value">{{ relationship.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <span class="form-label">Do you have any ID number?</span>
+      <app-choice-toggle
+        formControlName="hasId"
+        label="Deceased: do you have any ID number?"
+        [choices]="yesNo"
+      />
+    </div>
+    <div class="form-field">
+      <label for="di-id">
+        ID Number
+        @if (controls.hasId.value === true) {
+          <span class="required">*</span>
+        }
+      </label>
+      <input
+        id="di-id"
+        type="text"
+        inputmode="numeric"
+        maxlength="13"
+        placeholder="Enter 13-digit ID number"
+        formControlName="idNumber"
+      />
+      @if (showError(controls.idNumber)) {
+        <span class="field-error">{{ idMessage() }}</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="di-passport">
+        Passport Number
+        @if (controls.hasId.value === false) {
+          <span class="required">*</span>
+        }
+      </label>
+      <input
+        id="di-passport"
+        type="text"
+        placeholder="Enter passport number"
+        formControlName="passport"
+      />
+      @if (showError(controls.passport)) {
+        <span class="field-error">Passport Number is required when there is no ID number.</span>
+      }
+    </div>
+    <div class="form-field">
+      <span class="form-label">Gender</span>
+      <app-choice-toggle formControlName="gender" label="Gender" [choices]="genders" />
+    </div>
+    <div class="form-field">
+      <label for="di-birth">Date of Birth</label>
+      <input id="di-birth" type="date" [max]="today" formControlName="dateOfBirth" />
+      @if (showError(controls.dateOfBirth)) {
+        <span class="field-error">Date of Birth cannot be in the future.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="di-death">Date of Death</label>
+      <input id="di-death" type="date" [max]="today" formControlName="dateOfDeath" />
+      @if (showError(controls.dateOfDeath)) {
+        <span class="field-error">Date of Death cannot be in the future.</span>
+      } @else if (deathBeforeBirth()) {
+        <span class="field-error">Date of Death cannot be before Date of Birth.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="di-age">Age at Death</label>
+      <input id="di-age" type="text" readonly [value]="age() ?? ''" />
+    </div>
+    <div class="form-field">
+      <label for="di-place">Place of Death</label>
+      <input
+        id="di-place"
+        type="text"
+        placeholder="Enter place of death"
+        formControlName="placeOfDeath"
+      />
+    </div>
+    <div class="form-field">
+      <label for="di-death-province">Place of Death Province</label>
+      <select id="di-death-province" formControlName="deathProvince">
+        <option [ngValue]="null">Select Province</option>
+        @for (province of provinces; track province) {
+          <option [ngValue]="province">{{ province }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="di-body">Body Location</label>
+      <input
+        id="di-body"
+        type="text"
+        placeholder="Enter body location"
+        formControlName="bodyLocation"
+      />
+    </div>
+    <div class="form-field">
+      <label for="di-body-province">Body Location Province</label>
+      <select id="di-body-province" formControlName="bodyProvince">
+        <option [ngValue]="null">Select Province</option>
+        @for (province of provinces; track province) {
+          <option [ngValue]="province">{{ province }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="di-location-type">Location Type</label>
+      <select id="di-location-type" formControlName="locationType">
+        <option [ngValue]="null">Select Location Type</option>
+        @for (type of locationTypes; track type.value) {
+          <option [ngValue]="type.value">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="di-telephone">Telephone Number</label>
+      <app-phone-field
+        formControlName="telephone"
+        inputId="di-telephone"
+        label="Telephone Number"
+      />
+      @if (showError(controls.telephone)) {
+        <span class="field-error">Enter a valid number.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="di-burial-town">Burial Town</label>
+      <input
+        id="di-burial-town"
+        type="text"
+        placeholder="Enter burial town"
+        formControlName="burialTown"
+      />
+    </div>
+    <div class="form-field">
+      <label for="di-burial-province">Burial Town Province</label>
+      <select id="di-burial-province" formControlName="burialProvince">
+        <option [ngValue]="null">Select Province</option>
+        @for (province of provinces; track province) {
+          <option [ngValue]="province">{{ province }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="di-country">Country</label>
+      <select id="di-country" formControlName="country">
+        <option [ngValue]="null">Select Country</option>
+        @for (country of countries; track country.code) {
+          <option [ngValue]="country.code">{{ country.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</form>

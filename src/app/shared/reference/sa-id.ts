@@ -50,6 +50,13 @@ export function birthDateFromSaId(value: string | null | undefined, today = new 
   return '';
 }
 
+/** v21: digits 7–10 of a valid South African ID give the sex, 5000 and up for male. */
+export function genderFromSaId(value: string | null | undefined): 'Male' | 'Female' | '' {
+  const id = (value ?? '').trim();
+  if (!id || saIdProblem(id)) return '';
+  return Number(id.slice(6, 10)) >= 5000 ? 'Male' : 'Female';
+}
+
 function luhnValid(id: string): boolean {
   let sum = 0;
   for (let index = 0; index < 13; index++) {

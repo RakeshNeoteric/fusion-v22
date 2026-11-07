@@ -81,6 +81,7 @@ describe('Policy Details tab', () => {
       IsIdNumberAvailable: true,
       IdNumber: '8001015009087',
       DeceasedDateOfBirth: '1980-01-01',
+      Gender: 'Male',
     });
   });
 });

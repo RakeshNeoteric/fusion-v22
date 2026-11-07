@@ -6,11 +6,14 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import {
   CaseApi,
+  type CaseCauseOfDeathRecord,
   type CaseDeceasedRecord,
   type CaseDetails,
+  type CaseFinalFuneralRecord,
   type CaseInit,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
+import { ClientApi } from '@api/clients/client.api';
 import type { DirectoryUser } from '@api/models/app.models';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
@@ -33,7 +36,10 @@ const INIT: CaseInit = {
   ...CASE_INIT,
   ServiceTypeBasedTabs: [
     { ServiceTypeCode: 'FUN', TabNames: 'caller,policy-details,validation' },
-    { ServiceTypeCode: 'AVS', TabNames: 'caller,validation,deceased-info' },
+    {
+      ServiceTypeCode: 'AVS',
+      TabNames: 'caller,validation,deceased-info,cause-of-death,final-funeral',
+    },
   ],
 };
 
@@ -73,8 +79,11 @@ export function caseTabHarness() {
     update: vi.fn(),
     saveValidation: vi.fn(),
     saveDeceased: vi.fn(),
+    saveCauseOfDeath: vi.fn(),
+    saveFinalFuneral: vi.fn(),
     fetchPolicy: vi.fn(),
   };
+  const clients = { get: vi.fn() };
   const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage> | undefined;
 
@@ -92,11 +101,19 @@ export function caseTabHarness() {
     api.saveDeceased.mockImplementation((record: CaseDeceasedRecord) =>
       of({ ...record, CaseDeceasedInfoId: record.CaseDeceasedInfoId || 77 }),
     );
+    api.saveCauseOfDeath.mockImplementation((record: CaseCauseOfDeathRecord) =>
+      of({ ...record, CaseCauseOfDeathId: record.CaseCauseOfDeathId || 78 }),
+    );
+    api.saveFinalFuneral.mockImplementation((record: CaseFinalFuneralRecord) =>
+      of({ ...record, CaseFinalFuneralId: record.CaseFinalFuneralId || 79 }),
+    );
+    clients.get.mockReturnValue(of(null));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         provideAppIcons(),
         { provide: CaseApi, useValue: api },
+        { provide: ClientApi, useValue: clients },
         { provide: NotificationService, useValue: notify },
         {
           provide: SessionService,
@@ -183,6 +200,7 @@ export function caseTabHarness() {
 
   return {
     api,
+    clients,
     notify,
     show,
     settle,

@@ -1,0 +1,59 @@
+<form class="tab-panel app-form" novalidate [formGroup]="form">
+  <div class="tab-grid tab-grid-4">
+    <div class="form-field">
+      <label for="ff-parlour">Funeral Parlour</label>
+      <select id="ff-parlour" formControlName="parlour" (change)="parlourChanged()">
+        <option value="">Select Service Provider</option>
+        @if (unlisted(); as name) {
+          <option [value]="name">{{ name }} (no longer linked to the client)</option>
+        }
+        @for (parlour of parlours(); track parlour.name) {
+          <option [value]="parlour.name">{{ parlour.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="ff-province">Service Provider Province</label>
+      <input id="ff-province" type="text" readonly [value]="copied().province" />
+    </div>
+    <div class="form-field">
+      <label for="ff-manager">Manager's Name</label>
+      <input id="ff-manager" type="text" readonly [value]="copied().manager" />
+    </div>
+    <div class="form-field">
+      <label for="ff-burial">Burial Date</label>
+      <input id="ff-burial" type="date" formControlName="burialDate" />
+    </div>
+  </div>
+  <div class="tab-grid tab-grid-4">
+    <div class="form-field">
+      <label for="ff-physical">Physical Address</label>
+      <textarea id="ff-physical" rows="2" readonly [value]="copied().physicalAddress"></textarea>
+    </div>
+    <div class="form-field">
+      <label for="ff-storage">Storage Address</label>
+      <textarea id="ff-storage" rows="2" readonly [value]="copied().storageAddress"></textarea>
+    </div>
+  </div>
+  <div class="tab-grid tab-grid-4">
+    <div class="form-field">
+      <label for="ff-telephone">Telephone Number</label>
+      <input id="ff-telephone" type="text" readonly [value]="copied().telephone" />
+    </div>
+    <div class="form-field">
+      <label for="ff-fax">Fax Number</label>
+      <input id="ff-fax" type="text" readonly [value]="copied().fax" />
+    </div>
+    <div class="form-field">
+      <label for="ff-mobile">Mobile Number</label>
+      <app-phone-field formControlName="mobile" inputId="ff-mobile" label="Mobile Number" />
+      @if (showError(controls.mobile)) {
+        <span class="field-error">Enter a valid number.</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="ff-priority">Priority</label>
+      <input id="ff-priority" type="text" formControlName="priority" />
+    </div>
+  </div>
+</form>

@@ -2,9 +2,11 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   CaseApi,
+  type CaseCauseOfDeathRecord,
   type CaseChanges,
   type CaseDeceasedRecord,
   type CaseDetails,
+  type CaseFinalFuneralRecord,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
 import { SessionService } from '@core/session/session.service';
@@ -83,6 +85,20 @@ export class CaseWorkspace {
     const details = this.require();
     const saved = await firstValueFrom(this.api.saveDeceased(record));
     this.loaded.set({ ...details, CaseDeceasedInfo: saved });
+    return saved;
+  }
+
+  async saveCauseOfDeath(record: CaseCauseOfDeathRecord): Promise<CaseCauseOfDeathRecord> {
+    const details = this.require();
+    const saved = await firstValueFrom(this.api.saveCauseOfDeath(record));
+    this.loaded.set({ ...details, CaseCauseOfDeath: saved });
+    return saved;
+  }
+
+  async saveFinalFuneral(record: CaseFinalFuneralRecord): Promise<CaseFinalFuneralRecord> {
+    const details = this.require();
+    const saved = await firstValueFrom(this.api.saveFinalFuneral(record));
+    this.loaded.set({ ...details, CaseFinalFuneral: saved });
     return saved;
   }
 
