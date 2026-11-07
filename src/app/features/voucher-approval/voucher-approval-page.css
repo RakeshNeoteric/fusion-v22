@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+.va-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--app-danger);
+}

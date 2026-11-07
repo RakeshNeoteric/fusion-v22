@@ -68,4 +68,64 @@ describe('VoucherApi', () => {
     expect(isVoucherStatus('approved')).toBe(false);
     expect(isVoucherStatus(null)).toBe(false);
   });
+
+  const reserved = {
+    CaseVoucherId: 31,
+    CaseDetailId: 4,
+    VoucherProvider: 'Grocery_Shoprite' as const,
+    CaseVoucherStatus: 'Reserved' as const,
+    Comments: null,
+    VoucherRequestedBy: 7,
+    VoucherCode: 'SHP-1',
+    PolicyNumber: 'P-9',
+    CaseNumber: '0000004',
+    CaseReferenceNumber: 'REF1',
+    ContactDetails: null,
+    Value: 250,
+  };
+
+  it('lists the reserved vouchers (none when the backend returns nothing)', async () => {
+    const list = firstValueFrom(api.reserved());
+    backend.expectOne({ method: 'GET', url: 'Voucher/GetReservedVouchers' }).flush([reserved]);
+    expect(await list).toEqual([reserved]);
+
+    const empty = firstValueFrom(api.reserved());
+    backend.expectOne('Voucher/GetReservedVouchers').flush(null);
+    expect(await empty).toEqual([]);
+  });
+
+  it("finds a voucher's id from its event log by code", async () => {
+    const found = firstValueFrom(api.voucherId('SHP-1'));
+    backend
+      .expectOne(
+        (request) =>
+          request.method === 'GET' &&
+          request.url === 'Voucher/GetVoucherByCode' &&
+          request.params.get('VoucherCode') === 'SHP-1',
+      )
+      .flush({ VoucherEventLogId: 2, VoucherId: 501, VoucherCode: 'SHP-1' });
+    expect(await found).toBe(501);
+
+    const missing = firstValueFrom(api.voucherId('NOPE'));
+    backend.expectOne((request) => request.url === 'Voucher/GetVoucherByCode').flush(null);
+    expect(await missing).toBeNull();
+  });
+
+  it('approves or rejects, keeping who asked for the voucher', () => {
+    void firstValueFrom(
+      api.decide({ voucher: reserved, voucherId: 501, status: 'Rejected', reason: 'Duplicate' }),
+    );
+    const request = backend.expectOne({ method: 'POST', url: 'Voucher/ApproveVoucher' });
+    expect(request.request.body).toEqual({
+      CaseVoucherId: 31,
+      CaseDetailId: 4,
+      VoucherId: 501,
+      VoucherRequestedBy: 7,
+      IssuedDate: expect.any(String),
+      Comments: 'Duplicate',
+      CaseVoucherStatus: 'Rejected',
+      CaseReferenceNumber: 'REF1',
+    });
+    request.flush(null);
+  });
 });

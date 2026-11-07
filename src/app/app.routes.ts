@@ -230,6 +230,16 @@ export const routes: Routes = [
           import('@features/security/user-roles/user-roles-page').then((m) => m.UserRolesPage),
       },
       {
+        path: 'voucherapproval',
+        title: 'Voucher Approval',
+        data: { breadcrumb: 'Security / Voucher Approval' },
+        canMatch: [canAccess('VchApprvl')],
+        loadComponent: () =>
+          import('@features/voucher-approval/voucher-approval-page').then(
+            (m) => m.VoucherApprovalPage,
+          ),
+      },
+      {
         path: 'forbidden',
         title: 'Access denied',
         data: { breadcrumb: 'Access denied' },

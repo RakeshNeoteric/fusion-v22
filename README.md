@@ -211,6 +211,13 @@ address, copying the signed-in user, and does not attach files, so the Documents
 names the client's documents in the message. Case Stages and Vehicle Tracker drop down under the
 header; v21 showed fixed pictures there, and the backend has no data for them yet.
 
+Voucher Approval (`features/voucher-approval`, menu code `VchApprvl`) lists the vouchers reserved
+for cases. Approving (after a confirmation, since the caller is then texted) or rejecting (with a
+reason of at least 5 characters) needs edit access; the decided voucher leaves the list. The
+backend logs each decision against the voucher's id, which `GetReservedVouchers` leaves out, so it
+is looked up by code in the voucher event log (`GetVoucherByCode`). v21 loaded the case instead,
+which opened the case for the approver and added a "Case Opened" history note.
+
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
 `data.breadcrumb` is shown.

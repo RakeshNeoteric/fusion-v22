@@ -1,0 +1,24 @@
+@if (status() === 'failed') {
+  <div class="va-error" role="alert">
+    <span>Could not load the vouchers waiting for approval.</span>
+    <button type="button" class="app-button" (click)="load()">Try again</button>
+  </div>
+}
+
+<ag-grid-angular
+  class="va-grid"
+  domLayout="autoHeight"
+  overlayNoRowsTemplate="No vouchers are waiting for approval."
+  [modules]="modules"
+  [theme]="theme"
+  [rowData]="rows()"
+  [columnDefs]="columnDefs"
+  [defaultColDef]="defaultColDef"
+  [context]="context"
+  [getRowId]="rowId"
+  [animateRows]="false"
+  [loading]="status() === 'loading'"
+  [pagination]="true"
+  [paginationPageSize]="pageSize"
+  [paginationPageSizeSelector]="pageSizeOptions"
+/>
