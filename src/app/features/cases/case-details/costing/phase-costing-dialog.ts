@@ -15,14 +15,15 @@ import { firstValueFrom } from 'rxjs';
 import type { CasePhaseRecord } from '@api/cases/case.api';
 import { type TransportOperator, TransportOperatorApi } from '@api/config/transport-operator.api';
 import { type Vehicle, VehicleApi } from '@api/config/vehicle.api';
-import { displayDate } from '@api/services/service-provider.api';
+import { displayDate } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
+import { money } from '@shared/reference/money';
 import { displayStoredPhone } from '@shared/reference/phone';
 import type { ClientProvider } from '../client-providers';
 import { CaseWorkspace } from '../case-workspace';
-import { activePhases, caseTotals, isAuthorised, money, phaseTotal } from './costing-rules';
+import { activePhases, caseTotals, isAuthorised, phaseTotal } from './costing-rules';
 import { openTransport } from './transport-dialog';
 
 /** Today as `yyyy-MM-dd`, in local time. */

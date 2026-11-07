@@ -1,0 +1,83 @@
+@switch (state()) {
+  @case ('loading') {
+    <p role="status">Loading vouchers…</p>
+  }
+  @case ('failed') {
+    <div class="vc-failed" role="alert">
+      <p>Failed to load the vouchers.</p>
+      <button type="button" class="app-button" (click)="load()">Try again</button>
+    </div>
+  }
+  @default {
+    <section class="tab-panel" aria-labelledby="vc-request-heading">
+      <h3 class="tab-heading" id="vc-request-heading">Request Voucher(s) / Voucher Information</h3>
+      @if (settings().provider; as provider) {
+        <p class="vc-intro">
+          The list below contains available {{ providerLabel(provider) }} vouchers. Please make your
+          selection and click "Request Voucher(s)".
+        </p>
+        <app-link-table
+          caption="Available vouchers"
+          [rows]="stock()"
+          [columns]="stockColumns"
+          [rowKey]="stockKey"
+          [nameOf]="stockName"
+        >
+          <ng-template appLinkCell="Allocated" let-row>
+            <input
+              class="vc-allocate"
+              type="number"
+              min="0"
+              step="1"
+              [max]="row.count"
+              [id]="'vc-allocate-' + row.value"
+              [attr.aria-label]="'Allocated R ' + money(row.value) + ' vouchers'"
+              [formControl]="allocated(row)"
+            />
+          </ng-template>
+        </app-link-table>
+
+        <div class="vc-summary">
+          <p id="vc-amount">{{ amountSummary() }}</p>
+          @if (settings().maxCount; as max) {
+            <p id="vc-count">{{ held().count }} of a maximum of {{ max }} vouchers.</p>
+          }
+          <button type="button" class="app-button" [disabled]="!canRequest()" (click)="request()">
+            {{ requesting() ? 'Requesting…' : 'Request Voucher(s)' }}
+          </button>
+        </div>
+        @if (check().problems.length > 0) {
+          <ul class="vc-problems" role="alert">
+            @for (problem of check().problems; track problem) {
+              <li>{{ problem }}</li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="vc-intro" role="status">
+          This service has no voucher provider, so vouchers cannot be requested.
+        </p>
+      }
+    </section>
+
+    <section class="vc-section" aria-labelledby="vc-case-heading">
+      <h3 class="tab-heading" id="vc-case-heading">Case Vouchers</h3>
+      <app-link-table
+        caption="Case vouchers"
+        [rows]="rows()"
+        [columns]="voucherColumns"
+        [rowKey]="voucherKey"
+        [nameOf]="voucherName"
+      />
+    </section>
+
+    <section class="vc-section" aria-labelledby="vc-sms-heading">
+      <h3 class="tab-heading" id="vc-sms-heading">Sent SMS Info</h3>
+      <!-- v21 showed a made-up sample row here: the backend keeps sent SMS without their case. -->
+      <p class="vc-intro">
+        Sent SMS cannot be listed per case yet: the backend does not record which case an SMS was
+        sent for.
+      </p>
+    </section>
+  }
+}

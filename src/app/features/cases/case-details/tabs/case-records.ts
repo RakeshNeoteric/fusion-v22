@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type FormControl, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import type { CaseDeceasedRecord, CaseDetails, CaseValidationRecord } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { birthDateFromSaId, genderFromSaId, saIdValidator } from '@shared/reference/sa-id';
 import type { CaseWorkspace } from '../case-workspace';
 

@@ -24,7 +24,7 @@ import type {
 } from 'ag-grid-community';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { CaseApi, type CaseDetails } from '@api/cases/case.api';
-import { displayDate } from '@api/services/service-provider.api';
+import { displayDate } from '@shared/reference/date-time';
 import { PageActions } from '@core/layout/page-actions';
 import { PermissionService } from '@core/permissions/permission.service';
 import {

@@ -1,6 +1,14 @@
-import { formatDateTime, localParts, utcMoment } from './date-time';
+import { dateOnly, displayDate, formatDateTime, localParts, utcMoment } from './date-time';
 
 describe('date-time', () => {
+  it('treats .NET DateTime.MinValue as no date', () => {
+    expect(dateOnly('0001-01-01T00:00:00')).toBe('');
+    expect(dateOnly(null)).toBe('');
+    expect(dateOnly('2026-11-06T00:00:00')).toBe('2026-11-06');
+    expect(displayDate('2026-11-06T10:30:00')).toBe('06/11/2026');
+    expect(displayDate('0001-01-01T00:00:00')).toBe('');
+  });
+
   // A moment the backend returned without its zone, and the same moment as local time.
   const stored = '2026-03-04T05:06:00';
   const local = new Date(Date.UTC(2026, 2, 4, 5, 6));

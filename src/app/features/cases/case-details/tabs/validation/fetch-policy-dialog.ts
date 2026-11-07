@@ -4,7 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MAT_DIALOG_DATA, type MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { CaseApi, type CaseDetails, type PolicyMatch } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { LinkCell, type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';

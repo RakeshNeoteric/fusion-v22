@@ -1,11 +1,7 @@
 import type { CaseDetails, CasePhaseRecord } from '@api/cases/case.api';
+import { round2 } from '@shared/reference/money';
 import { PHASES } from '../../case-setup';
 import { phaseRecord } from '../tabs/phase/phase-rules';
-
-/** Money and distances to the cent, as the database keeps them (v21 showed raw floats). */
-export function round2(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
 
 /** What one phase costs (v21): fixed cost + rate per km × km + additional cost. */
 export interface PhaseCost {
@@ -64,12 +60,4 @@ export function caseTotals(details: CaseDetails): CaseTotals {
     AdditionalCostTotal: additional,
     TotalCost: round2(phases + additional),
   };
-}
-
-/** `1234.5` → `1,234.50` (v21 grid format). */
-export function money(value: number | null | undefined): string {
-  return (value ?? 0).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }

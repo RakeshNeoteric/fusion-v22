@@ -112,4 +112,55 @@ describe('CaseApi', () => {
     request.flush([]);
     expect(await matches).toEqual([]);
   });
+
+  it('logs a complaint', async () => {
+    const record = {
+      CaseComplaintId: 0,
+      CaseDetailId: 4,
+      Title: 'Late',
+      Type: 'Customer',
+      ComplaintDetail: '',
+      CreatedDate: '2026-11-06T10:00:00.000Z',
+      CreatedByUserId: 7,
+    };
+    const saved = firstValueFrom(api.addComplaint(record));
+    const request = backend.expectOne({ method: 'POST', url: 'Complaint' });
+    expect(request.request.body).toEqual(record);
+    request.flush({ ...record, CaseComplaintId: 3 });
+    expect((await saved).CaseComplaintId).toBe(3);
+  });
+
+  it("uploads a case document's file as form data, replacing the stored one", async () => {
+    const file = new File(['x'], 'death.pdf');
+    const record = {
+      CaseDocumentId: 80,
+      CaseDetailId: 4,
+      ClientDocumentId: 21,
+      CaseReferenceNumber: 'REF1',
+      FileStoragePath: 'https://x/File/download?fileName=Case%2Fold.pdf',
+      UploadedDate: '2026-11-06T10:00:00.000Z',
+    };
+    void firstValueFrom(api.uploadDocument(record, file));
+    const request = backend.expectOne({ method: 'POST', url: 'CaseDocument/80' });
+    const form = request.request.body as FormData;
+    expect(Object.fromEntries([...form.entries()].filter(([key]) => key !== 'Content'))).toEqual({
+      CaseDocumentId: '80',
+      CaseDetailId: '4',
+      ClientDocumentId: '21',
+      CaseReferenceNumber: 'REF1',
+      FileStoragePath: record.FileStoragePath,
+      UploadedDate: record.UploadedDate,
+    });
+    expect((form.get('Content') as File).name).toBe('death.pdf');
+    request.flush(null);
+
+    void firstValueFrom(
+      api.uploadDocument({ ...record, CaseDocumentId: 0, FileStoragePath: null }, file),
+    );
+    const created = backend.expectOne({ method: 'POST', url: 'CaseDocument' });
+    const body = created.request.body as FormData;
+    expect(body.has('CaseDocumentId')).toBe(false);
+    expect(body.has('FileStoragePath')).toBe(false);
+    created.flush(null);
+  });
 });

@@ -180,6 +180,14 @@ one form post with the file; uploading again replaces the case's file (after ask
 backend deletes the old one. Moments the backend stores in UTC are shown in local time with
 `shared/reference/date-time.ts`. Emailing documents comes with the header actions (7f).
 
+Voucher/SMS (`tabs/voucher`) requests vouchers through `api/vouchers/voucher.api.ts`. The
+provider and the limits (amount and number of vouchers) come from the client's link to the case's
+own service; a limit that is not set means no limit. `voucher-rules.ts` checks an allocation
+against the provider's stock and the limits, counting the vouchers the case holds (reserved,
+approved or redeemed). After a request, the tab shows the stock the backend returns and reloads
+the case's vouchers, whose status the transport managers change. Sent SMS cannot be listed: the
+backend keeps them without their case.
+
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's
 `data.breadcrumb` is shown.

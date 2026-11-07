@@ -33,6 +33,7 @@ import { FinalFuneralTab } from './tabs/final-funeral/final-funeral-tab';
 import { PhaseTab } from './tabs/phase/phase-tab';
 import { ComplaintsTab } from './tabs/complaints/complaints-tab';
 import { DocumentsTab } from './tabs/documents/documents-tab';
+import { VoucherTab } from './tabs/voucher/voucher-tab';
 import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
@@ -40,9 +41,6 @@ import { CaseWorkspace } from './case-workspace';
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /** Which sub-phase of the migration builds each tab (shown until it is built). */
-const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
-  voucher: '7e-2',
-};
 
 /**
  * v21 Call Centre / Case Details: the case header and the tabs its service type allows.
@@ -66,6 +64,7 @@ const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
     PhaseTab,
     ComplaintsTab,
     DocumentsTab,
+    VoucherTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CaseWorkspace],
@@ -97,8 +96,6 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   protected readonly currentTab = computed(
     () => this.tabs().find((tab) => tab.id === this.tab()) ?? this.tabs()[0] ?? null,
   );
-
-  protected readonly builtIn = BUILT_IN;
 
   /** The phase open now, when it is one. */
   private readonly phaseTab = viewChild(PhaseTab);

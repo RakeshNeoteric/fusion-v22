@@ -1,3 +1,17 @@
+/** `2026-11-06T00:00:00` → `2026-11-06`; '' for no date (null or `DateTime.MinValue`). */
+export function dateOnly(value: string | null | undefined): string {
+  const date = (value ?? '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) && !date.startsWith('0001') ? date : '';
+}
+
+/** `2026-11-06` → `06/11/2026` (v21 grid format); '' for no date. */
+export function displayDate(value: string | null | undefined): string {
+  const date = dateOnly(value);
+  if (!date) return '';
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 /**
  * A moment the backend stores in UTC. The frontend sends `toISOString()`, but the backend
  * returns it without a zone, so a value without one is read as UTC. Null when there is none or

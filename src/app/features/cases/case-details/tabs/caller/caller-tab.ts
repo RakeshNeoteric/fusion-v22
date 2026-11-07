@@ -12,7 +12,7 @@ import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } fr
 import { MatExpansionModule } from '@angular/material/expansion';
 import { startWith } from 'rxjs';
 import type { CaseContact, CaseDetails } from '@api/cases/case.api';
-import { displayDate } from '@api/services/service-provider.api';
+import { displayDate } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';

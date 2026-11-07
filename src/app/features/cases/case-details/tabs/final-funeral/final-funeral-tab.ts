@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import type { CaseDetails, CaseFinalFuneralRecord } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { displayStoredPhone, storedToE164 } from '@shared/reference/phone';

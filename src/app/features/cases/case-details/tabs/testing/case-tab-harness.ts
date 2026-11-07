@@ -22,6 +22,7 @@ import { DocumentTypeApi } from '@api/config/document.api';
 import { TransportOperatorApi } from '@api/config/transport-operator.api';
 import { VehicleApi } from '@api/config/vehicle.api';
 import type { DirectoryUser } from '@api/models/app.models';
+import { VoucherApi } from '@api/vouchers/voucher.api';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
@@ -102,6 +103,7 @@ export function caseTabHarness() {
   const vehicles = { listIncludingDeleted: vi.fn() };
   const operators = { listIncludingDeleted: vi.fn() };
   const documentTypes = { listIncludingDeleted: vi.fn() };
+  const vouchers = { available: vi.fn(), request: vi.fn() };
   const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage> | undefined;
 
@@ -153,6 +155,8 @@ export function caseTabHarness() {
     api.uploadDocument.mockReturnValue(of(null));
     clients.get.mockReturnValue(of(null));
     documentTypes.listIncludingDeleted.mockReturnValue(of([]));
+    vouchers.available.mockReturnValue(of([]));
+    vouchers.request.mockReturnValue(of({ reserved: [], available: [] }));
     vehicles.listIncludingDeleted.mockReturnValue(of([]));
     operators.listIncludingDeleted.mockReturnValue(of([]));
     TestBed.configureTestingModule({
@@ -164,6 +168,7 @@ export function caseTabHarness() {
         { provide: VehicleApi, useValue: vehicles },
         { provide: TransportOperatorApi, useValue: operators },
         { provide: DocumentTypeApi, useValue: documentTypes },
+        { provide: VoucherApi, useValue: vouchers },
         { provide: NotificationService, useValue: notify },
         {
           provide: SessionService,
@@ -263,6 +268,7 @@ export function caseTabHarness() {
     vehicles,
     operators,
     documentTypes,
+    vouchers,
     notify,
     show,
     allowOnlyViewing,

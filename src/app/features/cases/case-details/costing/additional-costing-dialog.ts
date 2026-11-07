@@ -14,10 +14,10 @@ import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
+import { money, round2 } from '@shared/reference/money';
 import { displayStoredPhone } from '@shared/reference/phone';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { CaseWorkspace } from '../case-workspace';
-import { money, round2 } from './costing-rules';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {

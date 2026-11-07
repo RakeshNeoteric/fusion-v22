@@ -1,0 +1,33 @@
+.vc-intro {
+  margin: 0;
+}
+.vc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.vc-allocate {
+  width: 100%;
+  max-width: 160px;
+}
+.vc-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.vc-summary p {
+  margin: 0;
+  font-weight: 600;
+}
+.vc-problems {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--app-danger);
+}
+.vc-failed {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}

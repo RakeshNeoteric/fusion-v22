@@ -14,7 +14,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatDialog } from '@angular/material/dialog';
 import { merge } from 'rxjs';
 import type { CaseValidationRecord, PolicyMatch } from '@api/cases/case.api';
-import { displayDate } from '@api/services/service-provider.api';
+import { displayDate } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';

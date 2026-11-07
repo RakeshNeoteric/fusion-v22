@@ -18,7 +18,7 @@ import {
   Validators,
 } from '@angular/forms';
 import type { CaseDeceasedRecord, CaseDetails } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { type Choice, ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';

@@ -131,8 +131,8 @@
               @case ('documents') {
                 <app-documents-tab />
               }
-              @default {
-                <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>
+              @case ('voucher') {
+                <app-voucher-tab />
               }
             }
           </section>

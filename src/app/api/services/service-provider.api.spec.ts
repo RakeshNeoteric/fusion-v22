@@ -2,12 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import {
-  type ServiceProvider,
-  ServiceProviderApi,
-  dateOnly,
-  displayDate,
-} from './service-provider.api';
+import { type ServiceProvider, ServiceProviderApi } from './service-provider.api';
 
 const provider = (id: number, overrides: Partial<ServiceProvider> = {}) =>
   ({ ServiceProviderId: id, Name: `SP ${id}`, IsDeleted: false, ...overrides }) as ServiceProvider;
@@ -50,15 +45,5 @@ describe('ServiceProviderApi', () => {
     expect(remove.request.body).toMatchObject({ ServiceProviderId: 8, IsDeleted: true });
     remove.flush(provider(8));
     await deleted;
-  });
-});
-
-describe('provider dates', () => {
-  it('treats .NET DateTime.MinValue as no date', () => {
-    expect(dateOnly('0001-01-01T00:00:00')).toBe('');
-    expect(dateOnly(null)).toBe('');
-    expect(dateOnly('2026-11-06T00:00:00')).toBe('2026-11-06');
-    expect(displayDate('2026-11-06T10:30:00')).toBe('06/11/2026');
-    expect(displayDate('0001-01-01T00:00:00')).toBe('');
   });
 });

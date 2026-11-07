@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
+import type { CaseVoucherRecord } from '@api/vouchers/voucher.api';
 
 /** Backend `CaseStatus`, sent as its name. */
 export const CASE_STATUSES = ['New', 'Active', 'Pending', 'Closed', 'Aborted'] as const;
@@ -323,6 +324,8 @@ export interface CaseDetails {
   readonly Complaint?: readonly CaseComplaintRecord[] | null;
   /** The files uploaded for the client's documents. */
   readonly CaseDocument?: readonly CaseDocumentRecord[] | null;
+  /** Vouchers reserved for the case, each with its voucher. */
+  readonly CaseVouchers?: readonly CaseVoucherRecord[] | null;
   /** Authorised phases' costs, kept by Phase Costing (decimal(8,2)). */
   readonly PhaseTotal?: number | null;
   /** The additional costs (decimal(8,2)). */

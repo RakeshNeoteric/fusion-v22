@@ -184,8 +184,15 @@ export class CaseWorkspace {
    */
   async uploadDocument(record: CaseDocumentRecord, file: File): Promise<void> {
     await firstValueFrom(this.api.uploadDocument(record, file));
-    const fresh = await firstValueFrom(this.api.open(record.CaseDetailId));
-    this.loaded.set({ ...this.require(), CaseDocument: fresh.CaseDocument ?? [] });
+    await this.reload('CaseDocument');
+  }
+
+  /**
+   * Reloads the case's vouchers: others change their status (approved or rejected) while the
+   * case is open, and a request only says which vouchers it reserved, not their case rows.
+   */
+  reloadVouchers(): Promise<void> {
+    return this.reload('CaseVouchers');
   }
 
   /**
@@ -201,6 +208,12 @@ export class CaseWorkspace {
       (details.AdditionalCostTotal ?? 0) === totals.AdditionalCostTotal &&
       (details.TotalCost ?? 0) === totals.TotalCost;
     if (!unchanged) await this.saveCase(totals);
+  }
+
+  /** Takes one of the case's included lists fresh from the backend, keeping everything else. */
+  private async reload(key: 'CaseDocument' | 'CaseVouchers'): Promise<void> {
+    const fresh = await firstValueFrom(this.api.open(this.require().CaseDetailId));
+    this.loaded.set({ ...this.require(), [key]: fresh[key] ?? [] });
   }
 
   private keepPhase(saved: CasePhaseRecord): void {

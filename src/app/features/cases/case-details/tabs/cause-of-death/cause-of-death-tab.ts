@@ -22,7 +22,7 @@ import {
   type CaseCauseOfDeathRecord,
   type CaseDetails,
 } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { storedToE164 } from '@shared/reference/phone';

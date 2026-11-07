@@ -8,8 +8,8 @@ import {
   NO_DATE,
   type ServiceProvider,
   ServiceProviderApi,
-  dateOnly,
 } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';

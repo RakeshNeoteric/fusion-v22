@@ -114,17 +114,3 @@ export class ServiceProviderApi implements CrudSource<ServiceProvider> {
     });
   }
 }
-
-/** `2026-11-06T00:00:00` → `2026-11-06`; '' for no date (null or `DateTime.MinValue`). */
-export function dateOnly(value: string | null | undefined): string {
-  const date = (value ?? '').slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) && !date.startsWith('0001') ? date : '';
-}
-
-/** `2026-11-06` → `06/11/2026` (v21 grid format); '' for no date. */
-export function displayDate(value: string | null | undefined): string {
-  const date = dateOnly(value);
-  if (!date) return '';
-  const [year, month, day] = date.split('-');
-  return `${day}/${month}/${year}`;
-}

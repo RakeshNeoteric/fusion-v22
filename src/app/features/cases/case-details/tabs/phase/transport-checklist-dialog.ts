@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, type MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import type { CaseDetails, CasePhaseRecord, CaseTransportRecord } from '@api/cases/case.api';
-import { dateOnly } from '@api/services/service-provider.api';
+import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { type Choice, ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';

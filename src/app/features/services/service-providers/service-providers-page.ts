@@ -1,9 +1,6 @@
 import { ChangeDetectionStrategy, Component, Injector, inject } from '@angular/core';
-import {
-  type ServiceProvider,
-  ServiceProviderApi,
-  displayDate,
-} from '@api/services/service-provider.api';
+import { type ServiceProvider, ServiceProviderApi } from '@api/services/service-provider.api';
+import { displayDate } from '@shared/reference/date-time';
 import { UserDirectoryService } from '@core/session/user-directory.service';
 import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { EntityGrid } from '@shared/grid/entity-grid/entity-grid';

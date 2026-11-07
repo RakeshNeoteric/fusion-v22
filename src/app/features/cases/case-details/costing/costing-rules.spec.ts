@@ -1,6 +1,7 @@
 import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
 import { caseDetails, casePhase } from '../../../../../testing/case.fixtures';
-import { activePhases, caseTotals, money, phaseTotal, round2 } from './costing-rules';
+import { money, round2 } from '@shared/reference/money';
+import { activePhases, caseTotals, phaseTotal } from './costing-rules';
 
 const cost = (amount: number, extra: Partial<CaseAdditionalCostRecord> = {}) =>
   ({
