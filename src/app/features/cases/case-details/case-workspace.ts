@@ -5,17 +5,20 @@ import {
   type CaseAdditionalCostRecord,
   type CaseCauseOfDeathRecord,
   type CaseChanges,
+  type CaseComplaintRecord,
   type CaseDeceasedRecord,
   type CaseDetails,
+  type CaseDocumentRecord,
   type CaseFinalFuneralRecord,
   type CasePhaseRecord,
   type CaseTransportRecord,
   type CaseValidationRecord,
 } from '@api/cases/case.api';
-import { ClientApi } from '@api/clients/client.api';
+import { ClientApi, type ClientWithLinks } from '@api/clients/client.api';
+import { PermissionService } from '@core/permissions/permission.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService, displayNameOf } from '@core/session/user-directory.service';
-import { type CaseDirectory, isFinished } from '../case-setup';
+import { CASES_PERMISSION, type CaseDirectory, isFinished } from '../case-setup';
 import { type ClientProvider, clientProviders } from './client-providers';
 import { caseTotals } from './costing/costing-rules';
 
@@ -28,9 +31,10 @@ import { caseTotals } from './costing/costing-rules';
 export class CaseWorkspace {
   private readonly api = inject(CaseApi);
   private readonly session = inject(SessionService);
+  private readonly permissions = inject(PermissionService);
   private readonly users = inject(UserDirectoryService);
   private readonly clients = inject(ClientApi);
-  private providers: { clientId: number; list: Promise<readonly ClientProvider[]> } | null = null;
+  private client: { id: number; loaded: Promise<ClientWithLinks | null> } | null = null;
 
   private readonly loaded = signal<CaseDetails | null>(null);
   private readonly lookups = signal<CaseDirectory | null>(null);
@@ -53,10 +57,15 @@ export class CaseWorkspace {
       .find((candidate) => candidate.UserEmail.toLowerCase() === email);
     return user ? displayNameOf(user) : (this.details()?.CaseOpenedBy?.trim() ?? '');
   });
-  /** Closed or aborted, or open for someone else: look, don't change (v21). */
+  /** The user may only view cases (no edit access to the Cases screen). */
+  readonly viewOnly = computed(() => !this.permissions.canEdit(CASES_PERMISSION));
+  /**
+   * Look, don't change (v21): the case is closed or aborted, open for someone else, or the user
+   * may only view cases. Every tab, popup and header action follows this.
+   */
   readonly readOnly = computed(() => {
     const details = this.details();
-    return !details || isFinished(details) || this.heldByOther();
+    return !details || isFinished(details) || this.heldByOther() || this.viewOnly();
   });
 
   /** The service's tab rules and the clients' and services' names. */
@@ -111,18 +120,23 @@ export class CaseWorkspace {
   }
 
   /**
-   * The case client's active service providers (`GET Client?Id=`), loaded once while the case
-   * is open. Fails like the request did; the next call tries again.
+   * The case's client with its links (`GET Client?Id=`), loaded once while the case is open.
+   * Fails like the request did; the next call tries again.
    */
-  loadProviders(): Promise<readonly ClientProvider[]> {
-    const clientId = this.details()?.CaseClientId ?? 0;
-    if (!clientId) return Promise.resolve([]);
-    if (this.providers?.clientId !== clientId) {
-      const list = firstValueFrom(this.clients.get(clientId)).then(clientProviders);
-      list.catch(() => (this.providers = null));
-      this.providers = { clientId, list };
+  loadClient(): Promise<ClientWithLinks | null> {
+    const id = this.details()?.CaseClientId ?? 0;
+    if (!id) return Promise.resolve(null);
+    if (this.client?.id !== id) {
+      const loaded = firstValueFrom(this.clients.get(id));
+      loaded.catch(() => (this.client = null));
+      this.client = { id, loaded };
     }
-    return this.providers.list;
+    return this.client.loaded;
+  }
+
+  /** The case client's active service providers. */
+  async loadProviders(): Promise<readonly ClientProvider[]> {
+    return clientProviders(await this.loadClient());
   }
 
   /** Adds the next phase; the backend needs its text columns, so they start empty. */
@@ -154,6 +168,24 @@ export class CaseWorkspace {
     );
     this.loaded.set({ ...details, CaseAdditionalCosts: [...others, saved] });
     return saved;
+  }
+
+  /** Logs a complaint against the case. */
+  async addComplaint(record: CaseComplaintRecord): Promise<CaseComplaintRecord> {
+    const saved = await firstValueFrom(this.api.addComplaint(record));
+    const details = this.require();
+    this.loaded.set({ ...details, Complaint: [...(details.Complaint ?? []), saved] });
+    return saved;
+  }
+
+  /**
+   * Uploads the file for a client document, then reloads the case's documents: the backend
+   * only says where it stored the file by reloading.
+   */
+  async uploadDocument(record: CaseDocumentRecord, file: File): Promise<void> {
+    await firstValueFrom(this.api.uploadDocument(record, file));
+    const fresh = await firstValueFrom(this.api.open(record.CaseDetailId));
+    this.loaded.set({ ...this.require(), CaseDocument: fresh.CaseDocument ?? [] });
   }
 
   /**

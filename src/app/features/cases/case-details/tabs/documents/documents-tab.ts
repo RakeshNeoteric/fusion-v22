@@ -1,0 +1,240 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MatTooltip } from '@angular/material/tooltip';
+import { firstValueFrom } from 'rxjs';
+import type { ClientDocumentLink } from '@api/clients/client-links.api';
+import { DocumentTypeApi } from '@api/config/document.api';
+import { NotificationService } from '@core/notifications/notification.service';
+import { FileViewer, storedFileName } from '@shared/files/file-viewer';
+import { formatDateTime } from '@shared/reference/date-time';
+import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
+import { CaseWorkspace } from '../../case-workspace';
+import { type DocumentRow, documentRows, uploadedFileName } from './document-rows';
+
+/**
+ * v21 Documents tab: one row per document the client asks for, with the client's template and
+ * the file uploaded for it on this case. Uploading again replaces the case's file.
+ */
+@Component({
+  selector: 'app-documents-tab',
+  imports: [LinkTable, LinkCell, MatTooltip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: '../case-tab.css',
+  styles: `
+    .doc-bar {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .doc-file {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-action {
+      padding: 2px 4px;
+      border: none;
+      background: none;
+      color: var(--app-teal);
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .doc-action:disabled {
+      color: #9ca3af;
+      cursor: default;
+    }
+    .doc-action:focus-visible {
+      outline: 2px solid var(--app-teal);
+    }
+    .doc-hidden {
+      display: none;
+    }
+  `,
+  template: `
+    <div class="doc-bar">
+      <!-- matTooltip needs a wrapper: a disabled button gets no pointer events. -->
+      <span matTooltip="Coming with the header actions (phase 7f)">
+        <button type="button" class="app-button" disabled>Email</button>
+      </span>
+    </div>
+    @switch (state()) {
+      @case ('loading') {
+        <p role="status">Loading documents…</p>
+      }
+      @case ('failed') {
+        <p role="alert">Failed to load the client's documents.</p>
+      }
+      @default {
+        <app-link-table
+          caption="Case documents"
+          [rows]="rows()"
+          [columns]="columns"
+          [rowKey]="key"
+          [nameOf]="name"
+        >
+          <ng-template appLinkCell="Template" let-row>
+            @if (row.template; as path) {
+              <span class="doc-file">
+                {{ fileName(path) }}
+                <button
+                  type="button"
+                  class="doc-action"
+                  [attr.aria-label]="'View ' + fileName(path)"
+                  (click)="viewer.preview(path)"
+                >
+                  View
+                </button>
+                <button
+                  type="button"
+                  class="doc-action"
+                  [attr.aria-label]="'Download ' + fileName(path)"
+                  (click)="viewer.download(path)"
+                >
+                  Download
+                </button>
+              </span>
+            } @else {
+              —
+            }
+          </ng-template>
+          <ng-template appLinkCell="Upload File" let-row>
+            <span class="doc-file">
+              <button
+                type="button"
+                class="doc-action"
+                [attr.aria-label]="'Upload ' + row.name"
+                [disabled]="workspace.readOnly() || busy()"
+                (click)="picker.click()"
+              >
+                Upload
+              </button>
+              <input
+                #picker
+                type="file"
+                class="doc-hidden"
+                [attr.aria-label]="'File for ' + row.name"
+                (change)="choose(row, picker)"
+              />
+              @if (row.uploaded; as path) {
+                {{ uploadedName(row) }}
+                <button
+                  type="button"
+                  class="doc-action"
+                  [attr.aria-label]="'View ' + uploadedName(row)"
+                  (click)="viewer.preview(path)"
+                >
+                  View
+                </button>
+                <button
+                  type="button"
+                  class="doc-action"
+                  [attr.aria-label]="'Download ' + uploadedName(row)"
+                  (click)="viewer.download(path)"
+                >
+                  Download
+                </button>
+              }
+            </span>
+          </ng-template>
+        </app-link-table>
+      }
+    }
+  `,
+})
+export class DocumentsTab {
+  protected readonly workspace = inject(CaseWorkspace);
+  private readonly types = inject(DocumentTypeApi);
+  private readonly confirm = inject(ConfirmService);
+  private readonly notifications = inject(NotificationService);
+  protected readonly viewer = inject(FileViewer);
+
+  protected readonly fileName = storedFileName;
+  protected readonly state = signal<'loading' | 'failed' | 'ready'>('loading');
+  protected readonly busy = signal(false);
+
+  private readonly clientDocuments = signal<readonly ClientDocumentLink[]>([]);
+  private readonly typeNames = signal<ReadonlyMap<number, string>>(new Map());
+
+  protected readonly rows = computed(() =>
+    documentRows(
+      this.clientDocuments(),
+      this.workspace.details()?.CaseDocument ?? [],
+      this.typeNames(),
+    ),
+  );
+
+  protected readonly columns: LinkColumn<DocumentRow>[] = [
+    { header: 'Document', text: (row) => row.name },
+    { header: 'Template' },
+    { header: 'Upload File' },
+    {
+      header: 'Uploaded Date',
+      text: (row) => (row.uploaded ? formatDateTime(row.upload?.UploadedDate) : ''),
+      align: 'center',
+    },
+  ];
+  protected readonly key = (row: DocumentRow) => row.clientDocumentId;
+  protected readonly name = (row: DocumentRow) => row.name;
+
+  constructor() {
+    void this.load();
+  }
+
+  protected uploadedName(row: DocumentRow): string {
+    return row.upload ? uploadedFileName(row.upload) : '';
+  }
+
+  protected async choose(row: DocumentRow, input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    const details = this.workspace.details();
+    if (!file || !details || this.workspace.readOnly() || this.busy()) return;
+    // v21 replaced the file without asking; the old one is deleted.
+    if (
+      row.uploaded &&
+      !(await this.confirm.ask({
+        title: 'Replace file',
+        message: `Replace ${this.uploadedName(row)} with ${file.name} for ${row.name}?`,
+        confirmText: 'Replace',
+      }))
+    ) {
+      return;
+    }
+    this.busy.set(true);
+    try {
+      await this.workspace.uploadDocument(
+        {
+          CaseDocumentId: row.upload?.CaseDocumentId ?? 0,
+          CaseDetailId: details.CaseDetailId,
+          ClientDocumentId: row.clientDocumentId,
+          CaseReferenceNumber: details.CaseReferenceNumber,
+          // The backend deletes the file it replaces.
+          FileStoragePath: row.uploaded,
+          UploadedDate: new Date().toISOString(),
+        },
+        file,
+      );
+      this.notifications.success('File uploaded successfully.');
+    } catch {
+      // The error interceptor has said why.
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** The client's documents and every document type's name (deleted types name old links). */
+  private async load(): Promise<void> {
+    try {
+      const [client, types] = await Promise.all([
+        this.workspace.loadClient(),
+        firstValueFrom(this.types.listIncludingDeleted()),
+      ]);
+      this.clientDocuments.set(client?.ClientDocument ?? []);
+      this.typeNames.set(new Map(types.map((type) => [type.DocumentId, type.Description])));
+      this.state.set('ready');
+    } catch {
+      this.state.set('failed');
+    }
+  }
+}

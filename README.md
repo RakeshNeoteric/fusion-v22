@@ -135,7 +135,9 @@ The case list (`features/cases/case-list`) groups by client, service and status 
 Enterprise: `case-grouping.ts` turns the cases into group headings and case rows, sorted within
 their groups, and `app-case-group-bar` changes the grouping (drag, remove, add back). Opening a case
 (`GET CaseDetails/{id}`) makes the user its holder (`CaseOpenedBy`); others and everyone on
-a closed or aborted case only look. The holder lets go with `CaseExit` on Exit, and also when
+a closed or aborted case only look, as do users without edit access to Cases (`CASES_PERMISSION`;
+the header says "View only"). All of these rules live in `CaseWorkspace.readOnly`, which every tab,
+popup and header action follows. The holder lets go with `CaseExit` on Exit, and also when
 leaving the page any other way. The tabs a case shows come from its service type's
 `ServiceTypeBasedTabs` rule (`case-setup.ts`); phase tabs appear only once the case has them.
 
@@ -170,6 +172,13 @@ non-deleted additional costs count toward the case's `PhaseTotal`, `AdditionalCo
 `TotalCost`, which `CaseWorkspace.saveTotals` saves with the whole case record whenever they
 change. The vehicle dispatch time is stored in UTC and shown in local time. The Removal Order and
 Additional Cost PO PDFs come with the Phase 8 reports.
+
+Complaints (`tabs/complaints`) are logged in a popup by the signed-in user and then only viewed,
+as in v21. Documents (`tabs/documents`) has a row for each document the client asks for (its
+Documents links): the client's template, and the file uploaded for it on this case. An upload is
+one form post with the file; uploading again replaces the case's file (after asking), and the
+backend deletes the old one. Moments the backend stores in UTC are shown in local time with
+`shared/reference/date-time.ts`. Emailing documents comes with the header actions (7f).
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

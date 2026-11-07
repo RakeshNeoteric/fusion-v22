@@ -6,7 +6,14 @@ import type {
   CasePhaseSummary,
   ServiceTypeTabs,
 } from '@api/cases/case.api';
+import type { MenuCode } from '@api/models/menu-code';
 import { statusLabel } from '@shared/reference/lookup-label';
+
+/**
+ * The Cases screen's permission (menu code). Opening it needs view access; changing a case needs
+ * edit access: users who may only view see every case read-only (v21).
+ */
+export const CASES_PERMISSION: MenuCode = 'CASES';
 
 /** Every case tab, in the order shown (v21). */
 export const CASE_TABS = [

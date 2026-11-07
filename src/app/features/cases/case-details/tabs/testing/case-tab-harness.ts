@@ -8,6 +8,7 @@ import {
   CaseApi,
   type CaseAdditionalCostRecord,
   type CaseCauseOfDeathRecord,
+  type CaseComplaintRecord,
   type CaseDeceasedRecord,
   type CaseDetails,
   type CaseFinalFuneralRecord,
@@ -17,14 +18,18 @@ import {
   type CaseValidationRecord,
 } from '@api/cases/case.api';
 import { ClientApi } from '@api/clients/client.api';
+import { DocumentTypeApi } from '@api/config/document.api';
 import { TransportOperatorApi } from '@api/config/transport-operator.api';
 import { VehicleApi } from '@api/config/vehicle.api';
 import type { DirectoryUser } from '@api/models/app.models';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
+import { PermissionService } from '@core/permissions/permission.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
+import { permission, role } from '../../../../../../testing/app-init.fixtures';
 import { CASE_INIT, caseDetails, casePhase } from '../../../../../../testing/case.fixtures';
+import { CASES_PERMISSION } from '../../../case-setup';
 import { CaseDetailsPage } from '../../case-details-page';
 
 const user = (id: number, first: string, last: string, email: string): DirectoryUser => ({
@@ -89,11 +94,14 @@ export function caseTabHarness() {
     createPhase: vi.fn(),
     savePhase: vi.fn(),
     saveAdditionalCost: vi.fn(),
+    addComplaint: vi.fn(),
+    uploadDocument: vi.fn(),
     fetchPolicy: vi.fn(),
   };
   const clients = { get: vi.fn() };
   const vehicles = { listIncludingDeleted: vi.fn() };
   const operators = { listIncludingDeleted: vi.fn() };
+  const documentTypes = { listIncludingDeleted: vi.fn() };
   const notify = { success: vi.fn(), warning: vi.fn(), info: vi.fn(), error: vi.fn() };
   let fixture: ComponentFixture<CaseDetailsPage> | undefined;
 
@@ -139,7 +147,12 @@ export function caseTabHarness() {
     api.saveAdditionalCost.mockImplementation((record: CaseAdditionalCostRecord) =>
       of({ ...record, CaseAdditionalCostId: record.CaseAdditionalCostId || 95 }),
     );
+    api.addComplaint.mockImplementation((record: CaseComplaintRecord) =>
+      of({ ...record, CaseComplaintId: 96 }),
+    );
+    api.uploadDocument.mockReturnValue(of(null));
     clients.get.mockReturnValue(of(null));
+    documentTypes.listIncludingDeleted.mockReturnValue(of([]));
     vehicles.listIncludingDeleted.mockReturnValue(of([]));
     operators.listIncludingDeleted.mockReturnValue(of([]));
     TestBed.configureTestingModule({
@@ -150,6 +163,7 @@ export function caseTabHarness() {
         { provide: ClientApi, useValue: clients },
         { provide: VehicleApi, useValue: vehicles },
         { provide: TransportOperatorApi, useValue: operators },
+        { provide: DocumentTypeApi, useValue: documentTypes },
         { provide: NotificationService, useValue: notify },
         {
           provide: SessionService,
@@ -158,6 +172,7 @@ export function caseTabHarness() {
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
       ],
     });
+    grantCases({ CanCreate: true });
     TestBed.inject(UserDirectoryService).load([
       { RoleId: 1, RoleName: 'Agent', Users: [user(7, 'Jane', 'Doe', 'jane@example.com')] },
       { RoleId: 2, RoleName: 'CaseController', Users: [user(3, 'Carl', 'Ng', 'carl@x.com')] },
@@ -165,6 +180,14 @@ export function caseTabHarness() {
   });
 
   afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+  /** Jane's access to the Cases screen: full by default. */
+  function grantCases(flags: Parameters<typeof permission>[1]): void {
+    TestBed.inject(PermissionService).load([role('Agent', [permission(CASES_PERMISSION, flags)])]);
+  }
+
+  /** Jane may only view cases. Call before `show`. */
+  const allowOnlyViewing = () => grantCases({});
 
   async function show(details: CaseDetails): Promise<void> {
     api.open.mockReturnValue(of(details));
@@ -239,8 +262,10 @@ export function caseTabHarness() {
     clients,
     vehicles,
     operators,
+    documentTypes,
     notify,
     show,
+    allowOnlyViewing,
     settle,
     element,
     type,

@@ -247,6 +247,39 @@ export interface CaseAdditionalCostRecord {
   readonly IsDeleted: boolean | null;
 }
 
+/** Backend `Complaint`: logged against a case; complaints are added and viewed, not edited. */
+export interface CaseComplaintRecord {
+  readonly CaseComplaintId: number;
+  readonly CaseDetailId: number;
+  readonly Title: string | null;
+  /** One of {@link COMPLAINT_TYPES}. */
+  readonly Type: string | null;
+  readonly ComplaintDetail: string | null;
+  /** UTC; the backend returns it without a zone. */
+  readonly CreatedDate: string;
+  /** The `AspNetUserId` of who logged it. */
+  readonly CreatedByUserId: number;
+}
+
+/** v21 complaint types; the label is what is stored. */
+export const COMPLAINT_TYPES = ['Internal', 'Customer', 'Client'] as const;
+
+/**
+ * Backend `CaseDocument`: the file uploaded for one of the client's documents
+ * (`ClientDocumentId`) on this case. The backend stores the file sent as `Content` and sets
+ * `FileStoragePath` to its download URL.
+ */
+export interface CaseDocumentRecord {
+  readonly CaseDocumentId: number;
+  readonly CaseDetailId: number;
+  readonly ClientDocumentId: number;
+  /** Part of the stored file's name. */
+  readonly CaseReferenceNumber: string | null;
+  readonly FileStoragePath: string | null;
+  /** UTC; the backend returns it without a zone. */
+  readonly UploadedDate: string | null;
+}
+
 /** The parts of a phase the tab strip needs. */
 export type CasePhaseSummary = Pick<CasePhaseRecord, 'CasePhaseDetailsId' | 'PhaseName'>;
 
@@ -286,6 +319,10 @@ export interface CaseDetails {
   readonly CaseValidation?: readonly CaseValidationRecord[] | null;
   readonly CasePhaseDetails?: readonly CasePhaseRecord[] | null;
   readonly CaseAdditionalCosts?: readonly CaseAdditionalCostRecord[] | null;
+  /** The case's complaints (the backend names the list in the singular). */
+  readonly Complaint?: readonly CaseComplaintRecord[] | null;
+  /** The files uploaded for the client's documents. */
+  readonly CaseDocument?: readonly CaseDocumentRecord[] | null;
   /** Authorised phases' costs, kept by Phase Costing (decimal(8,2)). */
   readonly PhaseTotal?: number | null;
   /** The additional costs (decimal(8,2)). */
@@ -479,6 +516,29 @@ export class CaseApi {
       id ? `CaseAdditionalCost/${id}` : 'CaseAdditionalCost',
       columnsOf(record),
     );
+  }
+
+  /** Logs a complaint (`POST Complaint`); the backend echoes it with its id. */
+  addComplaint(record: CaseComplaintRecord): Observable<CaseComplaintRecord> {
+    return this.http.post<CaseComplaintRecord>('Complaint', columnsOf(record));
+  }
+
+  /**
+   * Uploads the file for one of the client's documents, as form data: a new row (id 0) or a
+   * replacement, which sends the stored file's URL so the backend deletes that file. The
+   * backend's reply only has the new file's URL for a new row, so reload the case to see it.
+   */
+  uploadDocument(record: CaseDocumentRecord, file: File): Observable<unknown> {
+    const form = new FormData();
+    const id = record.CaseDocumentId;
+    if (id > 0) form.append('CaseDocumentId', String(id));
+    form.append('CaseDetailId', String(record.CaseDetailId));
+    form.append('ClientDocumentId', String(record.ClientDocumentId));
+    form.append('CaseReferenceNumber', record.CaseReferenceNumber ?? '');
+    if (record.FileStoragePath) form.append('FileStoragePath', record.FileStoragePath);
+    if (record.UploadedDate) form.append('UploadedDate', record.UploadedDate);
+    form.append('Content', file, file.name);
+    return this.http.post(id > 0 ? `CaseDocument/${id}` : 'CaseDocument', form);
   }
 
   fetchPolicy(caseId: number, search: PolicySearch): Observable<PolicyMatch[]> {

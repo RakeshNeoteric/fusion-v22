@@ -44,10 +44,8 @@ import {
   DEFAULT_GROUPING,
   groupCases,
 } from './case-grouping';
-import { CaseDirectory, callerName, deceasedName } from '../case-setup';
+import { CASES_PERMISSION, CaseDirectory, callerName, deceasedName } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
-
-const PERMISSION = 'CASES';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
@@ -90,7 +88,7 @@ export class CasesPage {
   protected readonly theme = APP_GRID_THEME;
   protected readonly pageSize = PAGE_SIZE;
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  protected readonly canCreate = inject(PermissionService).canCreate(PERMISSION);
+  protected readonly canCreate = inject(PermissionService).canCreate(CASES_PERMISSION);
 
   protected readonly status = signal<LoadStatus>('loading');
   private readonly cases = signal<readonly CaseRow[]>([]);

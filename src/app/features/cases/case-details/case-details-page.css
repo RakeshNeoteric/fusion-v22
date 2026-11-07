@@ -54,7 +54,8 @@
 .cd-status:is([data-status='Closed'], [data-status='Aborted']) {
   color: #d32f2f;
 }
-.cd-opened-by {
+.cd-opened-by,
+.cd-view-only {
   color: #b33;
   font-size: 0.95em;
   font-weight: 600;

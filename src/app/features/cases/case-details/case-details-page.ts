@@ -31,6 +31,8 @@ import { DeceasedInfoTab } from './tabs/deceased-info/deceased-info-tab';
 import { CauseOfDeathTab } from './tabs/cause-of-death/cause-of-death-tab';
 import { FinalFuneralTab } from './tabs/final-funeral/final-funeral-tab';
 import { PhaseTab } from './tabs/phase/phase-tab';
+import { ComplaintsTab } from './tabs/complaints/complaints-tab';
+import { DocumentsTab } from './tabs/documents/documents-tab';
 import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
 import { CaseWorkspace } from './case-workspace';
@@ -39,9 +41,7 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
 
 /** Which sub-phase of the migration builds each tab (shown until it is built). */
 const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
-  voucher: '7e',
-  complaints: '7e',
-  documents: '7e',
+  voucher: '7e-2',
 };
 
 /**
@@ -64,6 +64,8 @@ const BUILT_IN: Partial<Record<CaseTabKey, string>> = {
     CauseOfDeathTab,
     FinalFuneralTab,
     PhaseTab,
+    ComplaintsTab,
+    DocumentsTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CaseWorkspace],

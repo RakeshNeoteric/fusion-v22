@@ -2,13 +2,14 @@ import { of } from 'rxjs';
 import type { CaseDetails, CasePhaseRecord } from '@api/cases/case.api';
 import type { TransportOperator } from '@api/config/transport-operator.api';
 import type { Vehicle } from '@api/config/vehicle.api';
+import { localParts } from '@shared/reference/date-time';
 import {
   casePhase,
   clientWithProviders,
   serviceProvider,
 } from '../../../../../testing/case.fixtures';
 import { caseTabHarness, held } from '../tabs/testing/case-tab-harness';
-import { dispatchedMoment, dispatchedParts } from './transport-dialog';
+import { dispatchedMoment } from './transport-dialog';
 
 /** Today as the popup stores it. */
 function today(): string {
@@ -185,11 +186,11 @@ describe('vehicle dispatch time', () => {
   it('is stored as UTC and shown in local time', () => {
     const stored = dispatchedMoment('2026-11-05', '10:30');
     expect(stored).toMatch(/Z$/);
-    expect(dispatchedParts(stored?.replace(/\.\d+Z$/, '') ?? null)).toEqual({
+    expect(localParts(stored?.replace(/\.\d+Z$/, '') ?? null)).toEqual({
       date: '2026-11-05',
       time: '10:30',
     });
-    expect(dispatchedParts(null)).toEqual({ date: '', time: '' });
+    expect(localParts(null)).toEqual({ date: '', time: '' });
     expect(dispatchedMoment('', '10:00')).toBeNull();
   });
 });

@@ -20,6 +20,9 @@
             @if (workspace.heldByOther()) {
               <span class="cd-opened-by"> — Already opened by {{ workspace.holderName() }}</span>
             }
+            @if (workspace.viewOnly()) {
+              <span class="cd-view-only"> — View only</span>
+            }
           </h1>
           <div class="cd-actions">
             <!-- Vehicle Tracker, Case Stages, Abort and View More come in phase 7f. -->
@@ -121,6 +124,12 @@
               }
               @case ('phase4') {
                 <app-phase-tab phase="phase4" />
+              }
+              @case ('complaints') {
+                <app-complaints-tab />
+              }
+              @case ('documents') {
+                <app-documents-tab />
               }
               @default {
                 <p class="cd-coming">{{ tab.label }} is built in phase {{ builtIn[tab.id] }}.</p>

@@ -8,6 +8,7 @@ import type { Vehicle } from '@api/config/vehicle.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
+import { localParts } from '@shared/reference/date-time';
 
 /** The phase's transport, as Phase Costing saves it. */
 export type TransportValues = Pick<
@@ -48,21 +49,9 @@ function options(
 }
 
 /**
- * The stored dispatch moment is UTC (v21 sent `toISOString()`; the backend returns it without a
- * zone). Shown and entered in local time.
+ * Local date and time → the UTC moment to store (v21 sent `toISOString()`); null without a
+ * date. The stored moment is shown in local time (`localParts`).
  */
-export function dispatchedParts(stored: string | null): { date: string; time: string } {
-  if (!stored) return { date: '', time: '' };
-  const moment = new Date(/[zZ]|[+-]\d{2}:\d{2}$/.test(stored) ? stored : `${stored}Z`);
-  if (Number.isNaN(moment.getTime())) return { date: '', time: '' };
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return {
-    date: `${moment.getFullYear()}-${pad(moment.getMonth() + 1)}-${pad(moment.getDate())}`,
-    time: `${pad(moment.getHours())}:${pad(moment.getMinutes())}`,
-  };
-}
-
-/** Local date and time → the UTC moment to store; null without a date. */
 export function dispatchedMoment(date: string, time: string): string | null {
   if (!date) return null;
   const moment = new Date(`${date}T${time || '00:00'}:00`);
@@ -175,7 +164,7 @@ export class TransportDialog {
     this.data.phase.TransportOperatorId,
   );
 
-  private readonly dispatched = dispatchedParts(this.data.phase.VehicleDispatched);
+  private readonly dispatched = localParts(this.data.phase.VehicleDispatched);
   protected readonly form = new FormGroup(
     {
       vehicle: new FormControl<number | null>(this.data.phase.VehicleId, Validators.required),
