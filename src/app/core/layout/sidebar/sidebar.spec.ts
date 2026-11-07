@@ -152,6 +152,17 @@ describe('Sidebar', () => {
     expect(nav.classList).toContain('collapsed');
   });
 
+  it('shows the default icon when a configured icon has no image', async () => {
+    const { nav } = await render();
+    const icon = nav.querySelector<HTMLImageElement>('img.menu-icon');
+    if (!icon) throw new Error('icon not rendered');
+    icon.dispatchEvent(new Event('error'));
+    expect(icon.getAttribute('src')).toBe('/icons/menu/default.png');
+    // The default failing too does not loop.
+    icon.dispatchEvent(new Event('error'));
+    expect(icon.getAttribute('src')).toBe('/icons/menu/default.png');
+  });
+
   it('stays expanded when pinned', async () => {
     const { fixture, nav } = await render();
     fixture.componentRef.setInput('pinned', true);

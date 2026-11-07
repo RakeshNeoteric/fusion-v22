@@ -1,6 +1,5 @@
 import type { Workbook } from 'exceljs';
 import { longDate } from '@shared/reference/date-time';
-import { money } from '@shared/reference/money';
 import { SheetNames, addSheet, tableSheet, titleBar } from '@shared/excel/excel-sheet';
 import type { DashboardCard } from '../dashboard/dashboard-model';
 import type { ClientReportExport } from './client-report-export';
@@ -78,9 +77,11 @@ export function fillClientReportWorkbook(workbook: Workbook, report: ClientRepor
         longDate(voucher.issued),
         longDate(voucher.redeemed),
         voucher.code,
-        voucher.amount === null ? '' : `R ${money(voucher.amount)}`,
+        voucher.amount ?? '',
         voucher.status,
       ]),
+      // v21 wrote "R 1,234.50" as text; a number in the same look can be added up.
+      '"R "#,##0.00',
     );
   }
 }

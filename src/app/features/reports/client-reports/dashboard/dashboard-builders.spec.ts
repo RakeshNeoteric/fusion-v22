@@ -204,8 +204,9 @@ describe('Nedgroup dashboard', () => {
       ['Airtime', [0, 1, 0]],
       ['Total Vouchers', [2, 2, 0]],
     ]);
+    // The monthly budgets added up (40 + 80), so the two charts agree.
     expect(lines(card(cards, 'avsVoucherYtdQty').chart)).toEqual([
-      ['Budget', [40, 80, 80]],
+      ['Budget', [40, 120, 120]],
       ['Grocery YTD', [2, 3, 3]],
       ['Airtime YTD', [0, 1, 1]],
       ['Total Voucher YTD', [2, 4, 4]],

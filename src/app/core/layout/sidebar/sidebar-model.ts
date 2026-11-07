@@ -81,6 +81,14 @@ function toItem(menu: MenuConfig): SidebarItem {
     id: menu.MenuId,
     label: menu.DisplayName,
     route: `/${menu.MenuViewName.toLowerCase()}`,
-    iconUrl: `/icons/menu/${menu.Icon || DEFAULT_ICON}`,
+    iconUrl: menuIconUrl(menu.Icon),
   };
 }
+
+/** The menu's icon (v21's assets/icons, named in the menu configuration), or the default one. */
+export function menuIconUrl(icon: string | null | undefined): string {
+  return `/icons/menu/${icon?.trim() || DEFAULT_ICON}`;
+}
+
+/** Shown when a configured icon has no image: the default one, as for a menu without one. */
+export const FALLBACK_ICON_URL = menuIconUrl(null);

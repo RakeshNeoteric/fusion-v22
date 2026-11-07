@@ -537,6 +537,17 @@ export class CaseApi {
     });
   }
 
+  /**
+   * Lets go of a closed or aborted case without changing it: the case is saved as loaded with
+   * nobody holding it. (`CaseExit` with its status would stamp a new closed date and closer.)
+   */
+  releaseFinished(details: CaseDetails): Observable<CaseDetails> {
+    return this.http.post<CaseDetails>(`CaseDetails/${details.CaseDetailId}`, {
+      ...columnsOf(details),
+      CaseOpenedBy: null,
+    });
+  }
+
   saveValidation(record: CaseValidationRecord): Observable<CaseValidationRecord> {
     const id = record.CaseValidationId;
     return this.http.post<CaseValidationRecord>(

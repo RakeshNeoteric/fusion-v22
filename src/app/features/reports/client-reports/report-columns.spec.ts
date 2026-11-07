@@ -1,6 +1,6 @@
 import type { CaseVoucherRecord } from '@api/vouchers/voucher.api';
 import { caseDeceased, caseDetails, caseValidation } from '../../../../testing/case.fixtures';
-import { type ReportNames, reportColumns, reportRows } from './report-columns';
+import { type ReportNames, exportValue, reportColumns, reportRows } from './report-columns';
 import type { ClientTab, ServiceTab } from './report-tabs';
 
 const NAMES: ReportNames = {
@@ -192,6 +192,16 @@ describe('client report columns', () => {
     const [small, large] = reportRows(service(6, 'AVS', true), [GROCERIES]).map(
       (row) => amount?.sortKey?.(row) ?? '',
     );
-    expect(small!.localeCompare(large!)).toBeLessThan(0);
+    expect(typeof small).toBe('number');
+    expect(Number(small)).toBeLessThan(Number(large));
+  });
+
+  it('exports amounts as numbers, so Excel can add them up', () => {
+    const tab = service(6, 'AVS', true);
+    const amount = reportColumns(tab).find((c) => c.header === 'Amount');
+    const [row] = reportRows(tab, [GROCERIES]);
+    if (!amount || !row) throw new Error('no amount');
+    expect(typeof exportValue(amount, row, NAMES)).toBe('number');
+    expect(exportValue(amount, { ...row, voucher: null }, NAMES)).toBe('');
   });
 });

@@ -89,7 +89,7 @@ export class CaseWorkspace {
   async saveCase(changes: CaseChanges): Promise<void> {
     const details = this.require();
     const saved = await firstValueFrom(this.api.update(details, changes));
-    // The backend echoes what it stored; the included records are not in it.
+    // The echo has the saved columns; the included records stay as loaded.
     this.loaded.set({ ...details, ...changes, ...columnsKept(saved, details) });
   }
 
@@ -221,8 +221,10 @@ export class CaseWorkspace {
    */
   async reload(...keys: readonly ReloadableKey[]): Promise<void> {
     const fresh = await firstValueFrom(this.api.open(this.require().CaseDetailId));
+    // Loading the case gives it to this user when nobody has it (backend), so who has it is
+    // always taken: otherwise leaving the page would not let go of it.
     const parts = Object.fromEntries(
-      keys.map((key) => [key, fresh[key] ?? null]),
+      [...keys, 'CaseOpenedBy' as const].map((key) => [key, fresh[key] ?? null]),
     ) as Partial<CaseDetails>;
     this.loaded.set({ ...this.require(), ...parts });
   }
@@ -251,15 +253,19 @@ export class CaseWorkspace {
 }
 
 /**
- * The saved case's values. The backend echoes the case without its included records (deceased,
- * validations, …: null in the echo), so those are kept as loaded.
+ * The saved case's own columns. The backend echoes the body it was sent, and the frontend sends
+ * no included records (deceased, validations, phases, …), so the echo has them as null or empty
+ * lists: those are always kept as loaded. `ContactDetails` is a column (stored as JSON).
  */
 function columnsKept(saved: CaseDetails, loaded: CaseDetails): Partial<CaseDetails> {
-  const included = (key: string): boolean => {
-    const value: unknown = loaded[key as keyof CaseDetails];
-    return value !== null && typeof value === 'object' && key !== 'ContactDetails';
-  };
+  const isRecord = (key: string): boolean =>
+    key !== 'ContactDetails' &&
+    (isObject(saved[key as keyof CaseDetails]) || isObject(loaded[key as keyof CaseDetails]));
   return Object.fromEntries(
-    Object.entries(saved).filter(([key, value]) => value !== null || !included(key)),
+    Object.entries(saved).filter(([key]) => !isRecord(key)),
   ) as Partial<CaseDetails>;
+}
+
+function isObject(value: unknown): boolean {
+  return value !== null && typeof value === 'object';
 }

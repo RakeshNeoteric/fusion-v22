@@ -51,8 +51,14 @@ export abstract class ConfigCrudApi<T extends SoftDeletable> implements CrudSour
     return this.http.get<T[]>(this.path);
   }
 
+  /**
+   * The database gives the new row its id, so none is sent. (Service and ClientGroup ids are
+   * nullable on the backend: a 0 would be inserted as the id, which SQL Server refuses.)
+   */
   create(entity: T): Observable<T> {
-    return this.http.post<T>(this.path, { ...entity, IsDeleted: false });
+    const row: Partial<T> = { ...entity, IsDeleted: false };
+    delete row[this.idKey];
+    return this.http.post<T>(this.path, row);
   }
 
   update(entity: T): Observable<T> {

@@ -334,7 +334,7 @@ describe('ClientDialog', () => {
     expect(api.update).not.toHaveBeenCalled();
   });
 
-  it('replaces the logo on Update and deletes the old one', async () => {
+  it('replaces the logo on Update, keeping the old file', async () => {
     await open(stored);
     const input = element<HTMLInputElement>('app-client-dialog input[type="file"]');
     Object.defineProperty(input, 'files', {
@@ -348,7 +348,8 @@ describe('ClientDialog', () => {
     expect(api.update).toHaveBeenCalledWith(
       expect.objectContaining({ CompanyLogoStoragePath: 'Client/new.png' }),
     );
-    expect(files.delete).toHaveBeenCalledExactlyOnceWith('Client/old.png');
+    // A clone shares the original client's logo: the old file is kept.
+    expect(files.delete).not.toHaveBeenCalled();
   });
 
   it('saves a new client before opening a link tab, and stays open (v21)', async () => {
@@ -372,6 +373,31 @@ describe('ClientDialog', () => {
     element<HTMLButtonElement>('.rd-close').click();
     await settle();
     expect((await result)?.ClientId).toBe(20);
+  });
+
+  it('asks before ✖ throws away Details changes, from any tab', async () => {
+    await open(stored);
+    await fill('cl-name', 'Renamed');
+    await tab('Services');
+    confirm.ask.mockResolvedValue(false);
+    element<HTMLButtonElement>('.rd-close').click();
+    await settle();
+    expect(confirm.ask).toHaveBeenCalledOnce();
+    expect(query('app-client-dialog')).not.toBeNull();
+
+    confirm.ask.mockResolvedValue(true);
+    element<HTMLButtonElement>('.rd-close').click();
+    await settle();
+    expect(await result).toBeNull();
+    expect(api.update).not.toHaveBeenCalled();
+  });
+
+  it('closes at once when nothing was changed', async () => {
+    await open(stored);
+    element<HTMLButtonElement>('.rd-close').click();
+    await settle();
+    expect(confirm.ask).not.toHaveBeenCalled();
+    expect(await result).toBeNull();
   });
 
   it('shows Save and Is Active on Details only', async () => {

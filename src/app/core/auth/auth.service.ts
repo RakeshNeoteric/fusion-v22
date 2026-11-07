@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { type AccountInfo, InteractionRequiredAuthError } from '@azure/msal-browser';
 import { APP_CONFIG } from '@core/config/app-config';
@@ -11,6 +12,9 @@ import { MSAL_CLIENT } from './msal-client';
 export class AuthService {
   private readonly msal = inject(MSAL_CLIENT);
   private readonly azureAd = inject(APP_CONFIG).azureAd;
+  private readonly location = inject(Location);
+  /** A sign-in redirect has started; the page is being left. */
+  private redirecting = false;
 
   private readonly currentAccount = signal<AccountInfo | null>(null);
 
@@ -62,7 +66,9 @@ export class AuthService {
   /**
    * An access token for the Fusion Edge API. If Microsoft needs the user to interact again
    * (expired session, new consent), this redirects to sign-in and the promise never settles,
-   * because the page is being left.
+   * because the page is being left. The user comes back to the page they were on. Requests
+   * that need a token while the redirect starts wait too: a second redirect would fail
+   * (`interaction_in_progress`) and show an error just as the page leaves.
    */
   async getApiToken(): Promise<string> {
     const account = this.currentAccount();
@@ -75,10 +81,19 @@ export class AuthService {
       return result.accessToken;
     } catch (error: unknown) {
       if (error instanceof InteractionRequiredAuthError) {
-        await this.msal.acquireTokenRedirect(request);
+        if (!this.redirecting) {
+          this.redirecting = true;
+          await this.msal.acquireTokenRedirect({ ...request, state: this.currentUrl() });
+        }
         return new Promise<never>(() => undefined);
       }
       throw error;
     }
+  }
+
+  /** Where the user is, e.g. `/cases/case-details?id=4`: SessionService returns there. */
+  private currentUrl(): string {
+    const path = this.location.path(true);
+    return path.startsWith('/') ? path : `/${path}`;
   }
 }

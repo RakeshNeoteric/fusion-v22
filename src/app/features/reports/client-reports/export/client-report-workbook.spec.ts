@@ -97,9 +97,11 @@ describe('Client Report workbook', () => {
       '05 October 2026',
       '09 October 2026',
       'SR-1',
-      'R 1,250.00',
+      1250,
       'Redeemed',
     ]);
+    // Shown as "R 1,250.00", but a number Excel can add up.
+    expect(redemptions?.getRow(3).getCell(7).numFmt).toBe('"R "#,##0.00');
   });
 
   it("summary: the logo, and the year's cases by month and service", () => {

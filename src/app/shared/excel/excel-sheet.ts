@@ -106,13 +106,15 @@ export function fitColumns(sheet: Worksheet, columns: number): void {
 
 /**
  * A sheet of rows under a title bar (v21 report sheets): orange headers, bordered zebra rows,
- * a filter on the headers and the headers frozen.
+ * a filter on the headers and the headers frozen. Numbers stay numbers, shown with
+ * `numberFormat`, so Excel can add them up.
  */
 export function tableSheet(
   sheet: Worksheet,
   title: readonly string[],
   headers: readonly string[],
   rows: readonly (readonly (string | number)[])[],
+  numberFormat = '#,##0.00',
 ): void {
   titleBar(sheet, title, headers.length);
   const headerRow = sheet.getRow(2);
@@ -125,6 +127,7 @@ export function tableSheet(
     values.forEach((value, column) => {
       const cell = row.getCell(column + 1);
       cell.value = value;
+      if (typeof value === 'number') cell.numFmt = numberFormat;
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       if (index % 2 === 0) cell.fill = solid(EXCEL_COLORS.zebra);

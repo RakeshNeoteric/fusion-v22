@@ -1,11 +1,11 @@
 import type { DashboardLayout } from '../dashboard/client-dashboard';
 import type { DashboardCard } from '../dashboard/dashboard-model';
 
-/** One report tab's table, as text. */
+/** One report tab's table: text, and amounts as numbers. */
 export interface ReportSheet {
   readonly label: string;
   readonly headers: readonly string[];
-  readonly rows: readonly (readonly string[])[];
+  readonly rows: readonly (readonly (string | number)[])[];
 }
 
 /** A redeemed voucher (v21 Voucher Redemptions sheet). */

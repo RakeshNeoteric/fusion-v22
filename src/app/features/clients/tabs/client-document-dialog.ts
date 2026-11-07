@@ -193,12 +193,4 @@ export class ClientDocumentDialog extends RecordDialog<ClientDocumentLink> {
       IsDeleted: false,
     };
   }
-
-  /** The file that was replaced or removed is no longer used. */
-  protected override afterSave(saved: ClientDocumentLink): void {
-    const old = this.record?.DocumentStoragePath;
-    if (old && old !== saved.DocumentStoragePath) {
-      this.files.delete(old).subscribe({ error: () => undefined });
-    }
-  }
 }

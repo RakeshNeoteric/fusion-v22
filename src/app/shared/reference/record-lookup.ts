@@ -31,7 +31,21 @@ export abstract class RecordLookup<T extends LookupStatus, K extends string | nu
   abstract nameOf(record: T): string;
 
   load(): Observable<T[]> {
-    return this.fetch().pipe(tap((records) => this.records.set(records)));
+    return this.fetch().pipe(tap((records) => this.records.set(this.unique(records))));
+  }
+
+  /**
+   * One record per key. A code can be reused once its old record is deleted (service types),
+   * so the live record wins over an inactive one, and an inactive one over a deleted one.
+   */
+  private unique(records: readonly T[]): readonly T[] {
+    const kept = new Map<K, T>();
+    for (const record of records) {
+      const id = this.idOf(record);
+      const other = kept.get(id);
+      if (!other || standing(record) > standing(other)) kept.set(id, record);
+    }
+    return [...kept.values()];
   }
 
   find(id: K | null): T | undefined {
@@ -53,4 +67,9 @@ export abstract class RecordLookup<T extends LookupStatus, K extends string | nu
       (record) => this.nameOf(record),
     );
   }
+}
+
+/** Active beats inactive beats deleted. */
+function standing(status: LookupStatus): number {
+  return status.IsDeleted === true ? 0 : status.IsActive ? 2 : 1;
 }

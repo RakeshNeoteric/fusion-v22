@@ -7,9 +7,14 @@ export const signedInGuard: CanMatchFn = (_route, segments) => {
   if (inject(SessionService).isReady()) {
     return true;
   }
-  const path = '/' + segments.map((segment) => segment.path).join('/');
-  const returnUrl = path === '/' ? null : path;
-  return inject(Router).createUrlTree(['/login'], {
+  const router = inject(Router);
+  // The whole address, query included (`/cases/case-details?id=123`), not just the path.
+  const navigation = router.currentNavigation();
+  const url = navigation
+    ? router.serializeUrl(navigation.extractedUrl)
+    : '/' + segments.map((segment) => segment.path).join('/');
+  const returnUrl = url === '/' ? null : url;
+  return router.createUrlTree(['/login'], {
     queryParams: returnUrl ? { returnUrl } : {},
   });
 };

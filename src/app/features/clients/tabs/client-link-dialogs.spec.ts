@@ -258,7 +258,7 @@ describe('client link popups', () => {
     expect((await result)?.ClientDocumentId).toBe(50);
   });
 
-  it('removing a stored file takes effect on Update, then deletes it', async () => {
+  it('removing a stored file takes effect on Update, keeping the file', async () => {
     const path = 'https://api/File/download?fileName=Client%2F7_5_1_old.pdf';
     void open<ClientDocumentLink>(
       ClientDocumentDialog,
@@ -285,6 +285,7 @@ describe('client link popups', () => {
       expect.objectContaining({ ClientDocumentId: 5, DocumentStoragePath: null }),
       null,
     );
-    expect(files.delete).toHaveBeenCalledExactlyOnceWith(path);
+    // Another client may use the same file (a clone shares its files): it is kept.
+    expect(files.delete).not.toHaveBeenCalled();
   });
 });

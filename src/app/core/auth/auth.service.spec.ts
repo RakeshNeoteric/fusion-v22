@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import {
   type AccountInfo,
@@ -147,6 +148,20 @@ describe('AuthService', () => {
       ]);
       expect(result).toBe(pending);
       expect(msal.acquireTokenRedirect).toHaveBeenCalledOnce();
+    });
+
+    it('comes back to the page the user was on, with one redirect for many requests', async () => {
+      TestBed.inject(Location).go('/cases/case-details?id=4');
+      msal.acquireTokenSilent.mockRejectedValue(
+        new InteractionRequiredAuthError('interaction_required', 'correlation-id'),
+      );
+      void auth.getApiToken();
+      void auth.getApiToken();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(msal.acquireTokenRedirect).toHaveBeenCalledOnce();
+      expect(msal.acquireTokenRedirect).toHaveBeenCalledWith(
+        expect.objectContaining({ state: '/cases/case-details?id=4' }),
+      );
     });
 
     it('rethrows other token errors', async () => {

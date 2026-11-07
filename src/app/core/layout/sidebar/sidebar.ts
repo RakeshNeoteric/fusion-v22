@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SessionService } from '@core/session/session.service';
-import { buildSidebar } from './sidebar-model';
+import { FALLBACK_ICON_URL, buildSidebar } from './sidebar-model';
 
 /**
  * Data-driven main navigation. Collapsed to icons unless pinned open (header menu button)
@@ -22,6 +22,13 @@ export class Sidebar {
 
   protected readonly collapsed = computed(() => !this.pinned() && !this.hovered());
   protected readonly model = computed(() => buildSidebar(this.session.menus()));
+
+  /** A menu icon name with no image (a typo in the configuration) shows the default icon. */
+  protected useFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    // Once only: should the default image fail too, it does not retry for ever.
+    if (!image.src.endsWith(FALLBACK_ICON_URL)) image.src = FALLBACK_ICON_URL;
+  }
 
   protected setHovered(hovered: boolean): void {
     this.hovered.set(hovered);

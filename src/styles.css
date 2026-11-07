@@ -11,6 +11,30 @@
 
   /* Material (azure-blue prebuilt theme) tuned to the brand */
   --mat-button-filled-container-color: var(--app-navy);
+
+  /*
+   * The theme names Roboto with no fallback, so where Roboto has not loaded the browser used
+   * Times. Same font everywhere, with fallbacks.
+   */
+  --app-font: Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html {
+  --mat-sys-body-large-font: var(--app-font);
+  --mat-sys-body-medium-font: var(--app-font);
+  --mat-sys-body-small-font: var(--app-font);
+  --mat-sys-display-large-font: var(--app-font);
+  --mat-sys-display-medium-font: var(--app-font);
+  --mat-sys-display-small-font: var(--app-font);
+  --mat-sys-headline-large-font: var(--app-font);
+  --mat-sys-headline-medium-font: var(--app-font);
+  --mat-sys-headline-small-font: var(--app-font);
+  --mat-sys-label-large-font: var(--app-font);
+  --mat-sys-label-medium-font: var(--app-font);
+  --mat-sys-label-small-font: var(--app-font);
+  --mat-sys-title-large-font: var(--app-font);
+  --mat-sys-title-medium-font: var(--app-font);
+  --mat-sys-title-small-font: var(--app-font);
 }
 
 *,
@@ -26,7 +50,7 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--app-font);
   color: #1f1f1f;
   background-color: var(--app-page-background);
 }

@@ -46,9 +46,7 @@ export interface RecordDialogData<T> {
   template: `
     <div class="rd-header">
       <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
-      <button type="button" class="rd-close" aria-label="Close" [mat-dialog-close]="closeResult()">
-        ✖
-      </button>
+      <button type="button" class="rd-close" aria-label="Close" (click)="close()">✖</button>
     </div>
     <mat-dialog-content>
       <fieldset class="rd-fields" [disabled]="readOnly()">
@@ -58,9 +56,7 @@ export interface RecordDialogData<T> {
     <mat-dialog-actions align="end">
       <ng-content select="[rdFooterStart]" />
       @if (cancelable()) {
-        <button type="button" class="app-button rd-cancel" [mat-dialog-close]="closeResult()">
-          Cancel
-        </button>
+        <button type="button" class="app-button rd-cancel" (click)="close()">Cancel</button>
       }
       @if (!readOnly() && savable()) {
         <button type="submit" class="app-button" [disabled]="saving()">
@@ -84,6 +80,14 @@ export class RecordDialogFrame {
   readonly savable = input(true);
   /** What ✖ / Cancel close with: a popup that saved and stayed open returns what it saved. */
   readonly closeResult = input<unknown>(undefined);
+  /** Asked before ✖ / Cancel close the popup, e.g. "lose your changes?"; false keeps it open. */
+  readonly canClose = input<() => boolean | Promise<boolean>>(() => true);
+
+  private readonly dialogRef = inject(MatDialogRef);
+
+  protected async close(): Promise<void> {
+    if (await this.canClose()()) this.dialogRef.close(this.closeResult());
+  }
 }
 
 /**

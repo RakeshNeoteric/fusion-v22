@@ -3,11 +3,11 @@ import { AgGridAngular } from 'ag-grid-angular';
 import type { ColDef, ValueGetterParams } from 'ag-grid-community';
 import { APP_GRID_THEME, PAGE_SIZE_OPTIONS, REPORT_GRID_MODULES } from '@shared/grid/grid-setup';
 
-/** One column of a report: its text, and how it sorts when not by that text (dates). */
+/** One column of a report: its text, and how it sorts when not by that text (dates, amounts). */
 export interface TableColumn<T> {
   readonly header: string;
   readonly value: (row: T) => string;
-  readonly sortKey?: (row: T) => string;
+  readonly sortKey?: (row: T) => string | number;
 }
 
 /**
@@ -69,7 +69,9 @@ export class ReportTable<T> {
               const key = column.sortKey;
               const a = nodeA.data && key ? key(nodeA.data) : '';
               const b = nodeB.data && key ? key(nodeB.data) : '';
-              return a.localeCompare(b);
+              return typeof a === 'number' && typeof b === 'number'
+                ? a - b
+                : String(a).localeCompare(String(b));
             },
           }
         : {}),

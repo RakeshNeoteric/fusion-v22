@@ -12,7 +12,6 @@ describe('formatInternationalPhone (v21 Transport Operator rule)', () => {
 
   it('keeps the digits behind the dialling code when the number is not valid', () => {
     expect(formatInternationalPhone('12-3', 'ZA')).toBe('+27 123');
-    expect(formatInternationalPhone('', 'ZA')).toBe('+27');
   });
 
   it('formats for the branch country when v21 knows it', () => {
@@ -23,6 +22,12 @@ describe('formatInternationalPhone (v21 Transport Operator rule)', () => {
   it('treats any other or missing country as South Africa, as v21 does', () => {
     expect(formatInternationalPhone('0821234567', 'BW')).toBe('+27 82 123 4567');
     expect(formatInternationalPhone('0821234567', null)).toBe('+27 82 123 4567');
+  });
+
+  it('leaves a blank number blank instead of saving a bare dialling code', () => {
+    expect(formatInternationalPhone('', 'ZA')).toBe('');
+    expect(formatInternationalPhone(null, 'IN')).toBe('');
+    expect(formatInternationalPhone(' - ', null)).toBe('');
   });
 });
 

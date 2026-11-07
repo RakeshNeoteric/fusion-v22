@@ -272,7 +272,7 @@ describe('ServiceProviderDialog', () => {
     expect(api.update).not.toHaveBeenCalled();
   });
 
-  it('turning BEE off clears its details, and the old certificate goes on Update', async () => {
+  it('turning BEE off clears its details on Update, keeping the stored file', async () => {
     await open(stored);
     await answer('sp-bee-label', 'No');
     expect(element<HTMLInputElement>('#sp-bee-expiry').disabled).toBe(true);
@@ -284,7 +284,7 @@ describe('ServiceProviderDialog', () => {
         BeeCertificateStoragePath: null,
       }),
     );
-    expect(files.delete).toHaveBeenCalledExactlyOnceWith('ServiceProvider/old.pdf');
+    expect(files.delete).not.toHaveBeenCalled();
   });
 
   it('cancelling keeps the stored certificate and deletes the unused upload', async () => {

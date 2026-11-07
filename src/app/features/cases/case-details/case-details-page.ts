@@ -360,7 +360,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     const details = this.details();
     if (!details || !this.workspace.heldByMe()) return;
     try {
-      await this.lifecycle.exit(details.CaseStatus);
+      await this.lifecycle.release();
     } catch {
       // The error interceptor has said why; the case stays open until the user exits again.
     }

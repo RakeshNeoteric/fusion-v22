@@ -17,6 +17,7 @@ import type {
   ClientServiceProviderLink,
 } from '@api/clients/client-links.api';
 import { NotificationService } from '@core/notifications/notification.service';
+import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { PermissionService } from '@core/permissions/permission.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { DialogFiles } from '@shared/forms/record-dialog/dialog-files';
@@ -181,6 +182,7 @@ export class ClientDialog {
   private readonly api = inject(ClientApi);
   private readonly permissions = inject(PermissionService);
   private readonly notify = inject(NotificationService);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly tabs = TABS;
   protected readonly dataSwitches = DATA_SWITCHES;
@@ -197,7 +199,7 @@ export class ClientDialog {
   protected readonly savedHere = signal<Client | undefined>(undefined);
 
   private readonly storedLogo = this.data.record?.CompanyLogoStoragePath ?? '';
-  private readonly logoFiles = new DialogFiles('Client', this.storedLogo);
+  private readonly logoFiles = new DialogFiles('Client');
 
   protected readonly title = computed(() => {
     const client = this.client();
@@ -259,6 +261,21 @@ export class ClientDialog {
   protected switchControl(name: DataSwitch): FormControl<boolean> {
     return this.form.controls[name];
   }
+
+  /**
+   * ✖ with Details changes not saved asks first (v21 asked on the Details tab; here from any
+   * tab, since v22 does not save Details when another tab is opened).
+   */
+  protected readonly canClose = (): boolean | Promise<boolean> =>
+    this.readOnly ||
+    this.form.pristine ||
+    this.confirm.ask({
+      title: 'Unsaved changes',
+      message: 'The client details have changes that are not saved. Close and lose them?',
+      confirmText: 'Close',
+      cancelText: 'Stay',
+      tone: 'danger',
+    });
 
   /** A link tab needs the client saved: a new client is saved first (v21). */
   protected async choose(id: string): Promise<void> {

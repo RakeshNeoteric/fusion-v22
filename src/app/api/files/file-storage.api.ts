@@ -14,10 +14,14 @@ export type FileCategory = 'UserProfile' | 'Case' | 'Client' | 'ServiceProvider'
 export class FileStorageApi {
   private readonly http = inject(HttpClient);
 
-  /** Stores a new file and returns its storage path. */
+  /**
+   * Stores a new file and returns its storage path. The backend stores a file under its own
+   * name (`Client/logo.png`) and replaces one already there, so each upload gets a unique
+   * name: two clients' `logo.png` are then two files.
+   */
   upload(file: File, category: FileCategory): Observable<string> {
     const form = new FormData();
-    form.append('File', file, file.name);
+    form.append('File', file, uniqueName(file.name));
     const params = new HttpParams().set('Mode', 'CreateNew').set('FilePath', category);
     return this.http
       .post<{ FilePath: string }>('File/upload', form, { params })
@@ -46,4 +50,13 @@ export function storagePath(pathOrUrl: string | null | undefined): string {
   } catch {
     return '';
   }
+}
+
+/** `logo.png` → `logo-lq3k9x2a.png`: the name stays readable, and is never used twice. */
+export function uniqueName(fileName: string): string {
+  const dot = fileName.lastIndexOf('.');
+  const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
+  const extension = dot > 0 ? fileName.slice(dot) : '';
+  const unique = `${Date.now().toString(36)}${crypto.randomUUID().slice(0, 4)}`;
+  return `${stem}-${unique}${extension}`;
 }

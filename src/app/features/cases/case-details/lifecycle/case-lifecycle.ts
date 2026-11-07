@@ -53,6 +53,21 @@ export class CaseLifecycle {
     this.workspace.released(status);
   }
 
+  /**
+   * Lets go of the case as it is (leaving the page, Exit with "No"). A closed or aborted case is
+   * not exited with its status, which would stamp a new closed date: viewing an old case must
+   * not change it.
+   */
+  async release(): Promise<void> {
+    const details = this.require();
+    if (!isFinished(details)) {
+      await this.exit(details.CaseStatus);
+      return;
+    }
+    await firstValueFrom(this.api.releaseFinished(details));
+    this.workspace.released(details.CaseStatus);
+  }
+
   /** v21 Abort: the reason goes in the history (which aborts the case), then the case is let go. */
   async abort(reason: string): Promise<void> {
     await this.note('CaseAbort', reason);

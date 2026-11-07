@@ -86,6 +86,15 @@ describe('Contact History and SMS / Email', () => {
       ]);
     });
 
+    it('notices when reloading gave the case to this user, so leaving lets go of it', async () => {
+      await show(held({ CaseOpenedBy: 'bob@example.com', CaseHistory: [] }));
+      expect(text()).toContain('Already opened by');
+      // Bob has left meanwhile: loading the case now gives it to Jane (backend).
+      api.open.mockReturnValue(of(held({ CaseHistory: HISTORY })));
+      await fromMenu('Contact History');
+      expect(text()).not.toContain('Already opened by');
+    });
+
     it('filters by type and shows an entry in full', async () => {
       await show(held({ CaseHistory: HISTORY }));
       await fromMenu('Contact History');

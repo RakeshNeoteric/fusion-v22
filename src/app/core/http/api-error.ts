@@ -22,6 +22,12 @@ const FORBIDDEN_MESSAGE = 'You do not have permission to perform this action.';
 const UNAUTHORIZED_MESSAGE = 'Your session has expired. Please sign in again.';
 const FALLBACK_MESSAGE = 'The request could not be completed.';
 const UNEXPECTED_MESSAGE = 'An unexpected error occurred.';
+const DUPLICATE_MESSAGE = 'This record already exists.';
+const IN_USE_MESSAGE = 'This record is used elsewhere, so it cannot be changed or removed.';
+const NOT_SAVED_MESSAGE = 'The data could not be saved. Please check it and try again.';
+
+/** How the backend's exception middleware marks a database failure (422). */
+const DATABASE_EXCEPTION = 'Database exception occurred';
 
 /** Converts anything thrown during an HTTP call into an ApiError. */
 export function toApiError(error: unknown): ApiError {
@@ -42,7 +48,16 @@ export function toApiError(error: unknown): ApiError {
     return new ApiError(status, serverMessage ?? FORBIDDEN_MESSAGE, serverMessage);
   if (status === 401)
     return new ApiError(status, serverMessage ?? UNAUTHORIZED_MESSAGE, serverMessage);
+  // Database failures carry the raw SQL Server text: say what it means instead.
+  if (isRecord(error.error) && error.error['ExceptionType'] === DATABASE_EXCEPTION)
+    return new ApiError(status, databaseMessage(serverMessage ?? ''), serverMessage);
   return new ApiError(status, serverMessage ?? FALLBACK_MESSAGE, serverMessage);
+}
+
+function databaseMessage(raw: string): string {
+  if (/duplicate key|unique index|UNIQUE KEY/i.test(raw)) return DUPLICATE_MESSAGE;
+  if (/REFERENCE constraint|FOREIGN KEY/i.test(raw)) return IN_USE_MESSAGE;
+  return NOT_SAVED_MESSAGE;
 }
 
 /**

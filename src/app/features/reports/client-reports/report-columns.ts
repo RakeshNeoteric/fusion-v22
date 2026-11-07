@@ -20,8 +20,10 @@ export interface ReportNames {
 export interface ReportColumn {
   readonly header: string;
   readonly value: (row: ReportRow, names: ReportNames) => string;
-  /** How the column sorts, when not by its text (dates). */
-  readonly sortKey?: (row: ReportRow) => string;
+  /** How the column sorts, when not by its text (dates, amounts). */
+  readonly sortKey?: (row: ReportRow) => string | number;
+  /** An amount: exported to Excel as this number (null for none), so it can be added up. */
+  readonly amount?: (row: ReportRow) => number | null;
 }
 
 const text = (value: string | null | undefined) => value?.trim() ?? '';
@@ -147,7 +149,8 @@ const COLUMNS = {
   Amounts: {
     header: 'Amount',
     value: ({ voucher }) => (voucher?.Voucher ? money(voucher.Voucher.Value) : ''),
-    sortKey: ({ voucher }) => String(voucher?.Voucher?.Value ?? 0).padStart(12, '0'),
+    amount: ({ voucher }) => voucher?.Voucher?.Value ?? null,
+    sortKey: ({ voucher }) => voucher?.Voucher?.Value ?? -1,
   },
   'Month Issued': {
     header: 'Month Issued',
@@ -243,4 +246,13 @@ export function reportRows(tab: TableTab, cases: readonly CaseDetails[]): Report
       ? vouchers.map((voucher) => ({ details, voucher }))
       : [{ details, voucher: null }];
   });
+}
+
+/** A cell as exported: the amount as a number, anything else as shown. */
+export function exportValue(
+  column: ReportColumn,
+  row: ReportRow,
+  names: ReportNames,
+): string | number {
+  return column.amount ? (column.amount(row) ?? '') : column.value(row, names);
 }

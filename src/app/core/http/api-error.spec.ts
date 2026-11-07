@@ -66,6 +66,32 @@ describe('toApiError', () => {
     );
   });
 
+  it.each([
+    [
+      "Cannot insert duplicate key row in object 'dbo.Branch' with unique index 'IX_Name'.",
+      'This record already exists.',
+    ],
+    [
+      'The DELETE statement conflicted with the REFERENCE constraint "FK_Case_Client".',
+      'This record is used elsewhere, so it cannot be changed or removed.',
+    ],
+    [
+      "Cannot insert the value NULL into column 'Phone'.",
+      'The data could not be saved. Please check it and try again.',
+    ],
+  ])('turns a database failure into plain words: %s', (raw, shown) => {
+    const error = toApiError(
+      httpError(422, { ExceptionType: 'Database exception occurred', Message: raw }),
+    );
+    expect(error.message).toBe(shown);
+    expect(error.serverMessage).toBe(raw);
+  });
+
+  it('still shows the backend own 422 messages, e.g. a duplicate name', () => {
+    const body = { ExceptionType: 'ActionResultException', Message: 'Name already exists' };
+    expect(toApiError(httpError(422, body)).message).toBe('Name already exists');
+  });
+
   it.each<[number, string]>([
     [401, 'Your session has expired. Please sign in again.'],
     [403, 'You do not have permission to perform this action.'],

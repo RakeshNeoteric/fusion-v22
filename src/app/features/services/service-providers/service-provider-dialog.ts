@@ -83,10 +83,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
   private readonly directory = inject(UserDirectoryService);
   private readonly currentUserId = inject(SessionService).user()?.id ?? null;
   private readonly record = this.data.record;
-  private readonly certificates = new DialogFiles(
-    'ServiceProvider',
-    this.record?.BeeCertificateStoragePath ?? '',
-  );
+  private readonly certificates = new DialogFiles('ServiceProvider');
 
   protected readonly title = this.isNew
     ? 'Create Service Provider'

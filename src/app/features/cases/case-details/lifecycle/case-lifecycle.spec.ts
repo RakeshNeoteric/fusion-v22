@@ -230,12 +230,16 @@ describe('Case lifecycle (Case Details header)', () => {
       expect(api.exit).toHaveBeenCalledWith(4, 'Closed');
     });
 
-    it('a case the user cannot change is just left', async () => {
+    it('a case the user cannot change is just left, without a new closed date', async () => {
       await show(held({ CaseStatus: 'Closed' }));
       await click('Exit');
 
       expect(text()).not.toContain('Is the call complete?');
-      expect(api.exit).toHaveBeenCalledWith(4, 'Closed');
+      // CaseExit with Closed would stamp the closed date again.
+      expect(api.exit).not.toHaveBeenCalled();
+      expect(api.releaseFinished).toHaveBeenCalledWith(
+        expect.objectContaining({ CaseDetailId: 4, CaseStatus: 'Closed' }),
+      );
       expect(navigate).toHaveBeenCalledWith(['/cases']);
     });
   });

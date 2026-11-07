@@ -84,8 +84,21 @@
   outline-offset: 2px;
 }
 .cd-action mat-icon {
+  width: 22px;
+  height: 22px;
+}
+/* v21's Vehicle Tracker and View More images. */
+.cd-action-img {
   width: 26px;
   height: 26px;
+  object-fit: contain;
+}
+/* v21's Phase Costing and SMS / Email images, sized like the menu's icons. */
+.cd-menu-img {
+  width: 24px;
+  height: 24px;
+  margin-right: 16px;
+  object-fit: contain;
 }
 .cd-panel {
   margin-top: -32px;

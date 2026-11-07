@@ -147,7 +147,7 @@ describe('UserDialog', () => {
     expect(files.delete).not.toHaveBeenCalled();
   });
 
-  it('replaces the photo only when the user is saved, then deletes the old one', async () => {
+  it('replaces the photo only when the user is saved, keeping the old file', async () => {
     await open(stored);
     await choosePhoto();
     expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'UserProfile');
@@ -157,7 +157,7 @@ describe('UserDialog', () => {
     expect(api.update).toHaveBeenCalledWith(
       expect.objectContaining({ ProfileImage: 'UserProfile/new.png' }),
     );
-    expect(files.delete).toHaveBeenCalledExactlyOnceWith('UserProfile/old.png');
+    expect(files.delete).not.toHaveBeenCalled();
   });
 
   it('removing the photo takes effect on Update', async () => {
@@ -168,7 +168,7 @@ describe('UserDialog', () => {
     expect(files.delete).not.toHaveBeenCalled();
     await press('Update');
     expect(api.update).toHaveBeenCalledWith(expect.objectContaining({ ProfileImage: '' }));
-    expect(files.delete).toHaveBeenCalledWith('UserProfile/old.png');
+    expect(files.delete).not.toHaveBeenCalled();
   });
 
   it('cancelling keeps the stored photo and deletes the unused upload', async () => {

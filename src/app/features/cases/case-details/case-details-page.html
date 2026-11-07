@@ -34,7 +34,7 @@
               [attr.aria-expanded]="panel() === 'tracker'"
               (click)="togglePanel('tracker')"
             >
-              <mat-icon svgIcon="local-shipping" />
+              <img class="cd-action-img" src="/icons/case/tracking.png" alt="" />
             </button>
             <button
               type="button"
@@ -74,7 +74,7 @@
               matTooltip="View More"
               [matMenuTriggerFor]="moreMenu"
             >
-              <mat-icon svgIcon="apps" />
+              <img class="cd-action-img" src="/icons/case/view-more.png" alt="" />
             </button>
             <!-- v21 "View More". -->
             <mat-menu #moreMenu="matMenu" xPosition="before">
@@ -92,7 +92,7 @@
                   <span>Additional Cost</span>
                 </button>
                 <button mat-menu-item type="button" (click)="openPhaseCosting()">
-                  <mat-icon svgIcon="calculate" />
+                  <img class="cd-menu-img" src="/icons/case/phase-costing.png" alt="" />
                   <span>Phase Costing</span>
                 </button>
               }
@@ -102,7 +102,7 @@
                 [disabled]="workspace.readOnly()"
                 (click)="openMessage()"
               >
-                <mat-icon svgIcon="chat" />
+                <img class="cd-menu-img" src="/icons/case/sms-mail.png" alt="" />
                 <span>SMS / Email</span>
               </button>
               @if (finished()) {

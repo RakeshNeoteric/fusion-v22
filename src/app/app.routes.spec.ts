@@ -136,6 +136,11 @@ describe('app routes', () => {
     expect(harness.routeNativeElement?.textContent).toContain('Sign in with Microsoft');
   });
 
+  it('keeps the query of the address in the return URL (a link to a case)', async () => {
+    await harness.navigateByUrl('/cases/case-details?id=123');
+    expect(url()).toBe('/login?returnUrl=%2Fcases%2Fcase-details%3Fid%3D123');
+  });
+
   it('opens home inside the shell for a signed-in user', async () => {
     signIn();
     await harness.navigateByUrl('/');

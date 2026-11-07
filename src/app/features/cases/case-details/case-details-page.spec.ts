@@ -22,13 +22,20 @@ const bob: DirectoryUser = {
 };
 
 describe('CaseDetailsPage', () => {
-  const api = { open: vi.fn(), init: vi.fn(), exit: vi.fn(), update: vi.fn() };
+  const api = {
+    open: vi.fn(),
+    init: vi.fn(),
+    exit: vi.fn(),
+    update: vi.fn(),
+    releaseFinished: vi.fn(),
+  };
   let fixture: ComponentFixture<CaseDetailsPage>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     api.init.mockReturnValue(of(CASE_INIT));
     api.exit.mockReturnValue(of('ok'));
+    api.releaseFinished.mockImplementation((details: CaseDetails) => of(details));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -115,6 +122,19 @@ describe('CaseDetailsPage', () => {
     await show(caseDetails({ CaseDetailId: 4, CaseOpenedBy: 'jane@example.com' }));
     fixture.destroy();
     expect(api.exit).toHaveBeenCalledWith(4, 'Active');
+  });
+
+  it('lets go of a closed case without exiting it, so its closed date stays', async () => {
+    const closed = caseDetails({
+      CaseDetailId: 4,
+      CaseStatus: 'Closed',
+      CaseOpenedBy: 'jane@example.com',
+    });
+    await show(closed);
+    fixture.destroy();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(api.exit).not.toHaveBeenCalled();
+    expect(api.releaseFinished).toHaveBeenCalledWith(expect.objectContaining({ CaseDetailId: 4 }));
   });
 
   it('says when the case could not be loaded', async () => {

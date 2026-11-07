@@ -79,7 +79,6 @@ export function nedgroupCards(input: DashboardInput): DashboardCard[] {
   const voucherCount = new MonthBuckets();
   const voucherValue = new MonthBuckets();
   const voucherBudget = emptyYear();
-  const voucherBudgetToDate = new Map<number, number>();
 
   for (const { index, month } of monthsInOrder(input.dashboard.MonthlyCaseCount)) {
     for (const service of month.GroupByService) {
@@ -102,7 +101,6 @@ export function nedgroupCards(input: DashboardInput): DashboardCard[] {
       voucherCount.add(type, index, voucher.VoucherCount);
       voucherValue.add(type, index, voucher.TotalValue);
       voucherBudget[index] = (voucherBudget[index] ?? 0) + voucher.Budget;
-      voucherBudgetToDate.set(index, voucher.YtdBudget);
     }
   }
 
@@ -158,7 +156,9 @@ export function nedgroupCards(input: DashboardInput): DashboardCard[] {
       voucherLine('Total Vouchers', TOTAL, addUp(countLines)),
     ]),
     lineCard('avsVoucherYtdQty', 'Voucher Quantity Year-To-Date', [
-      voucherLine(BUDGET, BUDGET, carriedForward(voucherBudgetToDate)),
+      // The running total of the monthly budget, like the actual lines beside it. (v21 took the
+      // last voucher type's to-date budget, which disagreed with the monthly chart.)
+      voucherLine(BUDGET, BUDGET, yearToDate(voucherBudget)),
       ...countToDate,
       voucherLine('Total Voucher YTD', TOTAL, addUp(countToDate)),
     ]),

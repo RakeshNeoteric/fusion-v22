@@ -209,7 +209,7 @@ export class UserDialog extends RecordDialog<AppUser> {
   /** The backend does not record sign-ins yet: it sends year 1 then, and nothing is shown. */
   protected readonly lastLogin = recorded(this.record?.LastLoginDateTime);
   private readonly storedPhoto = this.record?.ProfileImage || '';
-  private readonly photoFiles = new DialogFiles('UserProfile', this.storedPhoto);
+  private readonly photoFiles = new DialogFiles('UserProfile');
 
   protected readonly title = this.profile
     ? 'My Profile'

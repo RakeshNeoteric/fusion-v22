@@ -6,6 +6,7 @@
     [cancelable]="false"
     [savable]="!readOnly && tab() === 'details'"
     [closeResult]="savedHere()"
+    [canClose]="canClose"
   >
     <app-folder-tabs
       #tabStrip

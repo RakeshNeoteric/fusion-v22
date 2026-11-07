@@ -29,7 +29,13 @@ import {
 } from './dashboard/client-dashboard';
 import type { ClientDashboardView } from './dashboard/dashboard-model';
 import { ReportDashboard } from './dashboard/report-dashboard';
-import { type ReportNames, type ReportRow, reportColumns, reportRows } from './report-columns';
+import {
+  type ReportNames,
+  type ReportRow,
+  exportValue,
+  reportColumns,
+  reportRows,
+} from './report-columns';
 import { type ReportTab, type TableTab, reportTabs } from './report-tabs';
 import { ClientReportExcel } from './export/client-report-excel';
 import { voucherRedemptions } from './export/voucher-redemptions';
@@ -214,12 +220,13 @@ export class ClientReportsPage {
         sheets: report.tabs
           .filter((tab): tab is TableTab => tab.kind !== 'dashboard')
           .map((tab) => {
-            const columns = this.columns(tab);
+            const columns = reportColumns(tab);
+            const names = this.names();
             return {
               label: tab.label,
               headers: columns.map((column) => column.header),
               rows: reportRows(tab, report.cases).map((row) =>
-                columns.map((column) => column.value(row)),
+                columns.map((column) => exportValue(column, row, names)),
               ),
             };
           }),

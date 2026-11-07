@@ -33,6 +33,8 @@ export function formatInternationalPhone(
   let digits = (phone ?? '').replace(/\D+/g, '');
   const dialDigits = dial.slice(1);
   if (digits.startsWith(dialDigits)) digits = digits.slice(dialDigits.length);
+  // No number at all stays empty (v21 saved a bare "+27").
+  if (!digits) return '';
 
   const parsed = parsePhoneNumberFromString(digits, iso);
   return parsed?.isValid() ? parsed.formatInternational() : `${dial} ${digits}`.trim();

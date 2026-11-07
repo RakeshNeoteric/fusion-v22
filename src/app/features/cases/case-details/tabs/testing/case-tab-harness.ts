@@ -57,6 +57,23 @@ const INIT: CaseInit = {
 };
 
 /** An open case held by Jane (the signed-in user), on Zulu Insure's Funeral service. */
+
+/** What `POST CaseDetails/{id}` echoes for the records the frontend does not send. */
+const BACKEND_ECHO_DEFAULTS = {
+  ClientDto: null,
+  CaseDeceasedInfo: null,
+  CaseCauseOfDeath: null,
+  CaseFinalFuneral: null,
+  CaseValidation: [],
+  CaseDocument: [],
+  CasePhaseDetails: [],
+  CaseAdditionalCosts: [],
+  CaseHistory: [],
+  Complaint: [],
+  CaseVouchers: [],
+  CaseRatings: [],
+} as const;
+
 export const held = (extra: Partial<CaseDetails> = {}): CaseDetails =>
   caseDetails({
     CaseDetailId: 4,
@@ -89,6 +106,7 @@ export function caseTabHarness() {
     open: vi.fn(),
     init: vi.fn(),
     exit: vi.fn(),
+    releaseFinished: vi.fn(),
     update: vi.fn(),
     saveValidation: vi.fn(),
     saveDeceased: vi.fn(),
@@ -119,9 +137,11 @@ export function caseTabHarness() {
     vi.clearAllMocks();
     api.init.mockReturnValue(of(INIT));
     api.exit.mockReturnValue(of('ok'));
-    // The backend echoes the case without its included records.
+    api.releaseFinished.mockImplementation((details: CaseDetails) => of(details));
+    // As the backend: the echo is the body it was sent, so the included records it did not get
+    // come back as its defaults (single records null, lists empty).
     api.update.mockImplementation((details: CaseDetails, changes: object) =>
-      of({ ...details, ...changes, CaseValidation: null, CaseDeceasedInfo: null }),
+      of({ ...details, ...changes, ...BACKEND_ECHO_DEFAULTS }),
     );
     api.saveValidation.mockImplementation((record: CaseValidationRecord) =>
       of({ ...record, CaseValidationId: record.CaseValidationId || 99 }),

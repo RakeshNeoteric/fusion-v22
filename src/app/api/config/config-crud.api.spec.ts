@@ -41,10 +41,11 @@ describe('ConfigCrudApi (via BodyLocationApi)', () => {
     expect(await result).toHaveLength(2);
   });
 
-  it('creates with POST and never as deleted', async () => {
+  it('creates with POST, never as deleted and without an id (the database gives it)', async () => {
     const result = firstValueFrom(api.create(location(0, { IsDeleted: null })));
     const req = backend.expectOne({ method: 'POST', url: 'Config/BodyLocation' });
-    expect(req.request.body).toMatchObject({ BodyLocationId: 0, IsDeleted: false });
+    expect(req.request.body).toMatchObject({ IsDeleted: false });
+    expect(req.request.body).not.toHaveProperty('BodyLocationId');
     req.flush(location(9));
     expect((await result).BodyLocationId).toBe(9);
   });
