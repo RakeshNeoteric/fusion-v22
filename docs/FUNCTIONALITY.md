@@ -188,6 +188,11 @@ app turns them into one level, the same rules as v21:
   `CaseInit`: a comma-separated list of tab names). A service type without a rule gets Caller,
   Complaints and Documents. Voucher services always get Voucher/SMS. Phase tabs appear only once
   the case has that phase.
+- **Changing the service changes the tabs.** On the Caller tab, picking another service (or
+  another client and then one of its services) switches the tab strip to that service's tabs at
+  once, as in v21. The new service is saved when another tab is opened or the case is left; going
+  back to the saved service shows its tabs again. While another client has no service picked,
+  the saved service's tabs stay.
 
 ### 3.2 Opening, holding and saving
 
@@ -420,19 +425,25 @@ case closed → `case.api.ts` `CaseExit/{id}` releases it → back to `/cases`.
   **Clone**, which copies a client (`GET Client/CloneClient`) under a new name.
 - **Client popup** with v21's slanted folder tabs:
 
-  | Tab              | Content                                                                                              |
-  | ---------------- | ---------------------------------------------------------------------------------------------------- |
-  | Details          | Company, claim and client data, custom labels, logo                                                  |
-  | Services         | Services the client offers, with voucher provider, limits and SMS settings per service               |
-  | Rating Questions | Questions asked when a case closes                                                                   |
-  | Documents        | Document types the client needs per case, each with a note and optional template file (PDF or image) |
-  | Service Provider | Providers (parlours, transport operators) linked to the client                                       |
+  | Tab              | Content                                                                                                                            |
+  | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+  | Details          | Company Information (logo), Custom Labels and Client Data (Policy File, Policy Lookup Path and Validation URL are shown read-only) |
+  | Services         | Services the client offers, with voucher provider, limits and SMS settings per service                                             |
+  | Rating Questions | Questions asked when a case closes                                                                                                 |
+  | Documents        | Document types the client needs per case, each with a note and optional template file (PDF or image)                               |
+  | Service Provider | Providers (parlours, transport operators) linked to the client                                                                     |
 
-- A **new client must be saved** before the link tabs open.
-- Each link tab saves all its links and unlinks at once (`Client/ClientService`,
+- **Leaving Details saves it** (v21): opening another tab first saves the details when they
+  changed, and always for a new client, so the link tabs work on a saved client. With errors
+  the popup stays on Details.
+- Each link or unlink is saved at once, on its own (`Client/ClientService`,
   `Client/ClientRatingQuestion`, `Client/ClientDocument`, `Client/ClientServiceProvider`).
-  One link per document type.
-- Closing the popup with unsaved changes asks first.
+  Linking and unlinking need create access; unlinking asks first. One link per document type.
+- **Link Service popup:** picking a service copies its note (new links), shows the voucher
+  settings for a voucher service (Total Value and Max Vouchers required, voucher SMS types),
+  and fills in the voucher provider. An existing link keeps its own voucher provider.
+  Transfer Number is required (the backend needs it).
+- Closing the popup with unsaved Details changes asks first.
 
 **Client Group** (`/client/client-group`, `CLIENT_GRP`): inline grid of groups (`ClientGroup`).
 
@@ -462,11 +473,11 @@ Records that are inactive or deleted still show their name on old records as
 
 ## 6. Services
 
-| Screen            | Route                         | Permission   | Backend               | Notes                                                                                                                                                                           |
-| ----------------- | ----------------------------- | ------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Service Types     | `/services/service-types`     | `SRV_PRV_TY` | `Config/ServiceTypes` | Services and providers refer to a type by its **code**. When a code is reused after deletion, the live record is shown.                                                         |
-| Services          | `/services/services`          | `SERVICES`   | `Service`             | Popup with a rich-text note (Quill) and AVS voucher rules                                                                                                                       |
-| Service Providers | `/services/service-providers` | `SERVICE_PR` | `ServiceProvider`     | Large popup: details, B-BBEE certificate upload, contact rows, rate, and the authorised / opened / verified / accredited trail. Internal providers are the company's own fleet. |
+| Screen            | Route                         | Permission   | Backend               | Notes                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------- | ----------------------------- | ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service Types     | `/services/service-types`     | `SRV_PRV_TY` | `Config/ServiceTypes` | Services and providers refer to a type by its **code**. When a code is reused after deletion, the live record is shown.                                                                                                                                                                                                                                                                                                            |
+| Services          | `/services/services`          | `SERVICES`   | `Service`             | Popup with a rich-text note (Quill) and AVS voucher rules                                                                                                                                                                                                                                                                                                                                                                          |
+| Service Providers | `/services/service-providers` | `SERVICE_PR` | `ServiceProvider`     | Large popup: details, B-BBEE certificate upload, contact rows, rate, and the authorised / opened / verified / accredited trail. Internal providers are the company's own fleet. BEE: expiry required only with BEE Status Yes, no past dates; certificate (PDF/PNG/JPEG) can be viewed, downloaded or removed, and is kept when BEE Status is turned off. Picking Authorised By, Verified By or Accredited By stamps today's date. |
 
 ---
 

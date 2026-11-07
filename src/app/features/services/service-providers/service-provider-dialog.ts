@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { firstValueFrom } from 'rxjs';
-import { FileStorageApi, storagePath } from '@api/files/file-storage.api';
+import { storagePath } from '@api/files/file-storage.api';
+import { FileViewer } from '@shared/files/file-viewer';
 import {
   NO_DATE,
   type ServiceProvider,
@@ -79,7 +79,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
   protected readonly maxContacts = MAX_CONTACTS;
 
   private readonly notify = inject(NotificationService);
-  private readonly files = inject(FileStorageApi);
+  private readonly viewer = inject(FileViewer);
   private readonly directory = inject(UserDirectoryService);
   private readonly currentUserId = inject(SessionService).user()?.id ?? null;
   private readonly record = this.data.record;
@@ -100,6 +100,8 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
 
   protected readonly uploading = signal(false);
   /** The certificate's file name, as shown next to "Choose File". */
+  /** v21: the expiry date picker starts at today, since an expired certificate cannot be saved. */
+  protected readonly earliestExpiry = today();
   protected readonly certificateName = signal(fileName(this.record?.BeeCertificateStoragePath));
 
   protected readonly form = new FormGroup({
@@ -226,20 +228,16 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
     this.setCertificate('', '');
   }
 
-  protected async viewCertificate(): Promise<void> {
+  /** v21 eye icon: opens the certificate in a new tab. */
+  protected viewCertificate(): void {
     const path = this.form.controls.BeeCertificate.value;
-    if (!path) return;
-    // Opened before the download, so the browser does not treat it as an unwanted popup.
-    const tab = window.open('', '_blank');
-    try {
-      const blob = await firstValueFrom(this.files.preview(path));
-      const url = URL.createObjectURL(blob);
-      if (tab) tab.location.href = url;
-      // The tab keeps its own copy once loaded.
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      tab?.close();
-    }
+    if (path) void this.viewer.preview(path);
+  }
+
+  /** v21 download icon. */
+  protected downloadCertificate(): void {
+    const path = this.form.controls.BeeCertificate.value;
+    if (path) void this.viewer.download(path);
   }
 
   protected override async save(): Promise<void> {
@@ -269,7 +267,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
       IsInternalServiceProvider: value.IsInternalServiceProvider,
       BeeStatus: bee,
       BeeExpiryDate: bee && value.BeeExpiryDate ? value.BeeExpiryDate : null,
-      BeeCertificateStoragePath: bee && value.BeeCertificate ? value.BeeCertificate : null,
+      BeeCertificateStoragePath: value.BeeCertificate || null,
       ContactDetails: value.contacts.map(toContact),
       ServiceTypeCode: value.ServiceTypeCode ?? '',
       RatePerKm: Number(value.RatePerKm),
@@ -325,10 +323,8 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
     } else {
       expiry.disable({ emitEvent: false });
       expiry.clearValidators();
-      if (changed) {
-        expiry.setValue('', { emitEvent: false });
-        this.setCertificate('', '');
-      }
+      // The stored certificate is kept (v21 still sent it), so No then Yes does not lose it.
+      if (changed) expiry.setValue('', { emitEvent: false });
     }
     expiry.updateValueAndValidity({ emitEvent: false });
   }

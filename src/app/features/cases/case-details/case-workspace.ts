@@ -27,6 +27,12 @@ import { caseTotals } from './costing/costing-rules';
 export type ReloadableKey =
   'CaseStatus' | 'CaseOpenedBy' | 'CaseDocument' | 'CaseVouchers' | 'CaseRatings' | 'CaseHistory';
 
+/** A client and one of its services, as picked on the Caller tab. */
+export interface ChosenService {
+  readonly clientId: number;
+  readonly serviceId: number;
+}
+
 /**
  * The case open on the Case Details page, shared by its header and tabs (provided by the page).
  * Saves keep the loaded case up to date, so every tab sees the others' changes.
@@ -73,12 +79,29 @@ export class CaseWorkspace {
     return !details || isFinished(details) || this.heldByOther() || this.viewOnly();
   });
 
-  /** The service's tab rules and the clients' and services' names. */
+  /**
+   * The client and service picked on the Caller tab but not saved yet. The tab strip follows
+   * them at once, as in v21; the Caller tab saves them when another tab opens or the case is left.
+   */
+  private readonly chosenService = signal<ChosenService | null>(null);
+
+  /** The tabs the case's service allows: the service just chosen on the Caller tab, else the saved one. */
   readonly allowedTabs = computed(() => {
     const details = this.details();
     const directory = this.directory();
-    return details && directory ? directory.allowedTabs(details) : [];
+    if (!details || !directory) return [];
+    const chosen = this.chosenService();
+    return directory.allowedTabs(
+      chosen
+        ? { ...details, CaseClientId: chosen.clientId, CaseClientServiceId: chosen.serviceId }
+        : details,
+    );
   });
+
+  /** The Caller tab's client and service while they differ from the saved ones; null otherwise. */
+  chooseService(chosen: ChosenService | null): void {
+    this.chosenService.set(chosen);
+  }
 
   show(details: CaseDetails, directory: CaseDirectory): void {
     this.lookups.set(directory);

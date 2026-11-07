@@ -219,6 +219,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
   }
 
   protected async openAdditionalCosting(): Promise<void> {
+    if (!(await this.saveTab())) return;
     await openAdditionalCosting(this.dialog, this.injector);
   }
 
@@ -289,9 +290,9 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     );
   }
 
-  /** v21 SMS / Email. */
+  /** v21 SMS / Email. The open tab is saved first, so a number just typed on Caller is used. */
   protected async openMessage(): Promise<void> {
-    if (this.workspace.readOnly()) return;
+    if (this.workspace.readOnly() || !(await this.saveTab())) return;
     await openCaseDialog<MessageDialog, MessageKind, MessageDialogData>(
       this.dialog,
       this.injector,
@@ -300,8 +301,12 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     );
   }
 
-  /** v21 Case Rating; closing the case from it leaves the case. */
+  /**
+   * v21 Case Rating; closing the case from it leaves the case. The open tab is saved first: the
+   * questions are the case client's and the answers carry the caller's name and number.
+   */
   protected async openRating(data: RatingDialogData = {}): Promise<void> {
+    if (!(await this.saveTab())) return;
     const outcome = await openCaseDialog<RatingDialog, RatingOutcome, RatingDialogData>(
       this.dialog,
       this.injector,

@@ -272,7 +272,7 @@ describe('ServiceProviderDialog', () => {
     expect(api.update).not.toHaveBeenCalled();
   });
 
-  it('turning BEE off clears its details on Update, keeping the stored file', async () => {
+  it('turning BEE off clears the expiry date but keeps the certificate (v21)', async () => {
     await open(stored);
     await answer('sp-bee-label', 'No');
     expect(element<HTMLInputElement>('#sp-bee-expiry').disabled).toBe(true);
@@ -281,10 +281,24 @@ describe('ServiceProviderDialog', () => {
       expect.objectContaining({
         BeeStatus: false,
         BeeExpiryDate: null,
-        BeeCertificateStoragePath: null,
+        BeeCertificateStoragePath: stored.BeeCertificateStoragePath,
       }),
     );
     expect(files.delete).not.toHaveBeenCalled();
+  });
+
+  it('turning BEE off and on again does not lose the certificate', async () => {
+    await open(stored);
+    await answer('sp-bee-label', 'No');
+    await answer('sp-bee-label', 'Yes');
+    expect(document.querySelector('[aria-label="View certificate"]')).not.toBeNull();
+  });
+
+  it('downloads the certificate, as v21 did', async () => {
+    await open(stored);
+    document.querySelector<HTMLButtonElement>('[aria-label="Download certificate"]')?.click();
+    await settle();
+    expect(files.preview).toHaveBeenCalledWith(stored.BeeCertificateStoragePath);
   });
 
   it('cancelling keeps the stored certificate and deletes the unused upload', async () => {

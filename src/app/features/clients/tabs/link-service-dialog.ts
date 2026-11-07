@@ -128,6 +128,13 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
   private readonly serviceId = toSignal(this.form.controls.ServiceId.valueChanges, {
     initialValue: this.form.controls.ServiceId.value,
   });
+  /**
+   * The link's own voucher provider when it has one (v21; the case Voucher/SMS tab uses it),
+   * otherwise the service's.
+   */
+  protected readonly voucherProvider = computed(
+    () => this.record?.VoucherProvider || this.service()?.VoucherProvider || '',
+  );
   protected readonly service = computed(() =>
     this.context.choices.find((service) => service.ServiceId === this.serviceId()),
   );
@@ -174,7 +181,7 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
       ServiceId: Number(value.ServiceId),
       TransferNumber: value.TransferNumber.trim(),
       Note: value.Note ?? '',
-      VoucherProvider: voucher ? (this.service()?.VoucherProvider ?? null) : null,
+      VoucherProvider: voucher ? this.voucherProvider() || null : null,
       VoucherAmount: voucher ? Number(value.VoucherAmount) : null,
       NoOfVouchers: voucher ? Number(value.NoOfVouchers) : null,
       VoucherSMSDetails: value.Sms.map((sms, index) => ({

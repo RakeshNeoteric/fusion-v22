@@ -186,6 +186,20 @@ describe('Contact History and SMS / Email', () => {
       expect(document.querySelector('app-message-dialog')).toBeNull();
     });
 
+    it('saves the open tab first, so a number just typed on Caller is texted', async () => {
+      await show(held());
+      await type('caller-phone-0', '831112222');
+      await fromMenu('SMS / Email');
+
+      expect(api.update).toHaveBeenCalledTimes(1);
+      await type('ms-sms-text', 'Hi');
+      await pressIn('app-message-dialog', 'Send');
+      expect(api.sendSms).toHaveBeenCalledWith(expect.anything(), {
+        receiver: '+27831112222',
+        body: 'Hi',
+      });
+    });
+
     it('stays open when the SMS service refuses the number', async () => {
       const { throwError } = await import('rxjs');
       api.sendSms.mockReturnValue(throwError(() => new Error('Invalid Phone Number')));

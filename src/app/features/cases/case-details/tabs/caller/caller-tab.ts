@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   forwardRef,
@@ -114,6 +115,19 @@ export class CallerTab extends CaseTabForm {
   constructor() {
     super();
     this.fill(this.saved());
+    // v21: the tab strip follows the service as soon as it is picked, before it is saved.
+    effect(() => {
+      const saved = this.saved();
+      const clientId = this.clientId();
+      const serviceId = this.serviceId();
+      const changed =
+        clientId !== null &&
+        serviceId !== null &&
+        (clientId !== saved.CaseClientId || serviceId !== saved.CaseClientServiceId);
+      untracked(() => this.workspace.chooseService(changed ? { clientId, serviceId } : null));
+    });
+    // Leaving the tab without saving (a refused save keeps it open) shows the saved service's tabs.
+    inject(DestroyRef).onDestroy(() => this.workspace.chooseService(null));
     effect(() => {
       const readOnly = this.readOnly();
       untracked(() =>

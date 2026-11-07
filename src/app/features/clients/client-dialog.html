@@ -189,12 +189,13 @@
             <div class="cl-data-fields">
               <div class="form-field">
                 <label for="cl-policy-file">Policy File</label>
-                <select id="cl-policy-file" formControlName="PolicyFile">
-                  <option [ngValue]="null">Select</option>
-                  @for (file of policyFiles; track file) {
-                    <option [ngValue]="file">{{ file }}</option>
-                  }
-                </select>
+                <!-- v21: these three are set up by the system and only shown. -->
+                <input
+                  id="cl-policy-file"
+                  type="text"
+                  readonly
+                  [value]="form.controls.PolicyFile.value ?? ''"
+                />
               </div>
               <div class="form-field">
                 <label for="cl-lookup-path">Policy Lookup Path</label>
@@ -202,6 +203,7 @@
                   id="cl-lookup-path"
                   type="text"
                   placeholder="Policy Lookup Path"
+                  readonly
                   formControlName="PolicyLookupPath"
                 />
               </div>
@@ -211,6 +213,7 @@
                   id="cl-validation-url"
                   type="text"
                   placeholder="Validation URL"
+                  readonly
                   formControlName="WebValidationURL"
                 />
               </div>

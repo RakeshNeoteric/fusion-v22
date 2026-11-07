@@ -10,9 +10,6 @@ import type {
   ClientServiceProviderLink,
 } from './client-links.api';
 
-/** v21 Policy File choices; the label is what is stored. */
-export const POLICY_FILES = ['File A', 'File B', 'File C'] as const;
-
 /**
  * Backend `Client`: the client's own fields. Linked records (services, documents, …) come
  * with `get()` only and are saved through their own endpoints, never with the client.

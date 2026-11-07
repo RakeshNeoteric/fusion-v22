@@ -144,6 +144,16 @@ did.
   disagreed with the monthly chart.
 - v21's Client Reports Excel had an **empty "Call Centre Stats" sheet**.
 
+- v21 Clients did not check required fields before saving Details, saved Details on every tab
+  change even with nothing changed, and saved for read-only users too; v22 saves only real
+  changes, after checking them, and never for read-only users.
+- v21 sent an empty Transfer Number on a client's service link, which the backend refuses; v22
+  requires it.
+- v21 never re-dated a service provider's rate authorisation once a date existed (the backend's
+  `0001-01-01` counted as a date), so an old provider could never get one; v22 stamps today
+  whenever Authorised By is picked and clears the date when it is cleared.
+- v21's Service Provider "Can Edit Address" toggle was never loaded or saved; v22 leaves it out.
+
 ### Behaviour kept on purpose
 
 - Delete needs full (create) access, as in v21, which ignored `CanDeleted`.
@@ -217,6 +227,8 @@ Worth knowing; each was a choice, not an accident.
 | Claims screen (empty placeholder)                            | Not migrated                                                                     |
 | `cases/new` URL                                              | Not migrated (nothing linked to it)                                              |
 | Dashboard said "dashboard works"                             | "Coming soon" page                                                               |
+| Service Provider BEE certificate: View and Download only     | Also Remove (takes effect on Save; the stored file is kept)                      |
+| Client Data Policy File was a read-only dropdown             | A read-only text field (same value, cannot be changed)                           |
 
 ---
 

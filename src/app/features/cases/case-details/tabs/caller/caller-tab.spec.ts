@@ -92,6 +92,52 @@ describe('Caller tab', () => {
     expect(selectedTab()).toBe('Caller');
   });
 
+  describe('the tabs follow the service (v21)', () => {
+    const tabs = () =>
+      [...document.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent?.trim());
+    const FUNERAL_TABS = ['Caller', 'Policy Details', 'Validation'];
+    // Groceries (AVS, a voucher service): its own rule, plus Voucher/SMS.
+    const GROCERIES_TABS = [
+      'Caller',
+      'Deceased Info',
+      'Cause Of Death',
+      'Final Funeral',
+      'Validation',
+      'Voucher/SMS',
+    ];
+
+    it('as soon as another service is picked, before it is saved', async () => {
+      await show(held());
+      expect(tabs()).toEqual(FUNERAL_TABS);
+
+      await choose('caller-service', 'Groceries');
+      expect(tabs()).toEqual(GROCERIES_TABS);
+      expect(api.update).not.toHaveBeenCalled();
+
+      // Back to the saved service: its tabs again.
+      await choose('caller-service', 'Funeral');
+      expect(tabs()).toEqual(FUNERAL_TABS);
+    });
+
+    it("saves the new service when one of its tabs is opened, and keeps that service's tabs", async () => {
+      await show(held());
+      await choose('caller-service', 'Groceries');
+      await openTab('Deceased Info');
+
+      expect(api.update).toHaveBeenCalledTimes(1);
+      const [, changes] = api.update.mock.calls[0] as [CaseDetails, Record<string, unknown>];
+      expect(changes).toMatchObject({ CaseClientId: 1, CaseClientServiceId: 6 });
+      expect(selectedTab()).toBe('Deceased Info');
+      expect(tabs()).toEqual(GROCERIES_TABS);
+    });
+
+    it('keeps the saved tabs while another client has no service picked yet', async () => {
+      await show(held());
+      await choose('caller-client', 'Acme');
+      expect(tabs()).toEqual(FUNERAL_TABS);
+    });
+  });
+
   it('chooses the service again for another client, and needs one', async () => {
     await show(held());
     await choose('caller-client', 'Acme');

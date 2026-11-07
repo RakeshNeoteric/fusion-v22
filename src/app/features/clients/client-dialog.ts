@@ -4,12 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { firstValueFrom } from 'rxjs';
-import {
-  type Client,
-  ClientApi,
-  type ClientWithLinks,
-  POLICY_FILES,
-} from '@api/clients/client.api';
+import { type Client, ClientApi, type ClientWithLinks } from '@api/clients/client.api';
 import type {
   ClientDocumentLink,
   ClientRatingQuestionLink,
@@ -187,7 +182,6 @@ export class ClientDialog {
   protected readonly tabs = TABS;
   protected readonly dataSwitches = DATA_SWITCHES;
   protected readonly labels = LABELS;
-  protected readonly policyFiles = POLICY_FILES;
   protected readonly readOnly = this.data.readOnly;
   /** v21: adding and removing links needs permission to create clients. */
   protected readonly canLink = this.permissions.canCreate(PERMISSION);
@@ -262,10 +256,7 @@ export class ClientDialog {
     return this.form.controls[name];
   }
 
-  /**
-   * ✖ with Details changes not saved asks first (v21 asked on the Details tab; here from any
-   * tab, since v22 does not save Details when another tab is opened).
-   */
+  /** ✖ with Details changes not saved asks first (v21 asked on the Details tab). */
   protected readonly canClose = (): boolean | Promise<boolean> =>
     this.readOnly ||
     this.form.pristine ||
@@ -277,13 +268,17 @@ export class ClientDialog {
       tone: 'danger',
     });
 
-  /** A link tab needs the client saved: a new client is saved first (v21). */
+  /**
+   * Leaving Details saves it first (v21), so a link tab always has the client saved; with
+   * errors the popup stays on Details. (v21 also saved when nothing had changed.)
+   */
   protected async choose(id: string): Promise<void> {
     const tab = TABS.find((candidate) => candidate.id === id)?.id;
     if (!tab || tab === this.tab() || this.saving()) return;
-    if (tab !== 'details' && this.clientId() === 0) {
-      if (this.readOnly || !(await this.saveDetails())) return;
-    }
+    const isNew = this.clientId() === 0;
+    if (tab !== 'details' && isNew && this.readOnly) return;
+    const leavingChanges = this.tab() === 'details' && !this.readOnly && this.form.dirty;
+    if (tab !== 'details' && (isNew || leavingChanges) && !(await this.saveDetails())) return;
     this.opened.update((opened) => new Set([...opened, tab]));
     this.tab.set(tab);
   }

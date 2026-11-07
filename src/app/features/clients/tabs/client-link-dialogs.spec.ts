@@ -223,6 +223,33 @@ describe('client link popups', () => {
     ]);
   });
 
+  it("keeps an existing link's own voucher provider (v21; cases use it)", async () => {
+    const linked: ClientServiceLink = {
+      ClientServiceId: 30,
+      ClientId: 7,
+      ServiceId: 2,
+      Note: 'Groceries note',
+      TransferNumber: '0800',
+      VoucherProvider: 'Grocery_Checkers',
+      VoucherAmount: 500,
+      NoOfVouchers: 2,
+      VoucherSMSDetails: [],
+      IsDeleted: false,
+    };
+    void open<ClientServiceLink>(LinkServiceDialog, linked, {
+      clientId: 7,
+      choices: SERVICES,
+      linked: new Set([2]),
+    });
+    await settle();
+    expect(element<HTMLInputElement>('#ls-provider').value).toBe('Grocery_Checkers');
+    await fill('ls-amount', '600');
+    await press('Update');
+    expect(links.saveServices).toHaveBeenCalledWith([
+      expect.objectContaining({ VoucherProvider: 'Grocery_Checkers', VoucherAmount: 600 }),
+    ]);
+  });
+
   it('adds a client document with its file', async () => {
     const result = open<ClientDocumentLink>(ClientDocumentDialog, null, {
       clientId: 7,

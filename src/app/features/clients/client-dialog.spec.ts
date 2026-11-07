@@ -375,10 +375,29 @@ describe('ClientDialog', () => {
     expect((await result)?.ClientId).toBe(20);
   });
 
-  it('asks before ✖ throws away Details changes, from any tab', async () => {
+  it('saves Details changes when another tab is opened (v21), so ✖ then closes', async () => {
     await open(stored);
     await fill('cl-name', 'Renamed');
     await tab('Services');
+    expect(api.update).toHaveBeenCalledOnce();
+    expect(api.update).toHaveBeenCalledWith(expect.objectContaining({ ClientName: 'Renamed' }));
+
+    element<HTMLButtonElement>('.rd-close').click();
+    await settle();
+    expect(confirm.ask).not.toHaveBeenCalled();
+  });
+
+  it('stays on Details when its changes have errors', async () => {
+    await open(stored);
+    await fill('cl-name', '');
+    await tab('Services');
+    expect(api.update).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Is Active?');
+  });
+
+  it('asks before ✖ throws away Details changes', async () => {
+    await open(stored);
+    await fill('cl-name', 'Renamed');
     confirm.ask.mockResolvedValue(false);
     element<HTMLButtonElement>('.rd-close').click();
     await settle();
@@ -390,6 +409,13 @@ describe('ClientDialog', () => {
     await settle();
     expect(await result).toBeNull();
     expect(api.update).not.toHaveBeenCalled();
+  });
+
+  it('shows the Client Data paths read-only, as v21 did', async () => {
+    await open(stored);
+    for (const id of ['cl-policy-file', 'cl-lookup-path', 'cl-validation-url']) {
+      expect(element<HTMLInputElement>(`#${id}`).readOnly).toBe(true);
+    }
   });
 
   it('closes at once when nothing was changed', async () => {
