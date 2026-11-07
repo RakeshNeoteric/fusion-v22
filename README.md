@@ -272,9 +272,11 @@ the charts as drawn on screen and their tables (Nedgroup: a services sheet and a
 a sheet per report tab, and the redeemed vouchers. v21's empty "Call Centre Stats" sheet is left
 out.
 
-Reports / Internal Reports shows a "coming soon" page, as v21 never finished the screen (its View
-Report and Export did nothing) and the backend has no report for it. Both report pages' period
-helpers are in `report-period.ts`.
+The sidebar Dashboard and Reports / Internal Reports show a "coming soon" page (`ComingSoon`,
+`shared/ui/coming-soon`): v21's Dashboard only said "dashboard works" and the backend has no
+dashboard data; v21's Internal Reports was never finished (its View Report and Export did nothing)
+and the backend has no report for it. The report period helpers (default last month, period
+order) are in `features/reports/report-period.ts`.
 
 A page whose title bar needs data (Permissions: "Security / {role} / Permissions") sets it with
 `PageTitle.show()` and removes it with `hide()` when it is destroyed; otherwise the route's

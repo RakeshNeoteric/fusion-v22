@@ -31,7 +31,8 @@ export const routes: Routes = [
         title: 'Dashboard',
         data: { breadcrumb: 'Dashboard' },
         canMatch: [canAccess('DBOARD')],
-        loadComponent: () => import('@features/home/home-page').then((m) => m.DashboardPage),
+        loadComponent: () =>
+          import('@features/dashboard/dashboard-page').then((m) => m.DashboardPage),
       },
       {
         path: 'body-location',
