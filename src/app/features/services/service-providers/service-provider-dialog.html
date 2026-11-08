@@ -5,8 +5,8 @@
     [readOnly]="readOnly"
     [saving]="saving() || uploading()"
   >
-    <fieldset class="sp-section">
-      <legend class="sp-section-title">Service Provider Details:</legend>
+    <section class="app-section" aria-labelledby="sp-details-title">
+      <h3 class="app-section-title" id="sp-details-title">Service Provider Details:</h3>
       <div class="sp-grid">
         <div class="form-field">
           <label for="sp-name">Name <span class="required">*</span></label>
@@ -109,10 +109,10 @@
           </mat-button-toggle-group>
         </div>
       </div>
-    </fieldset>
+    </section>
 
-    <fieldset class="sp-section">
-      <legend class="sp-section-title">BEE Requirements:</legend>
+    <section class="app-section" aria-labelledby="sp-bee-title">
+      <h3 class="app-section-title" id="sp-bee-title">BEE Requirements:</h3>
       <div class="sp-grid">
         <div class="sp-question">
           <span id="sp-bee-label">BEE Status</span>
@@ -205,10 +205,10 @@
           </div>
         </div>
       </div>
-    </fieldset>
+    </section>
 
-    <fieldset class="sp-section">
-      <legend class="sp-section-title">Contact Details:</legend>
+    <section class="app-section" aria-labelledby="sp-contacts-title">
+      <h3 class="app-section-title" id="sp-contacts-title">Contact Details:</h3>
       <div formArrayName="contacts" class="sp-contacts">
         @for (row of contacts.controls; track row; let index = $index) {
           <div class="sp-contact" [formGroupName]="index">
@@ -302,7 +302,7 @@
           </div>
         }
       </div>
-    </fieldset>
+    </section>
 
     <div class="sp-grid sp-trail">
       <div class="form-field">

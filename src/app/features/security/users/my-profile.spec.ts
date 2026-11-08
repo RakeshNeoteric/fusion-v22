@@ -65,7 +65,7 @@ describe('MyProfile', () => {
   });
 
   afterEach(async () => {
-    document.querySelector<HTMLButtonElement>('app-user-dialog .rd-close')?.click();
+    document.querySelector<HTMLButtonElement>('app-user-dialog .dialog-close')?.click();
     await settle();
     await opened;
   });

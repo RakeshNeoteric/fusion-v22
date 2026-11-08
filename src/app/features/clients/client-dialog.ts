@@ -265,7 +265,6 @@ export class ClientDialog {
       message: 'The client details have changes that are not saved. Close and lose them?',
       confirmText: 'Close',
       cancelText: 'Stay',
-      tone: 'danger',
     });
 
   /**

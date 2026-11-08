@@ -33,7 +33,6 @@ export class Header {
       title: 'Sign out',
       message: 'Are you sure you want to sign out?',
       confirmText: 'Sign out',
-      tone: 'danger',
     });
     if (confirmed) {
       await this.session.signOut();

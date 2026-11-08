@@ -147,10 +147,10 @@ describe('Case lifecycle (Case Details header)', () => {
       expect(navigate).toHaveBeenCalledWith(['/cases']);
     });
 
-    it('✖ stays on the case', async () => {
+    it('× stays on the case', async () => {
       await show(held());
       await click('Exit');
-      await press('✖');
+      await press('×');
       expect(api.exit).not.toHaveBeenCalled();
       expect(navigate).not.toHaveBeenCalled();
     });

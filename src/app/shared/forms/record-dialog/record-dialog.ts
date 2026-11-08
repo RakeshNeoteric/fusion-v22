@@ -6,6 +6,7 @@ import {
   Injectable,
   type Injector,
   ViewEncapsulation,
+  computed,
   inject,
   input,
   signal,
@@ -19,8 +20,10 @@ import {
 } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import type { CrudSource } from '@api/config/config-crud.api';
+import type { AppIconName } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
+import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 
 /** What a record form is opened with. */
 export interface RecordDialogData<T> {
@@ -38,16 +41,13 @@ export interface RecordDialogData<T> {
  */
 @Component({
   selector: 'app-record-dialog-frame',
-  imports: [MatDialogModule],
+  imports: [MatDialogModule, DialogHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Styles the projected fields and inputs, so they cannot be encapsulated; all scoped to .record-dialog.
   encapsulation: ViewEncapsulation.None,
   host: { class: 'record-dialog app-form' },
   template: `
-    <div class="rd-header">
-      <h2 mat-dialog-title class="rd-title">{{ title() }}</h2>
-      <button type="button" class="rd-close" aria-label="Close" (click)="close()">✖</button>
-    </div>
+    <app-dialog-header [title]="title()" [icon]="titleIcon()" (closed)="close()" />
     <mat-dialog-content>
       <fieldset class="rd-fields" [disabled]="readOnly()">
         <ng-content />
@@ -56,7 +56,9 @@ export interface RecordDialogData<T> {
     <mat-dialog-actions align="end">
       <ng-content select="[rdFooterStart]" />
       @if (cancelable()) {
-        <button type="button" class="app-button rd-cancel" (click)="close()">Cancel</button>
+        <button type="button" class="app-button app-button--cancel" (click)="close()">
+          Cancel
+        </button>
       }
       @if (!readOnly() && savable()) {
         <button type="submit" class="app-button" [disabled]="saving()">
@@ -72,6 +74,8 @@ export class RecordDialogFrame {
   readonly isNew = input.required<boolean>();
   readonly readOnly = input(false);
   readonly saving = input(false);
+  /** Before the title; v21 showed the edit icon on its forms. Null for none. */
+  readonly icon = input<AppIconName | null>('edit');
   /** Instead of Save / Update, e.g. "Clone (Copy) Client". */
   readonly saveLabel = input<string>();
   /** v21 Client popup: no Cancel, only ✖. */
@@ -84,6 +88,9 @@ export class RecordDialogFrame {
   readonly canClose = input<() => boolean | Promise<boolean>>(() => true);
 
   private readonly dialogRef = inject(MatDialogRef);
+
+  /** A view-only popup gets no edit icon. */
+  protected readonly titleIcon = computed(() => (this.readOnly() ? null : this.icon()));
 
   protected async close(): Promise<void> {
     if (await this.canClose()()) this.dialogRef.close(this.closeResult());

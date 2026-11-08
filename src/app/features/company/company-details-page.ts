@@ -185,7 +185,6 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
       title: 'Remove logo',
       message: 'Remove the company logo?',
       confirmText: 'Remove',
-      tone: 'danger',
     });
     if (!confirmed) return;
     try {

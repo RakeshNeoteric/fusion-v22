@@ -1,47 +1,40 @@
 import { ChangeDetectionStrategy, Component, Injectable, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
+import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 
 export interface ConfirmOptions {
   readonly title: string;
   readonly message: string;
   readonly confirmText?: string;
   readonly cancelText?: string;
-  /** `danger` colours the confirm button for destructive actions (delete, sign out). */
-  readonly tone?: 'default' | 'danger';
 }
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, DialogHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <app-dialog-header [title]="data.title" (closed)="dialogRef.close(false)" />
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" [mat-dialog-close]="false">
+      <button type="button" class="app-button app-button--cancel" [mat-dialog-close]="false">
         {{ data.cancelText ?? 'Cancel' }}
       </button>
-      <button
-        mat-flat-button
-        type="button"
-        cdkFocusInitial
-        [class.confirm-danger]="data.tone === 'danger'"
-        [mat-dialog-close]="true"
-      >
+      <button type="button" class="app-button" cdkFocusInitial [mat-dialog-close]="true">
         {{ data.confirmText ?? 'Confirm' }}
       </button>
     </mat-dialog-actions>
   `,
-  styles: `
-    .confirm-danger {
-      --mat-button-filled-container-color: var(--app-danger);
-    }
-  `,
 })
 export class ConfirmDialog {
   protected readonly data = inject<ConfirmOptions>(MAT_DIALOG_DATA);
+  protected readonly dialogRef = inject<MatDialogRef<ConfirmDialog, boolean>>(MatDialogRef);
 }
 
 /** `if (await confirm.ask({ title, message })) { ... }`; closing the dialog counts as "no". */

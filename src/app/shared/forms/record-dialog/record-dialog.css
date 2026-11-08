@@ -1,42 +1,13 @@
-/* The v21 popup frame; the fields inside use the shared form styles (src/form-styles.css). */
+/*
+ * The v21 popup frame. The header is DialogHeader, every popup is styled in
+ * src/dialog-styles.css, and the fields use the shared form styles (src/form-styles.css).
+ */
 .record-dialog {
   display: block;
-}
-.record-dialog .rd-header {
-  position: relative;
-}
-.record-dialog .rd-title {
-  margin: 0;
-  padding-right: 48px;
-  color: var(--app-teal);
-  font-size: 24px;
-  font-weight: 700;
-}
-.record-dialog .rd-close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  padding: 4px 8px;
-  border: none;
-  background: transparent;
-  color: red;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.record-dialog .rd-close:focus-visible {
-  outline: 2px solid var(--app-teal);
 }
 .record-dialog .rd-fields {
   min-width: 0;
   margin: 0;
   padding: 4px 0 0;
   border: none;
-}
-/* v21: red Cancel next to the teal Save. */
-.record-dialog .rd-cancel {
-  background-color: #e74c3c;
-}
-.record-dialog .rd-cancel:hover:not(:disabled) {
-  background-color: #c0392b;
 }

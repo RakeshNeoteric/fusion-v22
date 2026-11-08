@@ -182,7 +182,7 @@ describe('ServiceProviderDialog', () => {
   });
 
   afterEach(async () => {
-    document.querySelector<HTMLButtonElement>('app-service-provider-dialog .rd-close')?.click();
+    document.querySelector<HTMLButtonElement>('app-service-provider-dialog .dialog-close')?.click();
     await settle();
   });
 

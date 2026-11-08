@@ -38,6 +38,7 @@
               "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.css",
               "src/form-styles.css",
+              "src/dialog-styles.css",
               {
                 "input": "node_modules/quill/dist/quill.snow.css",
                 "bundleName": "quill-snow",
@@ -95,7 +96,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "setupFiles": ["src/testing/grid-guard.ts"]
+            "setupFiles": ["src/testing/grid-guard.ts", "src/testing/app-icons-setup.ts"]
           }
         },
         "lint": {

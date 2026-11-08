@@ -1,0 +1,55 @@
+/*
+ * Every popup (Material dialog), v21 look: white, 8px corners, a soft shadow, 30px padding,
+ * Arial, a teal 24px bold title (DialogHeader adds the icon and ×), and the buttons at the
+ * bottom right, 12px apart. Set once here through Material's dialog tokens, so each popup only
+ * lays out its own content.
+ */
+html {
+  --app-popup-font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  --mat-dialog-container-color: #fff;
+  --mat-dialog-container-shape: 8px;
+  --mat-dialog-container-elevation-shadow: 0 8px 16px rgb(0 0 0 / 30%);
+  --mat-dialog-headline-padding: 30px 30px 20px;
+  --mat-dialog-content-padding: 0 30px 30px;
+  --mat-dialog-with-actions-content-padding: 0 30px;
+  --mat-dialog-actions-padding: 24px 30px 30px;
+  --mat-dialog-subhead-font: var(--app-popup-font);
+  --mat-dialog-subhead-color: var(--app-teal);
+  --mat-dialog-subhead-size: 24px;
+  --mat-dialog-subhead-line-height: 30px;
+  --mat-dialog-subhead-weight: 700;
+  --mat-dialog-subhead-tracking: normal;
+  --mat-dialog-supporting-text-font: var(--app-popup-font);
+  --mat-dialog-supporting-text-color: #1f1f1f;
+  --mat-dialog-supporting-text-size: 14px;
+  --mat-dialog-supporting-text-tracking: normal;
+}
+
+/* Everything inside a popup uses the popup's font (fields and buttons inherit it). */
+.mat-mdc-dialog-surface {
+  font-family: var(--app-popup-font);
+}
+
+.mat-mdc-dialog-actions {
+  gap: 12px;
+}
+
+/*
+ * v21 section box inside a popup (e.g. "Service Provider Details:"): white, light-grey border,
+ * 8px corners, a faint shadow, and a teal bold title inside the box.
+ */
+.app-section {
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
+.app-section-title {
+  margin: 0 0 12px;
+  color: var(--app-teal);
+  font-size: 20px;
+  font-weight: 700;
+}

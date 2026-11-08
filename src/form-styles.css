@@ -128,16 +128,20 @@
   gap: 24px;
 }
 
-/* v21 teal form button (Save, Cancel, Update). */
+/*
+ * v21 form button: teal with bold white text (Save, Update). Add app-button--cancel for the red
+ * one (Cancel, Close, No).
+ */
 .app-button {
-  min-width: 100px;
-  padding: 8px 20px;
+  min-width: 90px;
+  padding: 10px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: var(--app-teal);
   color: #fff;
   font: inherit;
   font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -151,6 +155,12 @@
 .app-button:focus-visible {
   outline: 2px solid #000;
   outline-offset: 2px;
+}
+.app-button--cancel {
+  background-color: #e74c3c;
+}
+.app-button--cancel:hover:not(:disabled) {
+  background-color: #c0392b;
 }
 
 /* v21 Yes / No toggles (Material button toggles): green and red when chosen. */

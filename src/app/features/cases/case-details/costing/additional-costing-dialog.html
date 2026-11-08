@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Additional Cost</h2>
+<app-dialog-header title="Additional Cost" icon="edit" (closed)="close()" />
 <mat-dialog-content class="app-form ac-content">
   <div class="ac-toolbar">
     <button
@@ -137,5 +137,5 @@
   </table>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button type="button" class="app-button" mat-dialog-close>Close</button>
+  <button type="button" class="app-button app-button--cancel" (click)="close()">Close</button>
 </mat-dialog-actions>

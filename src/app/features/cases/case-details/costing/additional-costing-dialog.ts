@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { type MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { type MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
@@ -20,6 +20,7 @@ import { money, round2 } from '@shared/reference/money';
 import { localParts } from '@shared/reference/date-time';
 import { displayStoredPhone } from '@shared/reference/phone';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { CaseWorkspace } from '../case-workspace';
 import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po';
 
@@ -38,7 +39,7 @@ function tidyAddress(address: string): string {
  */
 @Component({
   selector: 'app-additional-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, PhoneField],
+  imports: [ReactiveFormsModule, MatDialogModule, PhoneField, DialogHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './additional-costing-dialog.html',
   styleUrl: './additional-costing-dialog.css',
@@ -49,6 +50,7 @@ export class AdditionalCostingDialog {
   private readonly confirm = inject(ConfirmService);
   private readonly users = inject(UserDirectoryService);
   private readonly pdf = inject(PdfRenderer);
+  private readonly dialogRef = inject(MatDialogRef);
 
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly busy = signal(false);
@@ -96,6 +98,10 @@ export class AdditionalCostingDialog {
 
   protected showError(control: FormControl<unknown>): boolean {
     return control.invalid && (control.touched || control.dirty);
+  }
+
+  protected close(): void {
+    this.dialogRef.close();
   }
 
   protected async add(): Promise<void> {
@@ -167,7 +173,6 @@ export class AdditionalCostingDialog {
       title: 'Delete additional cost',
       message: `Delete "${cost.Description}" (${money(cost.Amount)}) from ${cost.ServiceProviderName}?`,
       confirmText: 'Delete',
-      tone: 'danger',
     });
     if (!sure) return;
     await this.run(async () => {

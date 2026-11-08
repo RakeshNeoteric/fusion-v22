@@ -1,17 +1,4 @@
-/* v21 Service Provider popup: bordered sections with a teal title, four fields a row. */
-.sp-section {
-  min-width: 0;
-  margin: 0 0 18px;
-  padding: 10px 16px 16px;
-  border: 1px solid #cfd8dc;
-  border-radius: 10px;
-}
-.sp-section-title {
-  padding: 0 6px;
-  color: var(--app-teal);
-  font-size: 17px;
-  font-weight: 600;
-}
+/* v21 Service Provider popup: section boxes (shared .app-section), four fields a row. */
 .sp-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

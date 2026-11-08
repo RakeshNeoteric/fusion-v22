@@ -23,7 +23,6 @@ describe('ConfirmService', () => {
       title: 'Delete client',
       message: 'This cannot be undone.',
       confirmText: 'Delete',
-      tone: 'danger',
     });
     const [cancel, confirm] = await dialogButtons();
     expect(document.querySelector('[mat-dialog-title]')?.textContent).toContain('Delete client');
@@ -32,7 +31,9 @@ describe('ConfirmService', () => {
     );
     expect(cancel?.textContent?.trim()).toBe('Cancel');
     expect(confirm?.textContent?.trim()).toBe('Delete');
-    expect(confirm?.classList).toContain('confirm-danger');
+    // v21 look: red Cancel, teal confirm.
+    expect(cancel?.classList).toContain('app-button--cancel');
+    expect(confirm?.classList).not.toContain('app-button--cancel');
     cancel?.click();
   });
 
@@ -41,6 +42,13 @@ describe('ConfirmService', () => {
     const [, confirm] = await dialogButtons();
     confirm?.click();
     await expect(answer).resolves.toBe(true);
+  });
+
+  it('resolves false when closed with ×', async () => {
+    const answer = TestBed.inject(ConfirmService).ask({ title: 'Sure?', message: 'Really?' });
+    await dialogButtons();
+    document.querySelector<HTMLButtonElement>('.dialog-close')?.click();
+    await expect(answer).resolves.toBe(false);
   });
 
   it('resolves false when cancelled', async () => {

@@ -12,12 +12,20 @@ export type ExitChoice = 'complete' | 'incomplete';
   imports: [MatDialogModule, RecordDialogFrame, CaseIdentity],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-record-dialog-frame title="Exit" [isNew]="true" [cancelable]="false" [savable]="false">
+    <app-record-dialog-frame
+      title="Exit"
+      [icon]="null"
+      [isNew]="true"
+      [cancelable]="false"
+      [savable]="false"
+    >
       <app-case-identity idPrefix="ex" />
       <p class="ex-question" id="ex-question">Is the call complete?</p>
       <div rdFooterStart class="ex-choices" role="group" aria-labelledby="ex-question">
         <button type="button" class="app-button" [mat-dialog-close]="complete">Yes</button>
-        <button type="button" class="app-button ex-no" [mat-dialog-close]="incomplete">No</button>
+        <button type="button" class="app-button app-button--cancel" [mat-dialog-close]="incomplete">
+          No
+        </button>
       </div>
     </app-record-dialog-frame>
   `,
@@ -33,9 +41,6 @@ export type ExitChoice = 'complete' | 'incomplete';
       gap: 12px;
       margin-right: auto;
       margin-left: auto;
-    }
-    .ex-no {
-      background-color: #e74c3c;
     }
   `,
 })

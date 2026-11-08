@@ -15,5 +15,4 @@ export const unsavedChangesGuard: CanDeactivateFn<HasUnsavedChanges> = (page) =>
     message: 'You have changes that are not saved. Leave this page and lose them?',
     confirmText: 'Leave',
     cancelText: 'Stay',
-    tone: 'danger',
   });

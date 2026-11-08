@@ -61,7 +61,6 @@ export abstract class ClientLinkTab<T extends Link> {
       title: `Unlink ${this.linkName}`,
       message: `Unlink ${name} from this client?`,
       confirmText: 'Unlink',
-      tone: 'danger',
     });
     if (!confirmed) return;
     this.busy.set(true);

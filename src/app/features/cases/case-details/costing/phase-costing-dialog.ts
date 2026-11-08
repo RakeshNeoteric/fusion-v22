@@ -21,6 +21,7 @@ import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
 import { letterhead } from '@shared/pdf/letterhead';
 import { PDF_FONT, PdfRenderer } from '@shared/pdf/pdf-renderer';
+import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { money } from '@shared/reference/money';
 import { displayStoredPhone } from '@shared/reference/phone';
 import type { ClientProvider } from '../client-providers';
@@ -71,7 +72,7 @@ interface PhaseCard {
  */
 @Component({
   selector: 'app-phase-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip],
+  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip, DialogHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './phase-costing-dialog.html',
   styleUrl: './phase-costing-dialog.css',

@@ -270,7 +270,7 @@ describe('ClientDialog', () => {
   });
 
   afterEach(async () => {
-    query<HTMLButtonElement>('.rd-close')?.click();
+    query<HTMLButtonElement>('.dialog-close')?.click();
     await settle();
   });
 
@@ -370,7 +370,7 @@ describe('ClientDialog', () => {
     expect(rowsText()).toEqual(['No Rows To Show']);
 
     // ✖ gives back the client that was created, so the list shows it.
-    element<HTMLButtonElement>('.rd-close').click();
+    element<HTMLButtonElement>('.dialog-close').click();
     await settle();
     expect((await result)?.ClientId).toBe(20);
   });
@@ -382,7 +382,7 @@ describe('ClientDialog', () => {
     expect(api.update).toHaveBeenCalledOnce();
     expect(api.update).toHaveBeenCalledWith(expect.objectContaining({ ClientName: 'Renamed' }));
 
-    element<HTMLButtonElement>('.rd-close').click();
+    element<HTMLButtonElement>('.dialog-close').click();
     await settle();
     expect(confirm.ask).not.toHaveBeenCalled();
   });
@@ -399,13 +399,13 @@ describe('ClientDialog', () => {
     await open(stored);
     await fill('cl-name', 'Renamed');
     confirm.ask.mockResolvedValue(false);
-    element<HTMLButtonElement>('.rd-close').click();
+    element<HTMLButtonElement>('.dialog-close').click();
     await settle();
     expect(confirm.ask).toHaveBeenCalledOnce();
     expect(query('app-client-dialog')).not.toBeNull();
 
     confirm.ask.mockResolvedValue(true);
-    element<HTMLButtonElement>('.rd-close').click();
+    element<HTMLButtonElement>('.dialog-close').click();
     await settle();
     expect(await result).toBeNull();
     expect(api.update).not.toHaveBeenCalled();
@@ -420,7 +420,7 @@ describe('ClientDialog', () => {
 
   it('closes at once when nothing was changed', async () => {
     await open(stored);
-    element<HTMLButtonElement>('.rd-close').click();
+    element<HTMLButtonElement>('.dialog-close').click();
     await settle();
     expect(confirm.ask).not.toHaveBeenCalled();
     expect(await result).toBeNull();
@@ -428,7 +428,7 @@ describe('ClientDialog', () => {
 
   it('shows Save and Is Active on Details only', async () => {
     await open(stored);
-    expect(query('.rd-cancel')).toBeNull();
+    expect(query('.app-button--cancel')).toBeNull();
     expect(document.body.textContent).toContain('Is Active?');
     await tab('Rating Questions');
     expect(

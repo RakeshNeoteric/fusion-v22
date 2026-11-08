@@ -278,7 +278,6 @@ export class EntityGrid<T extends object> implements OnInit {
       title: `Delete ${entityName}`,
       message: `Are you sure you want to delete "${describe(original)}"?`,
       confirmText: 'Delete',
-      tone: 'danger',
     });
     if (!confirmed) return;
 

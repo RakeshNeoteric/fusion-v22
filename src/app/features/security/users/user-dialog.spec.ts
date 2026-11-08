@@ -35,7 +35,10 @@ describe('UserDialog', () => {
   const notify = { success: vi.fn(), info: vi.fn(), warning: vi.fn(), error: vi.fn() };
   let result: Promise<AppUser | null>;
 
-  async function open(record: AppUser | null, flags = { CanCreate: true }): Promise<void> {
+  async function open(
+    record: AppUser | null,
+    flags: Parameters<typeof permission>[1] = { CanCreate: true },
+  ): Promise<void> {
     TestBed.inject(PermissionService).load([role('Tester', [permission('USR', flags)])]);
     result = TestBed.inject(RecordDialogs).open(
       UserDialog,
@@ -104,7 +107,7 @@ describe('UserDialog', () => {
   });
 
   afterEach(async () => {
-    document.querySelector<HTMLButtonElement>('app-user-dialog .rd-close')?.click();
+    document.querySelector<HTMLButtonElement>('app-user-dialog .dialog-close')?.click();
     await settle();
   });
 
@@ -137,6 +140,21 @@ describe('UserDialog', () => {
       }),
     );
     expect((await result)?.AspNetUserId).toBe(9);
+  });
+
+  it('shows the v21 header: edit icon, title and a × that closes', async () => {
+    await open(stored);
+    expect(element('.dialog-title').textContent).toContain('Edit User');
+    expect(element('.dialog-title mat-icon').getAttribute('data-mat-icon-name')).toBe('edit');
+    element<HTMLButtonElement>('.dialog-close').click();
+    await settle();
+    expect(document.querySelector('app-user-dialog')).toBeNull();
+  });
+
+  it('has no edit icon when the user may only view', async () => {
+    await open(stored, { CanEdit: false });
+    expect(element('.dialog-title').textContent).toContain('View User');
+    expect(document.querySelector('app-user-dialog .dialog-title mat-icon')).toBeNull();
   });
 
   it('keeps sign-in data when updating (the backend replaces the whole row)', async () => {

@@ -141,7 +141,7 @@ describe('client link popups', () => {
   });
 
   afterEach(async () => {
-    document.querySelector<HTMLButtonElement>('.rd-close')?.click();
+    document.querySelector<HTMLButtonElement>('.dialog-close')?.click();
     await settle();
   });
 
