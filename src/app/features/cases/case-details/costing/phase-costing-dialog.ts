@@ -31,6 +31,7 @@ import { removalDocument, removalOrder } from './removal-order';
 import { removalOrderPdf } from './removal-order-pdf';
 import { openTransport } from './transport-dialog';
 import { todayIsoDate } from '@shared/forms/dates/app-dates';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 function costForm() {
   const amount = (max: number) =>
@@ -66,7 +67,7 @@ interface PhaseCard {
  */
 @Component({
   selector: 'app-phase-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip, DialogHeader],
+  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip, DialogHeader, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './phase-costing-dialog.html',
   styleUrl: './phase-costing-dialog.css',

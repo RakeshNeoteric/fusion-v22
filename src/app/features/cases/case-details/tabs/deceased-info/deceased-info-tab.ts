@@ -22,9 +22,9 @@ import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { type Choice, ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
-import { COUNTRIES } from '@shared/reference/countries';
+import { COUNTRY_OPTIONS } from '@shared/reference/countries';
 import { storedToE164 } from '@shared/reference/phone';
-import { PROVINCES } from '@shared/reference/provinces';
+import { PROVINCE_OPTIONS } from '@shared/reference/provinces';
 import {
   SA_ID_MESSAGES,
   type SaIdProblem,
@@ -38,6 +38,7 @@ import { applyIdOrPassport, savedDeceased } from '../case-records';
 import { ageAtDeath } from './age-at-death';
 import { todayIsoDate } from '@shared/forms/dates/app-dates';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 const GENDERS: readonly Choice<string>[] = [
   { value: 'Male', label: 'Male' },
@@ -73,7 +74,7 @@ function deathAfterBirth(group: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-deceased-info-tab',
-  imports: [ReactiveFormsModule, ChoiceToggle, PhoneField, DateField],
+  imports: [ReactiveFormsModule, ChoiceToggle, PhoneField, DateField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => DeceasedInfoTab) }],
   templateUrl: './deceased-info-tab.html',
@@ -87,8 +88,8 @@ export class DeceasedInfoTab extends CaseTabForm {
   protected readonly genders = GENDERS;
   protected readonly relationships = RELATIONSHIPS;
   protected readonly locationTypes = LOCATION_TYPES;
-  protected readonly provinces = PROVINCES;
-  protected readonly countries = COUNTRIES;
+  protected readonly provinces = PROVINCE_OPTIONS;
+  protected readonly countries = COUNTRY_OPTIONS;
   protected readonly today = todayIsoDate();
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly age = signal<number | null>(null);

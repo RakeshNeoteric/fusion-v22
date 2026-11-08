@@ -8,6 +8,7 @@ import type { RatingQuestionType } from '@api/config/rating-question-type.api';
 import type { DirectoryUser } from '@api/models/app.models';
 import { UserDirectoryService } from '@core/session/user-directory.service';
 import { caseTabHarness, held } from '../tabs/testing/case-tab-harness';
+import { dropdownOptions, dropdownText } from '../../../../../testing/form-controls';
 
 const controller = (id: number, first: string, last: string): DirectoryUser => ({
   AspNetUserId: id,
@@ -180,10 +181,8 @@ describe('Case lifecycle (Case Details header)', () => {
       );
       expect(questions).toEqual(['How was the service?', 'Was the agent polite?']);
       // Configured options in their order (inactive ones left out); else the type's name split.
-      const options = (id: string) =>
-        [...document.querySelectorAll<HTMLOptionElement>(`#${id} option`)].map((o) => o.text);
-      expect(options('cr-answer-20')).toEqual(['-- Select --', 'Good', 'Poor']);
-      expect(options('cr-answer-21')).toEqual(['-- Select --', 'Yes', 'No']);
+      expect(await dropdownOptions('cr-answer-20')).toEqual(['-- Select --', 'Good', 'Poor']);
+      expect(await dropdownOptions('cr-answer-21')).toEqual(['-- Select --', 'Yes', 'No']);
 
       await press('Close Rating Completed');
       expect(notify.warning).toHaveBeenCalledWith(
@@ -407,9 +406,7 @@ describe('Case lifecycle (Case Details header)', () => {
       );
       expect(notify.success).toHaveBeenCalledWith('Case reassigned to Dee Moyo.');
       expect(text()).toContain('(Active)');
-      expect(h.element<HTMLSelectElement>('#caller-controller').selectedOptions[0]?.text).toBe(
-        'Dee Moyo',
-      );
+      expect(dropdownText('caller-controller')).toBe('Dee Moyo');
     });
   });
 

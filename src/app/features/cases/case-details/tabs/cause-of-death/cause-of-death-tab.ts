@@ -29,6 +29,9 @@ import { storedToE164 } from '@shared/reference/phone';
 import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
+import { TimeField } from '@shared/forms/time-field/time-field';
 
 /** Only an unnatural death has the mortuary and post-mortem details (v21). */
 const UNNATURAL = 'Unnatural';
@@ -60,7 +63,7 @@ function newCauseOfDeath(details: CaseDetails): CaseCauseOfDeathRecord {
  */
 @Component({
   selector: 'app-cause-of-death-tab',
-  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, DateField],
+  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, DateField, SelectField, TimeField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => CauseOfDeathTab) }],
   templateUrl: './cause-of-death-tab.html',
@@ -70,7 +73,7 @@ export class CauseOfDeathTab extends CaseTabForm {
   private readonly workspace = inject(CaseWorkspace);
   private readonly notifications = inject(NotificationService);
 
-  protected readonly causes = CAUSES_OF_DEATH;
+  protected readonly causes = textOptions(CAUSES_OF_DEATH);
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly unnatural = signal(false);
 

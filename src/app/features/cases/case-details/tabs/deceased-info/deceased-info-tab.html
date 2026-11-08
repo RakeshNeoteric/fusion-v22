@@ -26,12 +26,13 @@
     </div>
     <div class="form-field">
       <label for="di-relationship">Relationship to Policyholder</label>
-      <select id="di-relationship" formControlName="relationship">
-        <option [ngValue]="null">Select Relationship</option>
-        @for (relationship of relationships; track relationship.value) {
-          <option [ngValue]="relationship.value">{{ relationship.label }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-relationship"
+        formControlName="relationship"
+        placeholder="Select Relationship"
+        allowNone
+        [options]="relationships"
+      />
     </div>
     <div class="form-field">
       <span class="form-label">Do you have any ID number?</span>
@@ -112,12 +113,13 @@
     </div>
     <div class="form-field">
       <label for="di-death-province">Place of Death Province</label>
-      <select id="di-death-province" formControlName="deathProvince">
-        <option [ngValue]="null">Select Province</option>
-        @for (province of provinces; track province) {
-          <option [ngValue]="province">{{ province }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-death-province"
+        formControlName="deathProvince"
+        placeholder="Select Province"
+        allowNone
+        [options]="provinces"
+      />
     </div>
     <div class="form-field">
       <label for="di-body">Body Location</label>
@@ -130,21 +132,23 @@
     </div>
     <div class="form-field">
       <label for="di-body-province">Body Location Province</label>
-      <select id="di-body-province" formControlName="bodyProvince">
-        <option [ngValue]="null">Select Province</option>
-        @for (province of provinces; track province) {
-          <option [ngValue]="province">{{ province }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-body-province"
+        formControlName="bodyProvince"
+        placeholder="Select Province"
+        allowNone
+        [options]="provinces"
+      />
     </div>
     <div class="form-field">
       <label for="di-location-type">Location Type</label>
-      <select id="di-location-type" formControlName="locationType">
-        <option [ngValue]="null">Select Location Type</option>
-        @for (type of locationTypes; track type.value) {
-          <option [ngValue]="type.value">{{ type.label }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-location-type"
+        formControlName="locationType"
+        placeholder="Select Location Type"
+        allowNone
+        [options]="locationTypes"
+      />
     </div>
     <div class="form-field">
       <label for="di-telephone">Telephone Number</label>
@@ -168,21 +172,23 @@
     </div>
     <div class="form-field">
       <label for="di-burial-province">Burial Town Province</label>
-      <select id="di-burial-province" formControlName="burialProvince">
-        <option [ngValue]="null">Select Province</option>
-        @for (province of provinces; track province) {
-          <option [ngValue]="province">{{ province }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-burial-province"
+        formControlName="burialProvince"
+        placeholder="Select Province"
+        allowNone
+        [options]="provinces"
+      />
     </div>
     <div class="form-field">
       <label for="di-country">Country</label>
-      <select id="di-country" formControlName="country">
-        <option [ngValue]="null">Select Country</option>
-        @for (country of countries; track country.code) {
-          <option [ngValue]="country.code">{{ country.label }}</option>
-        }
-      </select>
+      <app-select
+        inputId="di-country"
+        formControlName="country"
+        placeholder="Select Country"
+        allowNone
+        [options]="countries"
+      />
     </div>
   </div>
 </form>

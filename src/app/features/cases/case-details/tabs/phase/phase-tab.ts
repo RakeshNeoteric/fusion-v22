@@ -23,6 +23,7 @@ import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
 import { collectFromFor, phaseRecord } from './phase-rules';
 import { openTransportChecklist } from './transport-checklist-dialog';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** What the phase copies from its collecting provider. */
 interface CollectDetails {
@@ -56,7 +57,7 @@ const NO_REMOVE: RemoveDetails = {
  */
 @Component({
   selector: 'app-phase-tab',
-  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle],
+  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => PhaseTab) }],
   host: { '(pointerleave)': 'autoSave()' },
@@ -90,6 +91,13 @@ export class PhaseTab extends CaseTabForm implements OnInit {
       (id) => id > 0 && !known.has(id),
     );
   });
+  protected readonly providerOptions = computed(() => [
+    ...[...new Set(this.unlisted())].map((id) => ({
+      value: id,
+      label: 'Saved provider (no longer linked to the client)',
+    })),
+    ...this.providers().map((provider) => ({ value: provider.id, label: provider.name })),
+  ]);
   protected readonly removeTelephone = computed(() => displayStoredPhone(this.remove().telephone));
   protected readonly removeFax = computed(() => displayStoredPhone(this.remove().fax));
   /**

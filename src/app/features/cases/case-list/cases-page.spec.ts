@@ -8,6 +8,7 @@ import { CaseApi } from '@api/cases/case.api';
 import { PageActions } from '@core/layout/page-actions';
 import { CASE_INIT, caseDetails, caseDeceased } from '../../../../testing/case.fixtures';
 import { CasesPage } from './cases-page';
+import { chooseOption } from '../../../../testing/form-controls';
 
 describe('CasesPage', () => {
   const api = { list: vi.fn(), init: vi.fn() };
@@ -100,10 +101,7 @@ describe('CasesPage', () => {
   it('adds a grouping back from the list', async () => {
     host().querySelector<HTMLButtonElement>('[aria-label="Stop grouping by Client Name"]')?.click();
     await settle();
-    const add = host().querySelector<HTMLSelectElement>('select[aria-label="Add a grouping"]');
-    if (!add) throw new Error('no add');
-    add.value = 'client';
-    add.dispatchEvent(new Event('change'));
+    await chooseOption('gb-add', 'Client Name');
     await settle();
     expect(
       [...host().querySelectorAll('.gb-chip')].map((chip) =>

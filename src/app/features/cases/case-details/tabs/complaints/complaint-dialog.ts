@@ -12,6 +12,8 @@ import {
 import { requiredText } from '@shared/forms/validators';
 import { CaseIdentity } from '../../case-identity';
 import { CaseWorkspace } from '../../case-workspace';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /**
  * v21 "New Complaint" popup: a title, a type and the details, logged against the open case.
@@ -19,7 +21,7 @@ import { CaseWorkspace } from '../../case-workspace';
  */
 @Component({
   selector: 'app-complaint-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity],
+  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -41,12 +43,12 @@ import { CaseWorkspace } from '../../case-workspace';
           </div>
           <div class="form-field">
             <label for="cp-type">Complaint Type <span class="required">*</span></label>
-            <select id="cp-type" formControlName="type">
-              <option [ngValue]="null" disabled>-- Select --</option>
-              @for (type of types; track type) {
-                <option [ngValue]="type">{{ type }}</option>
-              }
-            </select>
+            <app-select
+              inputId="cp-type"
+              formControlName="type"
+              placeholder="-- Select --"
+              [options]="types"
+            />
             @if (showError('type')) {
               <span class="field-error">Complaint type is required.</span>
             }
@@ -73,7 +75,7 @@ export class ComplaintDialog extends RecordDialog<CaseComplaintRecord> {
   private readonly session = inject(SessionService);
 
   protected readonly entityName = 'Complaint';
-  protected readonly types = COMPLAINT_TYPES;
+  protected readonly types = textOptions(COMPLAINT_TYPES);
   protected readonly source = {
     create: (record: CaseComplaintRecord) => from(this.workspace.addComplaint(record)),
     // Never used: a logged complaint opens read-only.

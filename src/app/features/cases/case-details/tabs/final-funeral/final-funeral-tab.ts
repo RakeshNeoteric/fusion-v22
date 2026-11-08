@@ -19,6 +19,7 @@ import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
 import { NO_PARLOUR, type ParlourDetails, parlourDetails } from './funeral-parlours';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** The saved funeral, or a new one; the case list may have loaded only the burial date. */
 function savedFuneral(details: CaseDetails): CaseFinalFuneralRecord {
@@ -60,7 +61,7 @@ function savedDetails(record: CaseFinalFuneralRecord): ParlourDetails {
  */
 @Component({
   selector: 'app-final-funeral-tab',
-  imports: [ReactiveFormsModule, PhoneField, DateField],
+  imports: [ReactiveFormsModule, PhoneField, DateField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => FinalFuneralTab) }],
   templateUrl: './final-funeral-tab.html',
@@ -90,6 +91,13 @@ export class FinalFuneralTab extends CaseTabForm {
     return name && !findProviderByName(this.parlours(), name) ? name : '';
   });
   private readonly savedParlour = signal('');
+  protected readonly parlourOptions = computed(() => {
+    const unlisted = this.unlisted();
+    const listed = this.parlours().map((parlour) => ({ value: parlour.name, label: parlour.name }));
+    return unlisted
+      ? [{ value: unlisted, label: `${unlisted} (no longer linked to the client)` }, ...listed]
+      : listed;
+  });
   private baseline = '';
 
   constructor() {

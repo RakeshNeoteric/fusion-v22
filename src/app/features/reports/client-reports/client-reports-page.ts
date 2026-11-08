@@ -40,6 +40,7 @@ import { type ReportTab, type TableTab, reportTabs } from './report-tabs';
 import { ClientReportExcel } from './export/client-report-excel';
 import { voucherRedemptions } from './export/voucher-redemptions';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
@@ -66,7 +67,7 @@ interface ShownReport {
  */
 @Component({
   selector: 'app-client-reports-page',
-  imports: [ReactiveFormsModule, FolderTabs, ReportTable, ReportDashboard, DateField],
+  imports: [ReactiveFormsModule, FolderTabs, ReportTable, ReportDashboard, DateField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './client-reports-page.html',
   styleUrl: './client-reports-page.css',
@@ -169,31 +170,31 @@ export class ClientReportsPage {
       return;
     }
     const { client: clientId, services: serviceIds, from, to } = this.form.getRawValue();
-    const client = this.clients().find((candidate) => candidate.id === clientId);
+    const client = this.clients().find((candidate) => candidate.value === clientId);
     const directory = this.directory();
     if (!client || !directory) return;
     this.viewing.set(true);
     try {
       const result = await firstValueFrom(
         this.reportApi.load({
-          clientId: client.id,
+          clientId: client.value,
           from: dayBoundary(from, false),
           to: dayBoundary(to, true),
           serviceIds,
         }),
       );
       this.report.set({
-        tabs: reportTabs(client, this.services(), serviceIds),
+        tabs: reportTabs({ id: client.value, name: client.label }, this.services(), serviceIds),
         cases: result.Data,
-        clientName: client.name,
+        clientName: client.label,
         from,
         to,
         period: `${displayDate(from)} - ${displayDate(to)}`,
-        layout: dashboardLayout(client.name),
+        layout: dashboardLayout(client.label),
         year: new Date().getFullYear(),
-        dashboard: clientDashboard(client.name, {
+        dashboard: clientDashboard(client.label, {
           dashboard: result.DashBoard,
-          service: (serviceId) => directory.reportService(client.id, serviceId),
+          service: (serviceId) => directory.reportService(client.value, serviceId),
         }),
       });
       this.selectedTab.set('dashboard');

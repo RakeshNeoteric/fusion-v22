@@ -19,6 +19,7 @@ import { ServiceTypeLookup } from '../../configuration/service-types/service-typ
 import { todayIsoDate } from '@shared/forms/dates/app-dates';
 import { displayDate } from '@shared/reference/date-time';
 import { ServiceProviderDialog } from './service-provider-dialog';
+import { chooseOption, dropdownDisabled, dropdownText } from '../../../../testing/form-controls';
 
 const CURRENT_USER = 5;
 
@@ -106,11 +107,7 @@ describe('ServiceProviderDialog', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = element<HTMLSelectElement>(`#${id}`);
-    const index = [...select.options].findIndex((option) => option.text.trim() === label);
-    if (index < 0) throw new Error(`no option ${label} in ${id}`);
-    select.selectedIndex = index;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -238,11 +235,11 @@ describe('ServiceProviderDialog', () => {
     await open(stored);
     await answer('sp-verified-label', 'Yes');
     expect(value('sp-verified-on')).toBe(displayDate(todayIsoDate()));
-    expect(element<HTMLSelectElement>('#sp-verified-by').selectedOptions[0]?.text).toBe('Me Self');
+    expect(dropdownText('sp-verified-by')).toBe('Me Self');
 
     await answer('sp-verified-label', 'No');
     expect(value('sp-verified-on')).toBe('');
-    expect(element<HTMLSelectElement>('#sp-verified-by').disabled).toBe(true);
+    expect(dropdownDisabled('sp-verified-by')).toBe(true);
 
     await choose('sp-authorised-by', 'Ann Opener');
     expect(value('sp-authorised-on')).toBe(displayDate(todayIsoDate()));

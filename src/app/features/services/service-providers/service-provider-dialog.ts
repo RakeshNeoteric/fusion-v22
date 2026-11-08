@@ -17,11 +17,12 @@ import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { DialogFiles } from '@shared/forms/record-dialog/dialog-files';
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
-import { PROVINCES } from '@shared/reference/provinces';
+import { PROVINCE_OPTIONS } from '@shared/reference/provinces';
 import { ServiceTypeLookup } from '../../configuration/service-types/service-type-lookup';
 import { type ContactRow, toContact, toContactRow } from './provider-contacts';
 import { todayIsoDate } from '@shared/forms/dates/app-dates';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 limits. */
 export const MAX_CONTACTS = 5;
@@ -61,7 +62,14 @@ function contactForm(row?: ContactRow): ContactForm {
  */
 @Component({
   selector: 'app-service-provider-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, MatButtonToggleModule, DateField],
+  imports: [
+    ReactiveFormsModule,
+    RecordDialogFrame,
+    PhoneField,
+    MatButtonToggleModule,
+    DateField,
+    SelectField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './service-provider-dialog.html',
   styleUrl: './service-provider-dialog.css',
@@ -69,7 +77,7 @@ function contactForm(row?: ContactRow): ContactForm {
 export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
   protected readonly source = inject(ServiceProviderApi);
   protected readonly entityName = 'Service Provider';
-  protected readonly provinces = PROVINCES;
+  protected readonly provinces = PROVINCE_OPTIONS;
   protected readonly maxContacts = MAX_CONTACTS;
 
   private readonly notify = inject(NotificationService);

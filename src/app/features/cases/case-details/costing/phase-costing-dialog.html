@@ -127,12 +127,13 @@
           </div>
           <div class="form-field">
             <label [for]="'pc-' + card.number + '-by'">Authorised By</label>
-            <select [id]="'pc-' + card.number + '-by'" formControlName="authorisedBy">
-              <option [ngValue]="null">Select user</option>
-              @for (user of userOptions(card); track user.id) {
-                <option [ngValue]="user.id">{{ user.label }}</option>
-              }
-            </select>
+            <app-select
+              [inputId]="'pc-' + card.number + '-by'"
+              formControlName="authorisedBy"
+              placeholder="Select user"
+              allowNone
+              [options]="userOptions(card)"
+            />
             @if (showError(card.form.controls.authorisedBy)) {
               <span class="field-error">Authorised By is required.</span>
             }

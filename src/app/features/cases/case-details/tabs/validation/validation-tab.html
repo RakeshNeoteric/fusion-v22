@@ -108,12 +108,13 @@
       </div>
       <div class="form-field">
         <label for="val-relationship">Relationship to Policyholder</label>
-        <select id="val-relationship" formControlName="relationship">
-          <option [ngValue]="null">Select Relationship</option>
-          @for (relationship of relationships; track relationship.value) {
-            <option [ngValue]="relationship.value">{{ relationship.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="val-relationship"
+          formControlName="relationship"
+          placeholder="Select Relationship"
+          allowNone
+          [options]="relationships"
+        />
       </div>
       <div class="form-field val-fetch">
         <button type="button" class="app-button" [disabled]="readOnly()" (click)="fetchPolicy()">
@@ -152,11 +153,7 @@
       </div>
       <div class="form-field">
         <label for="val-by">Validated By</label>
-        <select id="val-by" formControlName="validatedBy">
-          @for (user of userOptions(); track user.id) {
-            <option [ngValue]="user.id">{{ user.label }}</option>
-          }
-        </select>
+        <app-select inputId="val-by" formControlName="validatedBy" [options]="userOptions()" />
       </div>
     </div>
     <label class="switch-field">

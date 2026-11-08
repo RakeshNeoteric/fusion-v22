@@ -17,6 +17,8 @@ import { openCaseDialog } from '../lifecycle/open-case-dialog';
 import { CaseCommunication } from './case-communication';
 import { type HistoryRow, historyRows, historyTypes } from './history-rows';
 import { NoteDialog } from './note-dialog';
+import { SelectField, type SelectValue } from '@shared/forms/select-field/select-field';
+import { textOptions } from '@shared/forms/select-field/select-option';
 
 const ALL = '';
 
@@ -26,7 +28,7 @@ const ALL = '';
  */
 @Component({
   selector: 'app-contact-history-dialog',
-  imports: [RecordDialogFrame, CaseIdentity, LinkTable],
+  imports: [RecordDialogFrame, CaseIdentity, LinkTable, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './contact-history-dialog.html',
   styleUrl: './contact-history-dialog.css',
@@ -46,7 +48,7 @@ export class ContactHistoryDialog {
   private readonly all = computed(() =>
     historyRows(this.workspace.details()?.CaseHistory ?? [], (id) => this.users.displayName(id)),
   );
-  protected readonly types = computed(() => historyTypes(this.all()));
+  protected readonly typeOptions = computed(() => textOptions(historyTypes(this.all())));
   protected readonly rows = computed(() =>
     this.type() === ALL ? this.all() : this.all().filter((row) => row.type === this.type()),
   );
@@ -76,8 +78,8 @@ export class ContactHistoryDialog {
     }
   }
 
-  protected filter(event: Event): void {
-    this.type.set((event.target as HTMLSelectElement).value);
+  protected filter(type: SelectValue<string>): void {
+    this.type.set(typeof type === 'string' ? type : ALL);
     this.selected.set(null);
   }
 

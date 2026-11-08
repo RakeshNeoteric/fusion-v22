@@ -45,12 +45,12 @@
               </div>
               <div class="form-field">
                 <label for="cl-group">Client Group <span class="required">*</span></label>
-                <select id="cl-group" formControlName="ClientGroupId">
-                  <option [ngValue]="null" disabled>Select a client group</option>
-                  @for (group of clientGroups; track group.value) {
-                    <option [ngValue]="group.value">{{ group.label }}</option>
-                  }
-                </select>
+                <app-select
+                  inputId="cl-group"
+                  formControlName="ClientGroupId"
+                  placeholder="Select a client group"
+                  [options]="clientGroups"
+                />
                 @if (showError('ClientGroupId')) {
                   <span class="field-error">Client Group is required.</span>
                 }

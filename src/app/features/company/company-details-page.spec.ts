@@ -8,6 +8,7 @@ import { PermissionService } from '@core/permissions/permission.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { permission, role } from '../../../testing/app-init.fixtures';
 import { CompanyDetailsPage } from './company-details-page';
+import { chooseOption, dropdownDisabled, dropdownText } from '../../../testing/form-controls';
 
 const physical = (overrides: Partial<CompanyAddress> = {}): CompanyAddress => ({
   AddressId: 1,
@@ -90,11 +91,7 @@ describe('CompanyDetailsPage', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = field<HTMLSelectElement>(id);
-    const option = [...select.options].find((candidate) => candidate.text.trim() === label);
-    if (!option) throw new Error(`no option "${label}"`);
-    select.value = option.value;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -153,7 +150,7 @@ describe('CompanyDetailsPage', () => {
   it('only allows a province for a South African address', async () => {
     await render();
     await choose('cd-country', 'Botswana');
-    expect(field<HTMLSelectElement>('cd-province').disabled).toBe(true);
+    expect(dropdownDisabled('cd-province')).toBe(true);
     await clickText('Save');
     expect(savedAddresses()[0]).toMatchObject({ Country: 'BW', State: null });
   });
@@ -161,7 +158,7 @@ describe('CompanyDetailsPage', () => {
   it('creates both addresses for a new company, defaulting to South Africa', async () => {
     api.get.mockReturnValue(of([]));
     await render();
-    expect(field<HTMLSelectElement>('cd-country').value).not.toBe('');
+    expect(dropdownText('cd-country')).toBe('South Africa');
     expect(host.textContent).toContain('Save the company details to add a logo.');
     await fill('cd-name', 'New Co');
     await clickText('Save');

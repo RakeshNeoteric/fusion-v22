@@ -36,6 +36,7 @@ import {
 } from '../case-records';
 import { openFetchPolicy } from './fetch-policy-dialog';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 type MethodKey =
   | 'fusionDb'
@@ -79,7 +80,7 @@ interface ValidationRow {
  */
 @Component({
   selector: 'app-validation-tab',
-  imports: [ReactiveFormsModule, ChoiceToggle, LinkTable, DateField],
+  imports: [ReactiveFormsModule, ChoiceToggle, LinkTable, DateField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => ValidationTab) }],
   templateUrl: './validation-tab.html',

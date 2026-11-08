@@ -31,12 +31,15 @@
       <div class="form-row ch-filter">
         <div class="form-field">
           <label for="ch-type">Type</label>
-          <select id="ch-type" [value]="type()" (change)="filter($event)">
-            <option value="">All</option>
-            @for (option of types(); track option) {
-              <option [value]="option">{{ option }}</option>
-            }
-          </select>
+          <app-select
+            inputId="ch-type"
+            (changed)="filter($event)"
+            placeholder="All"
+            allowNone
+            noneValue=""
+            [options]="typeOptions()"
+            [value]="type()"
+          />
         </div>
       </div>
       <app-link-table

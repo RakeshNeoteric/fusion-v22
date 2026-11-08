@@ -7,22 +7,26 @@ import { type ServiceProvider, ServiceProviderApi } from '@api/services/service-
 import { isSelectable, statusLabel } from '@shared/reference/lookup-label';
 import { type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';
 import { ClientLinkTab } from './client-link-tab';
+import { optionsOf } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 client popup, Service Provider: the providers that work for this client. */
 @Component({
   selector: 'app-client-service-providers-tab',
-  imports: [ReactiveFormsModule, LinkTable],
+  imports: [ReactiveFormsModule, LinkTable, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
   template: `
     @if (canLink()) {
       <div class="link-bar">
-        <select id="csp-pick" aria-label="Service provider to link" [formControl]="picked">
-          <option [ngValue]="null">Link New Service Provider</option>
-          @for (provider of choices(); track provider.ServiceProviderId) {
-            <option [ngValue]="provider.ServiceProviderId">{{ provider.Name }}</option>
-          }
-        </select>
+        <app-select
+          inputId="csp-pick"
+          [formControl]="picked"
+          ariaLabel="Service provider to link"
+          placeholder="Link New Service Provider"
+          allowNone
+          [options]="choiceOptions()"
+        />
         <button
           type="button"
           class="link-add"
@@ -65,6 +69,14 @@ export class ClientServiceProvidersTab extends ClientLinkTab<ClientServiceProvid
       .filter((provider) => isSelectable(provider) && !linked.has(provider.ServiceProviderId))
       .sort((a, b) => a.Name.localeCompare(b.Name));
   });
+
+  protected readonly choiceOptions = computed(() =>
+    optionsOf(
+      this.choices(),
+      (provider) => provider.ServiceProviderId,
+      (provider) => provider.Name,
+    ),
+  );
 
   protected readonly columns: readonly LinkColumn<ClientServiceProviderLink>[] = [
     { header: 'Service Provider', text: (link) => this.name(link) },

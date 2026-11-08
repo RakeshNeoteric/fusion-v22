@@ -15,6 +15,8 @@ import {
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { QuestionTypeLookup } from '../rating-question-types/question-type-lookup';
 import { optionsFromTypeName } from './question-option-choices';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /**
  * v21 Rating Question Option popup. The answer is picked from the chosen question type's
@@ -22,7 +24,7 @@ import { optionsFromTypeName } from './question-option-choices';
  */
 @Component({
   selector: 'app-rating-question-option-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame],
+  imports: [ReactiveFormsModule, RecordDialogFrame, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -35,24 +37,24 @@ import { optionsFromTypeName } from './question-option-choices';
         <div class="form-row">
           <div class="form-field">
             <label for="rqo-type">Question Type <span class="required">*</span></label>
-            <select id="rqo-type" formControlName="RatingQuestionTypeId">
-              <option [ngValue]="null" disabled>Select Question Type</option>
-              @for (type of questionTypes; track type.value) {
-                <option [ngValue]="type.value">{{ type.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="rqo-type"
+              formControlName="RatingQuestionTypeId"
+              placeholder="Select Question Type"
+              [options]="questionTypes"
+            />
             @if (showError('RatingQuestionTypeId')) {
               <span class="field-error">Question Type is required.</span>
             }
           </div>
           <div class="form-field">
             <label for="rqo-option">Question Option <span class="required">*</span></label>
-            <select id="rqo-option" formControlName="QuestionOption">
-              <option value="" disabled>Select Option</option>
-              @for (option of optionChoices(); track option) {
-                <option [value]="option">{{ option }}</option>
-              }
-            </select>
+            <app-select
+              inputId="rqo-option"
+              formControlName="QuestionOption"
+              placeholder="Select Option"
+              [options]="optionChoiceOptions()"
+            />
             @if (form.controls.QuestionOption.hasError('noOptions') && selectedType() !== null) {
               <span class="field-error">This question type has no options configured.</span>
             } @else if (showError('QuestionOption')) {
@@ -146,6 +148,7 @@ export class RatingQuestionOptionDialog extends RecordDialog<RatingQuestionOptio
     }
     return choices;
   });
+  protected readonly optionChoiceOptions = computed(() => textOptions(this.optionChoices()));
 
   protected readonly form = new FormGroup({
     RatingQuestionTypeId: new FormControl<number | null>(

@@ -38,7 +38,7 @@ describe('CaseDirectory', () => {
   const directory = new CaseDirectory(INIT);
 
   it('offers active clients by name, and their active services', () => {
-    expect(directory.clientsForNewCase().map((client) => client.name)).toEqual([
+    expect(directory.clientsForNewCase().map((client) => client.label)).toEqual([
       'Acme',
       'Zulu Insure',
     ]);

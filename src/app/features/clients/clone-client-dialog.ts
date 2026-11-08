@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { type MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
@@ -6,6 +6,8 @@ import { type Client, ClientApi } from '@api/clients/client.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { requiredText } from '@shared/forms/validators';
+import { optionsOf } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /**
  * v21 "Clone (Copy) a Client": copies a client, with its services, documents and other
@@ -13,7 +15,7 @@ import { requiredText } from '@shared/forms/validators';
  */
 @Component({
   selector: 'app-clone-client-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame],
+  imports: [ReactiveFormsModule, RecordDialogFrame, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="clone()" novalidate>
@@ -26,14 +28,12 @@ import { requiredText } from '@shared/forms/validators';
         <div class="form-row">
           <div class="form-field">
             <label for="clone-source">Client <span class="required">*</span></label>
-            <select id="clone-source" formControlName="clientId">
-              <option [ngValue]="null" disabled>
-                {{ loading() ? 'Loading clients…' : 'Select Client' }}
-              </option>
-              @for (client of clients(); track client.ClientId) {
-                <option [ngValue]="client.ClientId">{{ client.ClientName }}</option>
-              }
-            </select>
+            <app-select
+              inputId="clone-source"
+              formControlName="clientId"
+              [placeholder]="loading() ? 'Loading clients…' : 'Select Client'"
+              [options]="clientOptions()"
+            />
             @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
               <span class="field-error">Client is required.</span>
             }
@@ -63,6 +63,14 @@ export class CloneClientDialog {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly clients = signal<readonly Client[]>([]);
+
+  protected readonly clientOptions = computed(() =>
+    optionsOf(
+      this.clients(),
+      (client) => client.ClientId,
+      (client) => client.ClientName,
+    ),
+  );
 
   protected readonly form = new FormGroup({
     clientId: new FormControl<number | null>(null, Validators.required),

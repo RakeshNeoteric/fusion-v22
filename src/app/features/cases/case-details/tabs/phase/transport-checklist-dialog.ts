@@ -10,6 +10,7 @@ import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { storedToE164 } from '@shared/reference/phone';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { TimeField } from '@shared/forms/time-field/time-field';
 
 /** v21 ways the deceased travel; the value is what is stored. */
 const TRANSPORT_METHODS: readonly Choice<string>[] = [
@@ -59,7 +60,7 @@ function newTransport(phase: CasePhaseRecord): CaseTransportRecord {
  */
 @Component({
   selector: 'app-transport-checklist-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle, PhoneField, DateField],
+  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle, PhoneField, DateField, TimeField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './transport-checklist-dialog.html',
   styleUrl: './transport-checklist-dialog.css',

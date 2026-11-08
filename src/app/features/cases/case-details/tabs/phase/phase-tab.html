@@ -14,19 +14,14 @@
     <div class="tab-grid tab-grid-4">
       <div class="form-field">
         <label for="ph-collect-provider">Service Provider</label>
-        <select
-          id="ph-collect-provider"
+        <app-select
+          inputId="ph-collect-provider"
           formControlName="collectProvider"
-          (change)="collectProviderChanged()"
-        >
-          <option [ngValue]="null">Select Service provider</option>
-          @for (id of unlisted(); track id) {
-            <option [ngValue]="id">Saved provider (no longer linked to the client)</option>
-          }
-          @for (provider of providers(); track provider.id) {
-            <option [ngValue]="provider.id">{{ provider.name }}</option>
-          }
-        </select>
+          placeholder="Select Service provider"
+          allowNone
+          [options]="providerOptions()"
+          (changed)="collectProviderChanged()"
+        />
       </div>
       <div class="form-field">
         <label for="ph-manager">Manager's Name</label>
@@ -89,19 +84,14 @@
     <div class="tab-grid tab-grid-4">
       <div class="form-field">
         <label for="ph-remove-provider">Service Provider</label>
-        <select
-          id="ph-remove-provider"
+        <app-select
+          inputId="ph-remove-provider"
           formControlName="removeProvider"
-          (change)="removeProviderChanged()"
-        >
-          <option [ngValue]="null">Select Service provider</option>
-          @for (id of unlisted(); track id) {
-            <option [ngValue]="id">Saved provider (no longer linked to the client)</option>
-          }
-          @for (provider of providers(); track provider.id) {
-            <option [ngValue]="provider.id">{{ provider.name }}</option>
-          }
-        </select>
+          placeholder="Select Service provider"
+          allowNone
+          [options]="providerOptions()"
+          (changed)="removeProviderChanged()"
+        />
       </div>
     </div>
     <div class="tab-grid tab-grid-4">

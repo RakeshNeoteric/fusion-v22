@@ -3,6 +3,7 @@ import type { CaseFinalFuneralRecord } from '@api/cases/case.api';
 import type { ClientWithLinks } from '@api/clients/client.api';
 import type { ServiceProvider } from '@api/services/service-provider.api';
 import { caseTabHarness, held } from '../testing/case-tab-harness';
+import { dropdownOptions } from '../../../../../../testing/form-controls';
 
 const provider = (id: number, name: string, extra: Partial<ServiceProvider> = {}) =>
   ({
@@ -62,11 +63,10 @@ const avs = (saved: CaseFinalFuneralRecord | null = null) =>
   held({ CaseClientServiceId: 6, CaseFinalFuneral: saved });
 
 describe('Final Funeral tab', () => {
-  const { api, clients, show, type, choose, openTab, value, element } = caseTabHarness();
+  const { api, clients, show, type, choose, openTab, value } = caseTabHarness();
 
   const saved = () => api.saveFinalFuneral.mock.calls[0]?.[0] as CaseFinalFuneralRecord;
-  const options = () =>
-    [...element<HTMLSelectElement>('#ff-parlour').options].map((option) => option.text.trim());
+  const options = () => dropdownOptions('ff-parlour');
 
   it('lists the client’s active parlours and keeps the saved details as saved', async () => {
     clients.get.mockReturnValue(
@@ -81,7 +81,7 @@ describe('Final Funeral tab', () => {
     await show(avs(funeral()));
     await openTab('Final Funeral');
     expect(clients.get).toHaveBeenCalledWith(1);
-    expect(options()).toEqual(['Select Service Provider', 'AVBOB East', 'Zulu Funerals']);
+    expect(await options()).toEqual(['Select Service Provider', 'AVBOB East', 'Zulu Funerals']);
     expect(value('ff-parlour')).toBe('AVBOB East');
     expect(value('ff-manager')).toBe('Old Manager');
     expect(value('ff-province')).toBe('Limpopo');
@@ -116,7 +116,7 @@ describe('Final Funeral tab', () => {
   it('keeps a parlour the client no longer has', async () => {
     await show(avs(funeral({ FuneralParlour: 'Gone Funerals' })));
     await openTab('Final Funeral');
-    expect(value('ff-parlour')).toBe('Gone Funerals');
+    expect(value('ff-parlour')).toBe('Gone Funerals (no longer linked to the client)');
     await choose('ff-parlour', 'Select Service Provider');
     expect(value('ff-manager')).toBe('');
     await choose('ff-parlour', 'Gone Funerals (no longer linked to the client)');

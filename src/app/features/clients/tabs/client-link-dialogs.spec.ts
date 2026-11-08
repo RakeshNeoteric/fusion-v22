@@ -17,6 +17,7 @@ import { permission, role } from '../../../../testing/app-init.fixtures';
 import { ClientDocumentDialog } from './client-document-dialog';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { LinkServiceDialog, isVoucherService } from './link-service-dialog';
+import { chooseOption, dropdownDisabled, dropdownOptions } from '../../../../testing/form-controls';
 
 const service = (id: number, name: string, extra: Partial<Service> = {}): Service => ({
   ServiceId: id,
@@ -81,11 +82,7 @@ describe('client link popups', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = element<HTMLSelectElement>(`#${id}`);
-    const index = [...select.options].findIndex((option) => option.text.trim() === label);
-    if (index < 0) throw new Error(`no option ${label} in ${id}`);
-    select.selectedIndex = index;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -159,9 +156,7 @@ describe('client link popups', () => {
     });
     await settle();
     expect(document.body.textContent).toContain('Add Client Service');
-    expect(
-      [...element<HTMLSelectElement>('#ls-service').options].map((o) => o.text.trim()),
-    ).toEqual(['Select Service', 'Repatriation', 'Groceries']);
+    expect(await dropdownOptions('ls-service')).toEqual(['Repatriation', 'Groceries']);
 
     await press('Save');
     expect(document.body.textContent).toContain('Transfer Number is required.');
@@ -258,10 +253,7 @@ describe('client link popups', () => {
     });
     await settle();
     expect(document.body.textContent).toContain('Add Client Document');
-    expect([...element<HTMLSelectElement>('#cd-type').options].map((o) => o.text.trim())).toEqual([
-      'Select Document Type',
-      'Contract',
-    ]);
+    expect(await dropdownOptions('cd-type')).toEqual(['Contract']);
     await choose('cd-type', 'Contract');
     const input = element<HTMLInputElement>('app-client-document-dialog input[type="file"]');
     Object.defineProperty(input, 'files', {
@@ -303,7 +295,7 @@ describe('client link popups', () => {
     await settle();
     expect(document.body.textContent).toContain('Edit Client Document');
     expect(document.body.textContent).toContain('old.pdf');
-    expect(element<HTMLSelectElement>('#cd-type').disabled).toBe(true);
+    expect(dropdownDisabled('cd-type')).toBe(true);
 
     await press('Remove');
     expect(files.delete).not.toHaveBeenCalled();

@@ -7,6 +7,8 @@ import { CaseApi, type CaseDetails } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import type { CaseDirectory } from '../case-setup';
+import { optionsOf } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /**
  * v21 "Create a New Call": pick a client, then one of its services; Next creates the case.
@@ -14,7 +16,7 @@ import type { CaseDirectory } from '../case-setup';
  */
 @Component({
   selector: 'app-new-case-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame],
+  imports: [ReactiveFormsModule, RecordDialogFrame, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="create()" novalidate>
@@ -27,24 +29,24 @@ import type { CaseDirectory } from '../case-setup';
         <div class="form-row">
           <div class="form-field">
             <label for="nc-client">Client Name <span class="required">*</span></label>
-            <select id="nc-client" formControlName="clientId">
-              <option [ngValue]="null" disabled>Select Client</option>
-              @for (client of clients; track client.id) {
-                <option [ngValue]="client.id">{{ client.name }}</option>
-              }
-            </select>
+            <app-select
+              inputId="nc-client"
+              formControlName="clientId"
+              placeholder="Select Client"
+              [options]="clients"
+            />
             @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
               <span class="field-error">Client Name is required.</span>
             }
           </div>
           <div class="form-field">
             <label for="nc-service">Service <span class="required">*</span></label>
-            <select id="nc-service" formControlName="serviceId">
-              <option [ngValue]="null" disabled>{{ servicePrompt() }}</option>
-              @for (service of services(); track service.ServiceId) {
-                <option [ngValue]="service.ServiceId">{{ service.ServiceName }}</option>
-              }
-            </select>
+            <app-select
+              inputId="nc-service"
+              formControlName="serviceId"
+              [placeholder]="servicePrompt()"
+              [options]="serviceChoices()"
+            />
             @if (form.controls.serviceId.invalid && form.controls.serviceId.touched) {
               <span class="field-error">Service is required.</span>
             }
@@ -75,6 +77,13 @@ export class NewCaseDialog {
     const id = this.clientId();
     return id === null ? [] : this.directory.servicesForNewCase(id);
   });
+  protected readonly serviceChoices = computed(() =>
+    optionsOf(
+      this.services(),
+      (service) => service.ServiceId,
+      (service) => service.ServiceName,
+    ),
+  );
   protected readonly servicePrompt = computed(() => {
     if (this.clientId() === null) return 'Select a client first';
     return this.services().length ? 'Select Service' : 'No services for this client';

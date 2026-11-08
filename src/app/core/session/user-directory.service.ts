@@ -1,9 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 import type { DirectoryUser, RoleUsers } from '@api/models/app.models';
+import type { SelectOption } from '@shared/forms/select-field/select-option';
 
-export interface UserOption {
-  readonly id: number;
-  readonly label: string;
+/** A user to pick: the id is stored; inactive and deleted users can no longer be picked. */
+export interface UserOption extends SelectOption<number> {
   readonly user: DirectoryUser;
 }
 
@@ -81,7 +81,7 @@ export class UserDirectoryService {
 
 function optionsOf(users: readonly DirectoryUser[], selectedUserId: number | null): UserOption[] {
   const options = users.filter(isSelectable).map(toOption);
-  if (selectedUserId !== null && !options.some((option) => option.id === selectedUserId)) {
+  if (selectedUserId !== null && !options.some((option) => option.value === selectedUserId)) {
     const selected = users.find((user) => user.AspNetUserId === selectedUserId);
     if (selected) options.unshift(toOption(selected));
   }
@@ -89,5 +89,10 @@ function optionsOf(users: readonly DirectoryUser[], selectedUserId: number | nul
 }
 
 function toOption(user: DirectoryUser): UserOption {
-  return { id: user.AspNetUserId, label: displayNameOf(user), user };
+  return {
+    value: user.AspNetUserId,
+    label: displayNameOf(user),
+    selectable: isSelectable(user),
+    user,
+  };
 }

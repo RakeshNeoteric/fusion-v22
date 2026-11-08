@@ -52,7 +52,7 @@ import { DATE_INPUT_FORMAT, fromIsoDate, toIsoDate } from '../dates/app-dates';
       (dateChange)="changed($event.value, $event.targetElement)"
       (blur)="onTouched()"
     />
-    <mat-datepicker-toggle class="date-field-toggle" [for]="picker" [disabled]="disabled()" />
+    <mat-datepicker-toggle class="picker-toggle" [for]="picker" [disabled]="disabled()" />
     <mat-datepicker #picker (closed)="onTouched()" />
   `,
 })

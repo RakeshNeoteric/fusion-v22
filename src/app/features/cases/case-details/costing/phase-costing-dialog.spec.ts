@@ -11,6 +11,7 @@ import {
 import { capturePdfs, pdfTexts } from '../../../../../testing/pdf';
 import { caseTabHarness, held } from '../tabs/testing/case-tab-harness';
 import { dispatchedMoment } from './transport-dialog';
+import { dropdownOptions } from '../../../../../testing/form-controls';
 
 /** Today as the popup stores it. */
 function today(): string {
@@ -149,9 +150,7 @@ describe('Phase Costing', () => {
     await type('pc-1-fixed', '900');
 
     await press('Transport');
-    expect(
-      [...element<HTMLSelectElement>('#tr-vehicle').options].map((o) => o.text.trim()),
-    ).toEqual(['Select Vehicle', 'CA 123']);
+    expect(await dropdownOptions('tr-vehicle')).toEqual(['Select Vehicle', 'CA 123']);
     await press('Save');
     expect(text()).toContain('Vehicle is required.');
     await choose('tr-vehicle', 'CA 123');

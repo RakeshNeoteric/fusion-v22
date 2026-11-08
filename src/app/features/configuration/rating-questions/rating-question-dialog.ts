@@ -4,11 +4,12 @@ import { type RatingQuestion, RatingQuestionApi } from '@api/config/rating-quest
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { requiredText } from '@shared/forms/validators';
 import { QuestionTypeLookup } from '../rating-question-types/question-type-lookup';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 Rating Question popup: the question, its type, and its rank (order asked). */
 @Component({
   selector: 'app-rating-question-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame],
+  imports: [ReactiveFormsModule, RecordDialogFrame, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -31,12 +32,12 @@ import { QuestionTypeLookup } from '../rating-question-types/question-type-looku
         <div class="form-row">
           <div class="form-field">
             <label for="rq-type">Question Type <span class="required">*</span></label>
-            <select id="rq-type" formControlName="RatingQuestionTypeId">
-              <option [ngValue]="null" disabled>-- Select Question Type --</option>
-              @for (type of questionTypes; track type.value) {
-                <option [ngValue]="type.value">{{ type.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="rq-type"
+              formControlName="RatingQuestionTypeId"
+              placeholder="-- Select Question Type --"
+              [options]="questionTypes"
+            />
             @if (showError('RatingQuestionTypeId')) {
               <span class="field-error">Question Type is required.</span>
             }

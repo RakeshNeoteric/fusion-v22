@@ -1,6 +1,8 @@
 import { CdkDrag, type CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, computed, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, model, signal } from '@angular/core';
 import { CASE_GROUPINGS, type CaseGroupKey } from './case-grouping';
+import { SelectField, type SelectValue } from '@shared/forms/select-field/select-field';
+import { optionsOf } from '@shared/forms/select-field/select-option';
 
 /**
  * v21 row group panel: the groupings in order, as chips that can be dragged into another
@@ -8,7 +10,7 @@ import { CASE_GROUPINGS, type CaseGroupKey } from './case-grouping';
  */
 @Component({
   selector: 'app-case-group-bar',
-  imports: [CdkDropList, CdkDrag],
+  imports: [CdkDropList, CdkDrag, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="gb" role="group" aria-label="Group cases by">
@@ -48,12 +50,15 @@ import { CASE_GROUPINGS, type CaseGroupKey } from './case-grouping';
         }
       </ol>
       @if (available().length) {
-        <select class="gb-add" aria-label="Add a grouping" (change)="add($event)">
-          <option value="" selected>Group by…</option>
-          @for (grouping of available(); track grouping.key) {
-            <option [value]="grouping.key">{{ grouping.label }}</option>
-          }
-        </select>
+        <app-select
+          class="gb-add"
+          inputId="gb-add"
+          ariaLabel="Add a grouping"
+          placeholder="Group by…"
+          [options]="available()"
+          [(value)]="picked"
+          (changed)="add($event)"
+        />
       }
     </div>
   `,
@@ -119,8 +124,7 @@ import { CASE_GROUPINGS, type CaseGroupKey } from './case-grouping';
     .gb-remove:hover {
       background: #ddd;
     }
-    .gb-remove:focus-visible,
-    .gb-add:focus-visible {
+    .gb-remove:focus-visible {
       outline: 2px solid var(--app-teal);
     }
     .gb-remove svg {
@@ -132,12 +136,7 @@ import { CASE_GROUPINGS, type CaseGroupKey } from './case-grouping';
       color: #666;
     }
     .gb-add {
-      height: 32px;
-      padding: 0 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-      font: inherit;
+      width: 200px;
     }
     .cdk-drag-preview {
       list-style: none;
@@ -154,8 +153,14 @@ export class CaseGroupBar {
     this.groupBy().flatMap((key) => CASE_GROUPINGS.filter((grouping) => grouping.key === key)),
   );
   protected readonly available = computed(() =>
-    CASE_GROUPINGS.filter((grouping) => !this.groupBy().includes(grouping.key)),
+    optionsOf(
+      CASE_GROUPINGS.filter((grouping) => !this.groupBy().includes(grouping.key)),
+      (grouping) => grouping.key,
+      (grouping) => grouping.label,
+    ),
   );
+  /** The list goes back to "Group by…" once a grouping is added. */
+  protected readonly picked = signal<SelectValue<CaseGroupKey>>(null);
 
   protected move(event: CdkDragDrop<unknown>): void {
     const keys = [...this.groupBy()];
@@ -167,10 +172,9 @@ export class CaseGroupBar {
     this.groupBy.set(this.groupBy().filter((candidate) => candidate !== key));
   }
 
-  protected add(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const grouping = CASE_GROUPINGS.find((candidate) => candidate.key === select.value);
-    select.value = '';
+  protected add(key: SelectValue<CaseGroupKey>): void {
+    this.picked.set(null);
+    const grouping = CASE_GROUPINGS.find((candidate) => candidate.key === key);
     if (grouping) this.groupBy.set([...this.groupBy(), grouping.key]);
   }
 }

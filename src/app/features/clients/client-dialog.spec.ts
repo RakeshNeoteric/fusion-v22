@@ -20,6 +20,7 @@ import { permission, role } from '../../../testing/app-init.fixtures';
 import { ClientGroupLookup } from '../configuration/claim-centres/client-group-lookup';
 import { ClientDialog } from './client-dialog';
 import { cloneClient } from './clone-client-dialog';
+import { chooseOption, dropdownOptions, dropdownText } from '../../../testing/form-controls';
 
 const stored = {
   ClientId: 7,
@@ -176,9 +177,7 @@ describe('ClientDialog', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = element<HTMLSelectElement>(`#${id}`);
-    select.selectedIndex = [...select.options].findIndex((o) => o.text.trim() === label);
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -456,9 +455,8 @@ describe('ClientDialog', () => {
     await open(stored);
     await tab('Rating Questions');
     expect(rowsText()).toEqual(['How was the service? 2']);
-    const picker = element<HTMLSelectElement>('#crq-pick');
     // Only active questions that are not linked yet.
-    expect([...picker.options].map((option) => option.text.trim())).toEqual([
+    expect(await dropdownOptions('crq-pick')).toEqual([
       'Link New Rating Questions',
       'Would you recommend us?',
     ]);
@@ -542,14 +540,9 @@ describe('cloneClient', () => {
   it('copies the chosen client under a suggested name', async () => {
     const cloned = cloneClient(TestBed.inject(MatDialog));
     await settle();
-    const select = document.querySelector<HTMLSelectElement>('#clone-source')!;
-    expect([...select.options].map((o) => o.text.trim())).toEqual([
-      'Select Client',
-      'Acme',
-      'Zulu',
-    ]);
-    select.selectedIndex = 1;
-    select.dispatchEvent(new Event('change'));
+    expect(dropdownText('clone-source')).toBe('Select Client');
+    expect(await dropdownOptions('clone-source')).toEqual(['Acme', 'Zulu']);
+    await chooseOption('clone-source', 'Acme');
     await settle();
     expect(document.querySelector<HTMLInputElement>('#clone-name')?.value).toBe('Acme (Copy)');
 

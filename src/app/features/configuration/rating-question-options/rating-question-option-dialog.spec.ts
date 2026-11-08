@@ -16,6 +16,7 @@ import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { permission, role } from '../../../../testing/app-init.fixtures';
 import { QuestionTypeLookup } from '../rating-question-types/question-type-lookup';
 import { RatingQuestionOptionDialog } from './rating-question-option-dialog';
+import { chooseOption, dropdownOptions, dropdownText } from '../../../../testing/form-controls';
 
 const type = (id: number, name: string, overrides: Partial<RatingQuestionType> = {}) => ({
   RatingQuestionTypeId: id,
@@ -66,18 +67,12 @@ describe('RatingQuestionOptionDialog', () => {
     return found;
   }
 
-  function optionTexts(id: string): string[] {
-    return [...element<HTMLSelectElement>(`#${id}`).options]
-      .filter((option) => !option.disabled)
-      .map((option) => option.text.trim());
+  async function optionTexts(id: string): Promise<string[]> {
+    return dropdownOptions(id);
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = element<HTMLSelectElement>(`#${id}`);
-    const option = [...select.options].find((candidate) => candidate.text.trim() === label);
-    if (!option) throw new Error(`no option "${label}"`);
-    select.value = option.value;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -129,10 +124,10 @@ describe('RatingQuestionOptionDialog', () => {
 
   it('offers the answers of the chosen type and picks its first one', async () => {
     await open(null);
-    expect(optionTexts('rqo-option')).toEqual([]);
+    expect(await optionTexts('rqo-option')).toEqual([]);
     await choose('rqo-type', 'Excellent, Good; Poor');
-    expect(optionTexts('rqo-option')).toEqual(['Excellent', 'Good', 'Poor']);
-    expect(element<HTMLSelectElement>('#rqo-option').value).toBe('Excellent');
+    expect(await optionTexts('rqo-option')).toEqual(['Excellent', 'Good', 'Poor']);
+    expect(dropdownText('rqo-option')).toBe('Excellent');
   });
 
   it('keeps the answer when the new type also has it', async () => {
@@ -140,7 +135,7 @@ describe('RatingQuestionOptionDialog', () => {
     await choose('rqo-type', 'Yes/No');
     await choose('rqo-option', 'No');
     await choose('rqo-type', 'Excellent, Good; Poor');
-    expect(element<HTMLSelectElement>('#rqo-option').value).toBe('Excellent');
+    expect(dropdownText('rqo-option')).toBe('Excellent');
   });
 
   it('only accepts a whole-number rating from 1 to 10, and saves it as a number', async () => {
@@ -168,7 +163,7 @@ describe('RatingQuestionOptionDialog', () => {
 
   it('keeps an older saved answer that is not in the type name', async () => {
     await open(saved);
-    expect(optionTexts('rqo-option')).toEqual(['Yes', 'No', 'Maybe']);
-    expect(element<HTMLSelectElement>('#rqo-option').value).toBe('Maybe');
+    expect(await optionTexts('rqo-option')).toEqual(['Yes', 'No', 'Maybe']);
+    expect(dropdownText('rqo-option')).toBe('Maybe');
   });
 });

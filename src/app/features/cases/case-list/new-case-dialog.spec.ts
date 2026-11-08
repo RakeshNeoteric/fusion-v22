@@ -8,6 +8,12 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { CASE_INIT, caseDetails } from '../../../../testing/case.fixtures';
 import { CaseDirectory } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
+import {
+  chooseOption,
+  dropdownDisabled,
+  dropdownOptions,
+  dropdownText,
+} from '../../../../testing/form-controls';
 
 describe('NewCaseDialog', () => {
   const api = { create: vi.fn() };
@@ -35,20 +41,8 @@ describe('NewCaseDialog', () => {
     await TestBed.inject(ApplicationRef).whenStable();
   }
 
-  function select(id: string): HTMLSelectElement {
-    const found = document.querySelector<HTMLSelectElement>(`#${id}`);
-    if (!found) throw new Error(`not found: ${id}`);
-    return found;
-  }
-
-  function options(id: string): string[] {
-    return [...select(id).options].map((option) => option.text.trim());
-  }
-
   async function choose(id: string, label: string): Promise<void> {
-    const element = select(id);
-    element.selectedIndex = [...element.options].findIndex((o) => o.text.trim() === label);
-    element.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -63,17 +57,19 @@ describe('NewCaseDialog', () => {
 
   it("offers active clients, then the chosen client's active services", async () => {
     expect(document.body.textContent).toContain('Create a New Call');
-    expect(options('nc-client')).toEqual(['Select Client', 'Acme', 'Zulu Insure']);
-    expect(select('nc-service').disabled).toBe(true);
-    expect(options('nc-service')).toEqual(['Select a client first']);
+    expect(dropdownText('nc-client')).toBe('Select Client');
+    expect(await dropdownOptions('nc-client')).toEqual(['Acme', 'Zulu Insure']);
+    expect(dropdownDisabled('nc-service')).toBe(true);
+    expect(dropdownText('nc-service')).toBe('Select a client first');
 
     await choose('nc-client', 'Acme');
-    expect(select('nc-service').disabled).toBe(true);
-    expect(options('nc-service')).toEqual(['No services for this client']);
+    expect(dropdownDisabled('nc-service')).toBe(true);
+    expect(dropdownText('nc-service')).toBe('No services for this client');
 
     await choose('nc-client', 'Zulu Insure');
-    expect(select('nc-service').disabled).toBe(false);
-    expect(options('nc-service')).toEqual(['Select Service', 'Funeral', 'Groceries']);
+    expect(dropdownDisabled('nc-service')).toBe(false);
+    expect(dropdownText('nc-service')).toBe('Select Service');
+    expect(await dropdownOptions('nc-service')).toEqual(['Funeral', 'Groceries']);
   });
 
   it('asks for both fields before creating', async () => {

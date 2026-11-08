@@ -10,6 +10,9 @@ import { ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { localParts } from '@shared/reference/date-time';
 import { DateField } from '@shared/forms/date-field/date-field';
+import type { SelectOption } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
+import { TimeField } from '@shared/forms/time-field/time-field';
 
 /** The phase's transport, as Phase Costing saves it. */
 export type TransportValues = Pick<
@@ -24,11 +27,6 @@ export interface TransportDialogData {
   readonly readOnly: boolean;
 }
 
-interface Option {
-  readonly id: number;
-  readonly label: string;
-}
-
 /**
  * Active records to pick from; the saved one stays listed, marked, when it is no longer active
  * (v21).
@@ -36,11 +34,12 @@ interface Option {
 function options(
   records: readonly { id: number; name: string; active: boolean; deleted: boolean }[],
   selected: number | null,
-): Option[] {
+): SelectOption<number>[] {
   return records
     .filter((record) => (record.active && !record.deleted) || record.id === selected)
     .map((record) => ({
-      id: record.id,
+      value: record.id,
+      selectable: record.active && !record.deleted,
       label: record.deleted
         ? `${record.name} (Deleted)`
         : record.active
@@ -65,7 +64,14 @@ export function dispatchedMoment(date: string, time: string): string | null {
  */
 @Component({
   selector: 'app-transport-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle, DateField],
+  imports: [
+    ReactiveFormsModule,
+    RecordDialogFrame,
+    ChoiceToggle,
+    DateField,
+    SelectField,
+    TimeField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="app-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -78,24 +84,26 @@ export function dispatchedMoment(date: string, time: string): string | null {
         <div class="form-row">
           <div class="form-field">
             <label for="tr-vehicle">Vehicle <span class="required">*</span></label>
-            <select id="tr-vehicle" formControlName="vehicle">
-              <option [ngValue]="null">Select Vehicle</option>
-              @for (vehicle of vehicles; track vehicle.id) {
-                <option [ngValue]="vehicle.id">{{ vehicle.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="tr-vehicle"
+              formControlName="vehicle"
+              placeholder="Select Vehicle"
+              allowNone
+              [options]="vehicles"
+            />
             @if (showError(form.controls.vehicle)) {
               <span class="field-error">Vehicle is required.</span>
             }
           </div>
           <div class="form-field">
             <label for="tr-operator">Transport Operator <span class="required">*</span></label>
-            <select id="tr-operator" formControlName="operator">
-              <option [ngValue]="null">Select Operator</option>
-              @for (operator of operators; track operator.id) {
-                <option [ngValue]="operator.id">{{ operator.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="tr-operator"
+              formControlName="operator"
+              placeholder="Select Operator"
+              allowNone
+              [options]="operators"
+            />
             @if (showError(form.controls.operator)) {
               <span class="field-error">Transport Operator is required.</span>
             }
@@ -116,7 +124,7 @@ export function dispatchedMoment(date: string, time: string): string | null {
           </div>
           <div class="form-field">
             <label for="tr-time">Time</label>
-            <input id="tr-time" type="time" formControlName="time" />
+            <app-time-field inputId="tr-time" formControlName="time" />
             @if (form.hasError('timeWithoutDate') && form.controls.time.dirty) {
               <span class="field-error">Enter the date the vehicle was dispatched.</span>
             }

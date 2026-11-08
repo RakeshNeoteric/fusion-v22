@@ -87,12 +87,12 @@
         </div>
         <div class="form-field">
           <label for="sp-province">Province <span class="required">*</span></label>
-          <select id="sp-province" formControlName="Province">
-            <option [ngValue]="null" disabled>Select Province</option>
-            @for (province of provinces; track province) {
-              <option [ngValue]="province">{{ province }}</option>
-            }
-          </select>
+          <app-select
+            inputId="sp-province"
+            formControlName="Province"
+            placeholder="Select Province"
+            [options]="provinces"
+          />
           @if (showError('Province')) {
             <span class="field-error">Province is required.</span>
           }
@@ -306,12 +306,12 @@
     <div class="sp-grid sp-trail">
       <div class="form-field">
         <label for="sp-type">Service Type <span class="required">*</span></label>
-        <select id="sp-type" formControlName="ServiceTypeCode">
-          <option [ngValue]="null" disabled>Select Service Type</option>
-          @for (type of serviceTypes; track type.value) {
-            <option [ngValue]="type.value">{{ type.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="sp-type"
+          formControlName="ServiceTypeCode"
+          placeholder="Select Service Type"
+          [options]="serviceTypes"
+        />
         @if (showError('ServiceTypeCode')) {
           <span class="field-error">Service Type is required.</span>
         }
@@ -357,12 +357,13 @@
       </div>
       <div class="form-field">
         <label for="sp-authorised-by">Authorised By</label>
-        <select id="sp-authorised-by" formControlName="AuthorisedBy">
-          <option [ngValue]="null">Select Person</option>
-          @for (user of authorisers; track user.id) {
-            <option [ngValue]="user.id">{{ user.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="sp-authorised-by"
+          formControlName="AuthorisedBy"
+          placeholder="Select Person"
+          allowNone
+          [options]="authorisers"
+        />
       </div>
       <div class="form-field">
         <label for="sp-opened-on">Date Opened</label>
@@ -391,12 +392,13 @@
       </div>
       <div class="form-field">
         <label for="sp-verified-by">Verified By</label>
-        <select id="sp-verified-by" formControlName="VerifiedBy">
-          <option [ngValue]="null">Select Person</option>
-          @for (user of verifiers; track user.id) {
-            <option [ngValue]="user.id">{{ user.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="sp-verified-by"
+          formControlName="VerifiedBy"
+          placeholder="Select Person"
+          allowNone
+          [options]="verifiers"
+        />
       </div>
       <div class="sp-spacer"></div>
 
@@ -416,12 +418,13 @@
       </div>
       <div class="form-field">
         <label for="sp-accredited-by">Accredited By</label>
-        <select id="sp-accredited-by" formControlName="AccreditedBy">
-          <option [ngValue]="null">Select Person</option>
-          @for (user of accreditors; track user.id) {
-            <option [ngValue]="user.id">{{ user.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="sp-accredited-by"
+          formControlName="AccreditedBy"
+          placeholder="Select Person"
+          allowNone
+          [options]="accreditors"
+        />
       </div>
       <div class="sp-spacer"></div>
 

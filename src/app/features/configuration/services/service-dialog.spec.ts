@@ -10,6 +10,7 @@ import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { permission, role } from '../../../../testing/app-init.fixtures';
 import { ServiceTypeLookup } from '../service-types/service-type-lookup';
 import { ServiceDialog } from './service-dialog';
+import { chooseOption } from '../../../../testing/form-controls';
 
 const type = (code: string, description: string): ServiceType => ({
   ServiceTypeId: code.length,
@@ -61,11 +62,7 @@ describe('ServiceDialog', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = find<HTMLSelectElement>(`#${id}`)!;
-    const option = [...select.options].find((candidate) => candidate.text.trim() === label);
-    if (!option) throw new Error(`no option "${label}"`);
-    select.value = option.value;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 

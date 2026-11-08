@@ -66,15 +66,15 @@
   font-size: 12px;
 }
 
-/* v21 date field (DateField): the text box with Material's calendar button inside it, right. */
-.app-form .date-field {
+/* Date and time fields (DateField, TimeField): the text box with Material's button inside it, right. */
+.app-form :is(.date-field, .time-field) {
   position: relative;
   display: block;
 }
-.app-form .date-field input {
+.app-form :is(.date-field, .time-field) input {
   padding-right: 44px;
 }
-.app-form .date-field-toggle {
+.app-form .picker-toggle {
   position: absolute;
   top: 50%;
   right: 2px;
@@ -89,6 +89,69 @@ html {
   --mat-datepicker-calendar-date-focus-state-background-color: rgb(5 185 188 / 20%);
   --mat-datepicker-calendar-date-hover-state-background-color: rgb(5 185 188 / 12%);
   --mat-datepicker-calendar-container-shape: 10px;
+}
+
+/*
+ * v21 dropdown list (SelectField): white, rounded, a soft shadow, roomy options split by faint
+ * lines, the hovered and chosen ones in light teal. Material puts the list in an overlay, so it is
+ * styled here, not in the component.
+ */
+.app-select-panel {
+  --mat-select-panel-background-color: #fff;
+  --mat-select-container-elevation-shadow: 0 6px 12px rgb(0 0 0 / 15%);
+  --mat-option-label-text-font: inherit;
+  --mat-option-label-text-size: 14px;
+  --mat-option-label-text-weight: 500;
+  --mat-option-label-text-tracking: normal;
+  --mat-option-label-text-color: #1f1f1f;
+  --mat-option-hover-state-layer-color: rgb(5 185 188 / 10%);
+  --mat-option-focus-state-layer-color: rgb(5 185 188 / 14%);
+  --mat-option-selected-state-layer-color: rgb(5 185 188 / 18%);
+  --mat-option-selected-state-label-text-color: #1f1f1f;
+  --mat-pseudo-checkbox-full-selected-icon-color: var(--app-teal);
+
+  margin-top: 4px;
+  padding: 0 !important;
+  border: 1px solid #ccc;
+  border-radius: 10px !important;
+}
+.app-select-panel .mat-mdc-option {
+  min-height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+.app-select-panel .mat-mdc-option:last-child {
+  border-bottom: none;
+}
+.app-select-panel .app-select-none {
+  color: #757575;
+}
+.app-select-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fff;
+}
+.app-select-search input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.app-select-search input:focus {
+  border-color: #000;
+}
+.app-select-empty {
+  margin: 0;
+  padding: 12px;
+  color: #757575;
+  font-size: 14px;
 }
 
 /* v21 "Is Active?" switch: 36×20, teal when on. */

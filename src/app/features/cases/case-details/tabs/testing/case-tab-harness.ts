@@ -34,6 +34,11 @@ import { permission, role } from '../../../../../../testing/app-init.fixtures';
 import { CASE_INIT, caseDetails, casePhase } from '../../../../../../testing/case.fixtures';
 import { CASES_PERMISSION } from '../../../case-setup';
 import { CaseDetailsPage } from '../../case-details-page';
+import {
+  chooseOption,
+  dropdownDisabled,
+  dropdownText,
+} from '../../../../../../testing/form-controls';
 
 const user = (id: number, first: string, last: string, email: string): DirectoryUser => ({
   AspNetUserId: id,
@@ -260,9 +265,7 @@ export function caseTabHarness() {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = element<HTMLSelectElement>(`#${id}`);
-    select.selectedIndex = [...select.options].findIndex((o) => o.text.trim() === label);
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -316,8 +319,15 @@ export function caseTabHarness() {
 
   const selectedTab = () =>
     document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim();
-  const value = (id: string) => element<HTMLInputElement | HTMLSelectElement>(`#${id}`).value;
-  const disabled = (id: string) => element<HTMLInputElement>(`#${id}`).disabled;
+  /** A box's text, or what a dropdown shows. */
+  const value = (id: string) => {
+    const found = element<HTMLInputElement>(`#${id}`);
+    return found.tagName === 'MAT-SELECT' ? dropdownText(id) : found.value;
+  };
+  const disabled = (id: string) => {
+    const found = element<HTMLInputElement>(`#${id}`);
+    return found.tagName === 'MAT-SELECT' ? dropdownDisabled(id) : found.disabled;
+  };
   const text = () => document.body.textContent ?? '';
 
   return {

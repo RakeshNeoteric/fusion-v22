@@ -32,7 +32,7 @@ describe('Deceased Info tab', () => {
     expect(disabled('di-passport')).toBe(false);
     expect(disabled('di-birth')).toBe(true);
     expect(value('di-age')).toBe('46');
-    expect(value('di-relationship')).toContain('OTHER');
+    expect(value('di-relationship')).toBe('Other');
   });
 
   it('takes the date of birth and sex from the ID number and saves the whole record', async () => {

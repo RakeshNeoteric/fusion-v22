@@ -53,12 +53,13 @@
             </div>
             <div class="form-field">
               <label for="cd-province">Province</label>
-              <select id="cd-province" formControlName="province">
-                <option [ngValue]="null">Select Province</option>
-                @for (province of provinces; track province) {
-                  <option [ngValue]="province">{{ province }}</option>
-                }
-              </select>
+              <app-select
+                inputId="cd-province"
+                formControlName="province"
+                placeholder="Select Province"
+                allowNone
+                [options]="provinces"
+              />
             </div>
           </div>
           <div class="form-row" formGroupName="physical">
@@ -68,12 +69,13 @@
             </div>
             <div class="form-field">
               <label for="cd-country">Country</label>
-              <select id="cd-country" formControlName="country">
-                <option [ngValue]="null">Select Country</option>
-                @for (country of countries; track country.code) {
-                  <option [ngValue]="country.code">{{ country.label }}</option>
-                }
-              </select>
+              <app-select
+                inputId="cd-country"
+                formControlName="country"
+                placeholder="Select Country"
+                allowNone
+                [options]="countries"
+              />
             </div>
           </div>
         </fieldset>
@@ -106,12 +108,13 @@
             </div>
             <div class="form-field">
               <label for="cd-postal-province">Province</label>
-              <select id="cd-postal-province" formControlName="province">
-                <option [ngValue]="null">Select Province</option>
-                @for (province of provinces; track province) {
-                  <option [ngValue]="province">{{ province }}</option>
-                }
-              </select>
+              <app-select
+                inputId="cd-postal-province"
+                formControlName="province"
+                placeholder="Select Province"
+                allowNone
+                [options]="provinces"
+              />
             </div>
             <div class="form-field">
               <label for="cd-postal-postcode">Post Code</label>
@@ -121,12 +124,13 @@
           <div class="form-row" formGroupName="postal">
             <div class="form-field">
               <label for="cd-postal-country">Country</label>
-              <select id="cd-postal-country" formControlName="country">
-                <option [ngValue]="null">Select Country</option>
-                @for (country of countries; track country.code) {
-                  <option [ngValue]="country.code">{{ country.label }}</option>
-                }
-              </select>
+              <app-select
+                inputId="cd-postal-country"
+                formControlName="country"
+                placeholder="Select Country"
+                allowNone
+                [options]="countries"
+              />
             </div>
           </div>
         </fieldset>

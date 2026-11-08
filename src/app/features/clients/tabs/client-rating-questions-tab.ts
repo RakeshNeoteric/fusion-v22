@@ -7,22 +7,26 @@ import { type RatingQuestion, RatingQuestionApi } from '@api/config/rating-quest
 import { isSelectable, statusLabel } from '@shared/reference/lookup-label';
 import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
 import { ClientLinkTab } from './client-link-tab';
+import { optionsOf } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 client popup, Rating Questions: the questions asked on this client's cases, in rank order. */
 @Component({
   selector: 'app-client-rating-questions-tab',
-  imports: [ReactiveFormsModule, LinkTable, LinkCell],
+  imports: [ReactiveFormsModule, LinkTable, LinkCell, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
   template: `
     @if (canLink()) {
       <div class="link-bar">
-        <select id="crq-pick" aria-label="Rating question to link" [formControl]="picked">
-          <option [ngValue]="null">Link New Rating Questions</option>
-          @for (question of choices(); track question.RatingQuestionId) {
-            <option [ngValue]="question.RatingQuestionId">{{ question.Question }}</option>
-          }
-        </select>
+        <app-select
+          inputId="crq-pick"
+          [formControl]="picked"
+          ariaLabel="Rating question to link"
+          placeholder="Link New Rating Questions"
+          allowNone
+          [options]="choiceOptions()"
+        />
         <button
           type="button"
           class="link-add"
@@ -83,6 +87,14 @@ export class ClientRatingQuestionsTab extends ClientLinkTab<ClientRatingQuestion
   protected readonly rows = computed(() =>
     [...this.links()].sort(
       (a, b) => a.ListRank - b.ListRank || this.name(a).localeCompare(this.name(b)),
+    ),
+  );
+
+  protected readonly choiceOptions = computed(() =>
+    optionsOf(
+      this.choices(),
+      (question) => question.RatingQuestionId,
+      (question) => question.Question,
     ),
   );
 

@@ -21,6 +21,8 @@ import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/rec
 import { requiredText } from '@shared/forms/validators';
 import { ServiceTypeLookup } from '../service-types/service-type-lookup';
 import { noteText } from '@shared/forms/note-text';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 editor toolbar. */
 const NOTE_TOOLBAR = [
@@ -42,7 +44,7 @@ const NOTE_TOOLBAR = [
  */
 @Component({
   selector: 'app-service-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent],
+  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
@@ -71,12 +73,12 @@ const NOTE_TOOLBAR = [
           </div>
           <div class="form-field">
             <label for="sv-type">Service Type <span class="required">*</span></label>
-            <select id="sv-type" formControlName="ServiceTypeCode">
-              <option [ngValue]="null" disabled>Select Service Type</option>
-              @for (type of serviceTypes; track type.value) {
-                <option [ngValue]="type.value">{{ type.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="sv-type"
+              formControlName="ServiceTypeCode"
+              placeholder="Select Service Type"
+              [options]="serviceTypes"
+            />
             @if (showError('ServiceTypeCode')) {
               <span class="field-error">Service Type is required.</span>
             }
@@ -89,12 +91,13 @@ const NOTE_TOOLBAR = [
                   <span class="required">*</span>
                 }
               </label>
-              <select id="sv-provider" formControlName="VoucherProvider">
-                <option [ngValue]="null">Select provider</option>
-                @for (provider of voucherProviders; track provider) {
-                  <option [ngValue]="provider">{{ provider }}</option>
-                }
-              </select>
+              <app-select
+                inputId="sv-provider"
+                formControlName="VoucherProvider"
+                placeholder="Select provider"
+                allowNone
+                [options]="voucherProviders"
+              />
               @if (showError('VoucherProvider')) {
                 <span class="field-error">Voucher Provider is required.</span>
               }
@@ -158,7 +161,7 @@ export class ServiceDialog extends RecordDialog<Service> {
   protected readonly source = inject(ServiceApi);
   protected readonly entityName = 'Service';
   protected readonly editorModules = { toolbar: NOTE_TOOLBAR };
-  protected readonly voucherProviders = VOUCHER_PROVIDERS;
+  protected readonly voucherProviders = textOptions(VOUCHER_PROVIDERS);
 
   private readonly record = this.data.record;
 

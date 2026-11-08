@@ -12,6 +12,7 @@ import { PermissionService } from '@core/permissions/permission.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { permission, role } from '../../../../testing/app-init.fixtures';
 import { ClaimCentresPage } from './claim-centres-page';
+import { chooseOption, dropdownOptions, dropdownText } from '../../../../testing/form-controls';
 
 /** The page as the shell shows it: the title bar (with "+ New") above the page. */
 @Component({
@@ -102,11 +103,7 @@ describe('ClaimCentresPage', () => {
   }
 
   async function choose(id: string, label: string): Promise<void> {
-    const select = field<HTMLSelectElement>(id);
-    const option = [...select.options].find((candidate) => candidate.text.trim() === label);
-    if (!option) throw new Error(`no option "${label}" in #${id}`);
-    select.value = option.value;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(id, label);
     await settle();
   }
 
@@ -181,8 +178,8 @@ describe('ClaimCentresPage', () => {
     expect(dialog()?.textContent).toContain('Create New Claim Centre');
 
     // Only active client groups can be picked.
-    const groupLabels = [...field<HTMLSelectElement>('cc-group').options].map((o) => o.text.trim());
-    expect(groupLabels).toEqual(['-- Select Client Group --', 'Group 1', 'Group 2']);
+    expect(dropdownText('cc-group')).toBe('-- Select Client Group --');
+    expect(await dropdownOptions('cc-group')).toEqual(['Group 1', 'Group 2']);
 
     await click(dialogButton('Save'));
     expect(notify.warning).toHaveBeenCalledWith('Please fill in all required fields.');
@@ -217,8 +214,7 @@ describe('ClaimCentresPage', () => {
     await click(await viewButton('id:2'));
     expect(dialog()?.textContent).toContain('Edit Claim Centre');
     expect(field<HTMLInputElement>('cc-name').value).toBe('Centre 2');
-    const selected = field<HTMLSelectElement>('cc-group');
-    expect(selected.options[selected.selectedIndex]?.text.trim()).toBe('Group 3 (Inactive)');
+    expect(dropdownText('cc-group')).toBe('Group 3 (Inactive)');
 
     await click(dialogButton('Update'));
     expect(notify.info).toHaveBeenCalledWith('No changes to save.');

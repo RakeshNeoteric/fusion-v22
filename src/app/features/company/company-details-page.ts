@@ -21,11 +21,12 @@ import { PermissionService } from '@core/permissions/permission.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { EMAIL_PATTERN } from '@shared/forms/validators';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
-import { COUNTRIES } from '@shared/reference/countries';
-import { PROVINCES } from '@shared/reference/provinces';
+import { COUNTRY_OPTIONS } from '@shared/reference/countries';
+import { PROVINCE_OPTIONS } from '@shared/reference/provinces';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { ImagePicker } from '@shared/ui/image-picker/image-picker';
 import { StoredImage } from '@shared/ui/image-picker/stored-image';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 const PERMISSION = 'CMP';
 const DEFAULT_LOGO = '/images/building.jpg';
@@ -51,7 +52,7 @@ type AddressForm = ReturnType<typeof addressGroup>;
  */
 @Component({
   selector: 'app-company-details-page',
-  imports: [ReactiveFormsModule, MatButtonToggleModule, PhoneField, ImagePicker],
+  imports: [ReactiveFormsModule, MatButtonToggleModule, PhoneField, ImagePicker, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './company-details-page.html',
   styleUrl: './company-details-page.css',
@@ -64,8 +65,8 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
   private readonly confirm = inject(ConfirmService);
 
   protected readonly canEdit = inject(PermissionService).canEdit(PERMISSION);
-  protected readonly provinces = PROVINCES;
-  protected readonly countries = COUNTRIES;
+  protected readonly provinces = PROVINCE_OPTIONS;
+  protected readonly countries = COUNTRY_OPTIONS;
 
   protected readonly status = signal<LoadStatus>('loading');
   protected readonly saving = signal(false);

@@ -2,12 +2,13 @@
   <div class="tab-grid tab-grid-3">
     <div class="form-field">
       <label for="cod-cause">Cause of Death <span class="required">*</span></label>
-      <select id="cod-cause" formControlName="cause">
-        <option [ngValue]="null">Select cause of death</option>
-        @for (cause of causes; track cause) {
-          <option [ngValue]="cause">{{ cause }}</option>
-        }
-      </select>
+      <app-select
+        inputId="cod-cause"
+        formControlName="cause"
+        placeholder="Select cause of death"
+        allowNone
+        [options]="causes"
+      />
       @if (showError(controls.cause)) {
         <span class="field-error">Cause of Death is required.</span>
       }
@@ -68,7 +69,7 @@
       </div>
       <div class="form-field">
         <label for="cod-release-time">Release Time</label>
-        <input id="cod-release-time" type="time" formControlName="releaseTime" />
+        <app-time-field inputId="cod-release-time" formControlName="releaseTime" />
       </div>
     </div>
   }

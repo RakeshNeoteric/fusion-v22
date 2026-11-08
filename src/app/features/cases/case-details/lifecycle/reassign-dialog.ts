@@ -8,6 +8,7 @@ import { displayDate, localParts } from '@shared/reference/date-time';
 import { CaseIdentity } from '../case-identity';
 import { CaseWorkspace } from '../case-workspace';
 import { CaseLifecycle } from './case-lifecycle';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 role whose users can run a case. */
 const CONTROLLER_ROLE = 'Case Controller';
@@ -18,7 +19,7 @@ const CONTROLLER_ROLE = 'Case Controller';
  */
 @Component({
   selector: 'app-reassign-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity],
+  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="assign()" novalidate>
@@ -44,12 +45,12 @@ const CONTROLLER_ROLE = 'Case Controller';
             <label for="ra-controller">
               Re-Assign Controller <span class="required">*</span>
             </label>
-            <select id="ra-controller" formControlName="controller">
-              <option [ngValue]="null" disabled>-- Select --</option>
-              @for (option of options(); track option.id) {
-                <option [ngValue]="option.id">{{ option.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="ra-controller"
+              formControlName="controller"
+              placeholder="-- Select --"
+              [options]="options()"
+            />
             @if (controller.touched && controller.invalid) {
               <span class="field-error">Select the case controller.</span>
             }

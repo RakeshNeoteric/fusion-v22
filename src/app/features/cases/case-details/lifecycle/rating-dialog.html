@@ -38,17 +38,16 @@
             [nameOf]="rowName"
           >
             <ng-template appLinkCell="Answer" let-row>
-              <select
-                class="cr-answer"
-                [id]="'cr-answer-' + row.linkId"
-                [attr.aria-label]="'Answer to ' + row.question"
+              <app-select
+                [inputId]="'cr-answer-' + row.linkId"
                 [formControl]="control(row)"
-              >
-                <option value="">-- Select --</option>
-                @for (option of row.options; track option) {
-                  <option [value]="option">{{ option }}</option>
-                }
-              </select>
+                [ariaLabel]="'Answer to ' + row.question"
+                class="cr-answer"
+                placeholder="-- Select --"
+                allowNone
+                noneValue=""
+                [options]="choices().get(row.linkId) ?? []"
+              />
             </ng-template>
           </app-link-table>
           <p class="cr-progress" id="cr-progress">

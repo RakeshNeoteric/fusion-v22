@@ -10,6 +10,8 @@ import { CaseIdentity } from '../case-identity';
 import { CaseWorkspace } from '../case-workspace';
 import { CaseHeldElsewhereError, CaseLifecycle } from './case-lifecycle';
 import { type RatingQuestionRow, ratingProgress } from './rating-rules';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** What the popup is opened with: the questions when the opener has loaded them already. */
 export interface RatingDialogData {
@@ -27,7 +29,7 @@ type LoadState = 'loading' | 'ready' | 'failed';
  */
 @Component({
   selector: 'app-rating-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, LinkTable, LinkCell],
+  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, LinkTable, LinkCell, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rating-dialog.html',
   styleUrl: './rating-dialog.css',
@@ -50,6 +52,10 @@ export class RatingDialog {
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly rows = signal<readonly RatingQuestionRow[]>([]);
+  /** Each question's answers as dropdown choices. */
+  protected readonly choices = computed(
+    () => new Map(this.rows().map((row) => [row.linkId, textOptions(row.options)])),
+  );
   protected readonly answers = new FormRecord<FormControl<string>>({});
   private readonly answerValues = toSignal(this.answers.valueChanges, { initialValue: {} });
   protected readonly progress = computed(() => {

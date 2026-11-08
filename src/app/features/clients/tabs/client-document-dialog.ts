@@ -15,6 +15,7 @@ import { useLazyStylesheet } from '@shared/forms/lazy-stylesheet';
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 editor toolbar, without media: the note is stored as plain text. */
 const NOTE_TOOLBAR = [
@@ -34,7 +35,7 @@ const ACCEPTED_FILES = '.pdf,image/*';
  */
 @Component({
   selector: 'app-client-document-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent],
+  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
@@ -50,12 +51,12 @@ const ACCEPTED_FILES = '.pdf,image/*';
         <div class="form-row">
           <div class="form-field">
             <label for="cd-type">Document Type <span class="required">*</span></label>
-            <select id="cd-type" formControlName="DocumentId">
-              <option [ngValue]="null" disabled>Select Document Type</option>
-              @for (option of documentTypes; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="cd-type"
+              formControlName="DocumentId"
+              placeholder="Select Document Type"
+              [options]="documentTypes"
+            />
             @if (showError('DocumentId')) {
               <span class="field-error">Document Type is required.</span>
             }

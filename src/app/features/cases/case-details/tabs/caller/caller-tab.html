@@ -2,37 +2,32 @@
   <div class="tab-grid tab-grid-3">
     <div class="form-field">
       <label for="caller-client">Client <span class="required">*</span></label>
-      <select id="caller-client" formControlName="clientId" (change)="clientChanged()">
-        <option [ngValue]="null" disabled>Select Client</option>
-        @for (client of clientOptions(); track client.id) {
-          <option [ngValue]="client.id">{{ client.name }}</option>
-        }
-      </select>
+      <app-select
+        inputId="caller-client"
+        formControlName="clientId"
+        (changed)="clientChanged()"
+        placeholder="Select Client"
+        [options]="clientOptions()"
+      />
       @if (showError(form.controls.clientId)) {
         <span class="field-error">Client is required.</span>
       }
     </div>
     <div class="form-field">
       <label for="caller-service">Service <span class="required">*</span></label>
-      <select id="caller-service" formControlName="serviceId">
-        <option [ngValue]="null" disabled>
-          {{ serviceOptions().length ? 'Select Service' : 'No services for this client' }}
-        </option>
-        @for (service of serviceOptions(); track service.id) {
-          <option [ngValue]="service.id">{{ service.name }}</option>
-        }
-      </select>
+      <app-select
+        inputId="caller-service"
+        formControlName="serviceId"
+        [placeholder]="serviceOptions().length ? 'Select Service' : 'No services for this client'"
+        [options]="serviceOptions()"
+      />
       @if (showError(form.controls.serviceId)) {
         <span class="field-error">Service is required.</span>
       }
     </div>
     <div class="form-field">
       <label for="caller-language">Preferred Language</label>
-      <select id="caller-language" formControlName="language">
-        @for (language of languages; track language) {
-          <option [ngValue]="language">{{ language }}</option>
-        }
-      </select>
+      <app-select inputId="caller-language" formControlName="language" [options]="languages" />
     </div>
   </div>
 
@@ -83,12 +78,13 @@
         </div>
         <div class="form-field">
           <label [for]="'caller-relationship-' + i">Relationship</label>
-          <select formControlName="relationship" [id]="'caller-relationship-' + i">
-            <option [ngValue]="null">Select Relationship</option>
-            @for (relationship of relationships; track relationship.value) {
-              <option [ngValue]="relationship.value">{{ relationship.label }}</option>
-            }
-          </select>
+          <app-select
+            [inputId]="'caller-relationship-' + i"
+            formControlName="relationship"
+            placeholder="Select Relationship"
+            allowNone
+            [options]="relationships"
+          />
         </div>
         @if (i === 0) {
           <button
@@ -128,21 +124,23 @@
     </div>
     <div class="form-field">
       <label for="caller-controller">Case Controller</label>
-      <select id="caller-controller" formControlName="controllerId">
-        <option [ngValue]="null">Select Case Controller</option>
-        @for (user of controllerOptions(); track user.id) {
-          <option [ngValue]="user.id">{{ user.label }}</option>
-        }
-      </select>
+      <app-select
+        inputId="caller-controller"
+        formControlName="controllerId"
+        placeholder="Select Case Controller"
+        allowNone
+        [options]="controllerOptions()"
+      />
     </div>
     <div class="form-field">
       <label for="caller-agent">Agent</label>
-      <select id="caller-agent" formControlName="agentId">
-        <option [ngValue]="null">Select Agent</option>
-        @for (user of agentOptions(); track user.id) {
-          <option [ngValue]="user.id">{{ user.label }}</option>
-        }
-      </select>
+      <app-select
+        inputId="caller-agent"
+        formControlName="agentId"
+        placeholder="Select Agent"
+        allowNone
+        [options]="agentOptions()"
+      />
     </div>
     <div class="form-field">
       <label for="caller-open-date">Call Open Date</label>

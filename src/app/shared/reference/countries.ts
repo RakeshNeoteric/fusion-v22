@@ -1,3 +1,5 @@
+import { optionsOf, type SelectOption } from '@shared/forms/select-field/select-option';
+
 /** Countries offered for a branch; the backend stores the ISO code (e.g. `ZA`). Same list as v21. */
 export const COUNTRIES: readonly { readonly code: string; readonly label: string }[] = [
   { code: 'AF', label: 'Afghanistan' },
@@ -251,3 +253,10 @@ export function countryLabel(code: string | null | undefined): string {
   if (!code) return '';
   return COUNTRIES.find((country) => country.code === code)?.label ?? code;
 }
+
+/** {@link COUNTRIES} as dropdown choices, storing the code. */
+export const COUNTRY_OPTIONS: readonly SelectOption<string>[] = optionsOf(
+  COUNTRIES,
+  (country) => country.code,
+  (country) => country.label,
+);

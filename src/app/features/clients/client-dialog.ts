@@ -30,6 +30,7 @@ import { ClientDocumentsTab } from './tabs/client-documents-tab';
 import { ClientRatingQuestionsTab } from './tabs/client-rating-questions-tab';
 import { ClientServiceProvidersTab } from './tabs/client-service-providers-tab';
 import { ClientServicesTab } from './tabs/client-services-tab';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 const PERMISSION = 'CLIENT';
 
@@ -166,6 +167,7 @@ const NEW_CLIENT: Client = {
     ClientRatingQuestionsTab,
     ClientDocumentsTab,
     ClientServiceProvidersTab,
+    SelectField,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './client-dialog.html',

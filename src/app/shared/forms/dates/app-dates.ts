@@ -11,10 +11,13 @@ import {
 /** How a date is typed and shown in a date field (v21: UK format). */
 export const DATE_INPUT_FORMAT = 'DD/MM/YYYY';
 
+/** Times are typed as `14:30` (or `2:30 pm`) and shown in the UK's 24-hour clock. */
 const APP_DATE_FORMATS: MatDateFormats = {
-  parse: { dateInput: DATE_INPUT_FORMAT },
+  parse: { dateInput: DATE_INPUT_FORMAT, timeInput: null },
   display: { ...MAT_NATIVE_DATE_FORMATS.display, dateInput: DATE_INPUT_FORMAT },
 };
+
+const TIME = /^(\d{2}):(\d{2})/;
 
 /** `07/11/2026` (also `7-11-2026`, `7.11.2026`) or `2026-11-07`. */
 const DAY_FIRST = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/;
@@ -63,7 +66,7 @@ export class AppDateAdapter extends NativeDateAdapter {
   }
 }
 
-/** Material date pickers for the whole app: DD/MM/YYYY, UK week (Monday first). */
+/** Material date and time pickers for the whole app: DD/MM/YYYY, UK week, 24-hour clock. */
 export function provideAppDates(): Provider[] {
   return [
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
@@ -90,4 +93,21 @@ export function toIsoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** `14:30` → today at that time; null for no time. */
+export function fromTimeText(value: string | null | undefined): Date | null {
+  const match = TIME.exec(value ?? '');
+  if (!match) return null;
+  const [, hours = '', minutes = ''] = match;
+  const time = new Date();
+  time.setHours(Number(hours), Number(minutes), 0, 0);
+  return time;
+}
+
+/** A time → `14:30`, as the forms (and native time inputs) use. */
+export function toTimeText(time: Date): string {
+  const hours = String(time.getHours()).padStart(2, '0');
+  const minutes = String(time.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }

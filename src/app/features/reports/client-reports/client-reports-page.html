@@ -8,12 +8,13 @@
 <form class="app-form cr-filters" [formGroup]="form" (ngSubmit)="view()" novalidate>
   <div class="form-field">
     <label for="cr-client">Client <span class="required">*</span></label>
-    <select id="cr-client" formControlName="client">
-      <option [ngValue]="null">Select Client</option>
-      @for (client of clients(); track client.id) {
-        <option [ngValue]="client.id">{{ client.name }}</option>
-      }
-    </select>
+    <app-select
+      inputId="cr-client"
+      formControlName="client"
+      placeholder="Select Client"
+      allowNone
+      [options]="clients()"
+    />
     @if (showError(controls.client)) {
       <span class="field-error">Choose a client.</span>
     }

@@ -1,17 +1,9 @@
 import type { Observable } from 'rxjs';
 import type { CrudSource } from '@api/config/config-crud.api';
 import type { AppIconName } from '@core/icons/app-icons';
+import type { SelectOption } from '@shared/forms/select-field/select-option';
 
-export interface SelectOption {
-  /** null for an optional column's "none" choice. */
-  readonly value: string | number | null;
-  readonly label: string;
-  /**
-   * False for choices that may still appear on old records but can no longer be picked,
-   * e.g. an inactive or deleted branch (v21). Default true.
-   */
-  readonly selectable?: boolean;
-}
+export type { SelectOption } from '@shared/forms/select-field/select-option';
 
 interface ColumnLayout {
   readonly header: string;

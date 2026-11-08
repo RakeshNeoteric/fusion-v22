@@ -9,6 +9,7 @@ import type {
 import type { CompanyAddress } from '@api/config/company-details.api';
 import type { MenuCode } from '@api/models/menu-code';
 import { statusLabel } from '@shared/reference/lookup-label';
+import type { SelectOption } from '@shared/forms/select-field/select-option';
 
 /**
  * The Cases screen's permission (menu code). Opening it needs view access; changing a case needs
@@ -95,10 +96,8 @@ export function caseTabs(
   );
 }
 
-export interface CaseOption {
-  readonly id: number;
-  readonly name: string;
-}
+/** A client or service to pick on a case. */
+export type CaseOption = SelectOption<number>;
 
 export interface ReportService {
   readonly name: string;
@@ -115,8 +114,8 @@ export class CaseDirectory {
   clientsForNewCase(): CaseOption[] {
     return (this.init.ClientDto ?? [])
       .filter((client) => client.IsActive && client.IsDeleted !== true)
-      .map((client) => ({ id: client.ClientId, name: client.ClientName }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .map((client) => ({ value: client.ClientId, label: client.ClientName }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   /** The client's active services, for a new case. */
@@ -133,9 +132,9 @@ export class CaseDirectory {
   /** Clients to pick on a case: the active ones, and the case's own client whatever its state. */
   clientOptions(selectedClientId: number | null): CaseOption[] {
     const options = this.clientsForNewCase();
-    if (selectedClientId !== null && !options.some((option) => option.id === selectedClientId)) {
-      const name = this.clientName(selectedClientId);
-      if (name) options.unshift({ id: selectedClientId, name });
+    if (selectedClientId !== null && !options.some((option) => option.value === selectedClientId)) {
+      const label = this.clientName(selectedClientId);
+      if (label) options.unshift({ value: selectedClientId, label, selectable: false });
     }
     return options;
   }
@@ -143,11 +142,14 @@ export class CaseDirectory {
   /** The client's active services, and the case's own service whatever its state (v21). */
   serviceOptions(clientId: number | null, selectedServiceId: number | null): CaseOption[] {
     const options = (clientId === null ? [] : this.servicesForNewCase(clientId))
-      .map((service) => ({ id: service.ServiceId, name: service.ServiceName }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    if (selectedServiceId !== null && !options.some((option) => option.id === selectedServiceId)) {
-      const name = this.serviceName(clientId, selectedServiceId);
-      if (name) options.unshift({ id: selectedServiceId, name });
+      .map((service) => ({ value: service.ServiceId, label: service.ServiceName }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    if (
+      selectedServiceId !== null &&
+      !options.some((option) => option.value === selectedServiceId)
+    ) {
+      const label = this.serviceName(clientId, selectedServiceId);
+      if (label) options.unshift({ value: selectedServiceId, label });
     }
     return options;
   }

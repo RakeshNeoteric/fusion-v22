@@ -8,12 +8,12 @@
     <div class="form-row">
       <div class="form-field">
         <label for="ls-service">Services <span class="required">*</span></label>
-        <select id="ls-service" formControlName="ServiceId">
-          <option [ngValue]="null" disabled>Select Service</option>
-          @for (option of services; track option.value) {
-            <option [ngValue]="option.value">{{ option.label }}</option>
-          }
-        </select>
+        <app-select
+          inputId="ls-service"
+          formControlName="ServiceId"
+          placeholder="Select Service"
+          [options]="services"
+        />
         @if (showError('ServiceId')) {
           <span class="field-error">Service is required.</span>
         }
@@ -111,11 +111,11 @@
           </div>
           <div class="form-field ls-type">
             <label [for]="'ls-sms-type-' + index">SMS Type</label>
-            <select [id]="'ls-sms-type-' + index" formControlName="Type">
-              @for (type of smsTypes(); track type) {
-                <option [ngValue]="type">{{ type }}</option>
-              }
-            </select>
+            <app-select
+              [inputId]="'ls-sms-type-' + index"
+              formControlName="Type"
+              [options]="smsTypeOptions()"
+            />
           </div>
           <label class="switch-field">
             <span class="switch">

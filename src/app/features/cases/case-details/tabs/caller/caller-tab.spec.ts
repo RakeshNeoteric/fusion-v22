@@ -20,16 +20,12 @@ describe('Caller tab', () => {
 
   it('shows the case: client, service, language, callers, controller, agent', async () => {
     await show(held({ IsPolicyHolder: false }));
-    expect(element<HTMLSelectElement>('#caller-client').selectedOptions[0]?.text).toBe(
-      'Zulu Insure',
-    );
-    expect(element<HTMLSelectElement>('#caller-service').selectedOptions[0]?.text).toBe('Funeral');
-    expect(element<HTMLSelectElement>('#caller-language').selectedOptions[0]?.text).toBe('Zulu');
+    expect(value('caller-client')).toBe('Zulu Insure');
+    expect(value('caller-service')).toBe('Funeral');
+    expect(value('caller-language')).toBe('Zulu');
     expect(value('caller-first-0')).toBe('Ann');
-    expect(element<HTMLSelectElement>('#caller-controller').selectedOptions[0]?.text).toBe(
-      'Carl Ng',
-    );
-    expect(element<HTMLSelectElement>('#caller-agent').selectedOptions[0]?.text).toBe('Jane Doe');
+    expect(value('caller-controller')).toBe('Carl Ng');
+    expect(value('caller-agent')).toBe('Jane Doe');
     expect(value('caller-case-number')).toBe('0000004');
     const no = element('[aria-label="Caller is Policy Holder"] [aria-checked="true"]');
     expect(no.textContent?.trim()).toBe('No');
@@ -141,10 +137,7 @@ describe('Caller tab', () => {
   it('chooses the service again for another client, and needs one', async () => {
     await show(held());
     await choose('caller-client', 'Acme');
-    expect(value('caller-service')).not.toBe('5');
-    expect(element<HTMLSelectElement>('#caller-service').options[0]?.text.trim()).toBe(
-      'No services for this client',
-    );
+    expect(value('caller-service')).toBe('No services for this client');
     await openTab('Policy Details');
     expect(api.update).not.toHaveBeenCalled();
     expect(text()).toContain('Service is required.');

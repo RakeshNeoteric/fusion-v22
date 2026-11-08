@@ -6,11 +6,13 @@ import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/rec
 import { requiredText } from '@shared/forms/validators';
 import { PROVINCES } from '@shared/reference/provinces';
 import { ClientGroupLookup } from './client-group-lookup';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 Claim Centre popup: create, edit, or (read-only users) view one claim centre. */
 @Component({
   selector: 'app-claim-centre-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField],
+  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -30,12 +32,12 @@ import { ClientGroupLookup } from './client-group-lookup';
           </div>
           <div class="form-field">
             <label for="cc-group">Client Group <span class="required">*</span></label>
-            <select id="cc-group" formControlName="ClientGroupId">
-              <option [ngValue]="null" disabled>-- Select Client Group --</option>
-              @for (group of clientGroups; track group.value) {
-                <option [ngValue]="group.value">{{ group.label }}</option>
-              }
-            </select>
+            <app-select
+              inputId="cc-group"
+              formControlName="ClientGroupId"
+              placeholder="-- Select Client Group --"
+              [options]="clientGroups"
+            />
             @if (showError('ClientGroupId')) {
               <span class="field-error">Client Group is required.</span>
             }
@@ -77,12 +79,12 @@ import { ClientGroupLookup } from './client-group-lookup';
           </div>
           <div class="form-field">
             <label for="cc-province">Province <span class="required">*</span></label>
-            <select id="cc-province" formControlName="Province">
-              <option [ngValue]="null" disabled>-- Select Province --</option>
-              @for (province of provinces; track province) {
-                <option [ngValue]="province">{{ province }}</option>
-              }
-            </select>
+            <app-select
+              inputId="cc-province"
+              formControlName="Province"
+              placeholder="-- Select Province --"
+              [options]="provinces"
+            />
             @if (showError('Province')) {
               <span class="field-error">Province is required.</span>
             }
@@ -117,10 +119,11 @@ export class ClaimCentreDialog extends RecordDialog<ClaimCentre> {
   );
 
   /** v21 list, plus an older value that is no longer in it, so it is not lost. */
-  protected readonly provinces =
+  protected readonly provinces = textOptions(
     this.record?.Province && !PROVINCES.includes(this.record.Province)
       ? [...PROVINCES, this.record.Province]
-      : PROVINCES;
+      : PROVINCES,
+  );
 
   protected readonly form = new FormGroup({
     Name: new FormControl(this.record?.Name ?? '', {

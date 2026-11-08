@@ -24,6 +24,8 @@ import { e164ToStored, storedToE164 } from '@shared/reference/phone';
 import { CaseWorkspace } from '../../case-workspace';
 import { LANGUAGES, MAX_CALLERS, RELATIONSHIPS } from '../../../case-reference';
 import { CaseTabForm } from '../case-tab-form';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 type CallerRow = FormGroup<{
   id: FormControl<number>;
@@ -41,7 +43,7 @@ type CallerRow = FormGroup<{
  */
 @Component({
   selector: 'app-caller-tab',
-  imports: [ReactiveFormsModule, MatExpansionModule, ChoiceToggle, PhoneField],
+  imports: [ReactiveFormsModule, MatExpansionModule, ChoiceToggle, PhoneField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => CallerTab) }],
   templateUrl: './caller-tab.html',
@@ -53,7 +55,7 @@ export class CallerTab extends CaseTabForm {
   private readonly session = inject(SessionService);
   private readonly notifications = inject(NotificationService);
 
-  protected readonly languages = LANGUAGES;
+  protected readonly languages = textOptions(LANGUAGES);
   protected readonly relationships = RELATIONSHIPS;
   protected readonly yesNo = YES_NO;
   protected readonly yesNoNa = YES_NO_NA;

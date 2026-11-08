@@ -13,6 +13,8 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { CaseIdentity } from '../case-identity';
 import { CaseCommunication } from './case-communication';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 type ManualNoteType = (typeof MANUAL_NOTE_TYPES)[number];
 
@@ -22,7 +24,7 @@ const atLeast3Characters = (control: AbstractControl<string>): ValidationErrors 
 /** v21 New Note popup (Contact History): an Admin, Inbound or Outbound note. Closes with `true`. */
 @Component({
   selector: 'app-note-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity],
+  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -36,12 +38,12 @@ const atLeast3Characters = (control: AbstractControl<string>): ValidationErrors 
         <div class="form-row">
           <div class="form-field">
             <label for="nt-type">Note Type <span class="required">*</span></label>
-            <select id="nt-type" formControlName="type">
-              <option [ngValue]="null" disabled>-- Select --</option>
-              @for (type of types; track type) {
-                <option [ngValue]="type">{{ type }}</option>
-              }
-            </select>
+            <app-select
+              inputId="nt-type"
+              formControlName="type"
+              placeholder="-- Select --"
+              [options]="types"
+            />
             @if (form.controls.type.touched && form.controls.type.invalid) {
               <span class="field-error">Please select a note type.</span>
             }
@@ -71,7 +73,7 @@ export class NoteDialog {
   private readonly communication = inject(CaseCommunication);
   private readonly notifications = inject(NotificationService);
 
-  protected readonly types = MANUAL_NOTE_TYPES;
+  protected readonly types = textOptions(MANUAL_NOTE_TYPES);
   protected readonly saving = signal(false);
   protected readonly form = new FormGroup({
     type: new FormControl<ManualNoteType | null>(null, Validators.required),

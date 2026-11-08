@@ -2,15 +2,15 @@
   <div class="tab-grid tab-grid-4">
     <div class="form-field">
       <label for="ff-parlour">Funeral Parlour</label>
-      <select id="ff-parlour" formControlName="parlour" (change)="parlourChanged()">
-        <option value="">Select Service Provider</option>
-        @if (unlisted(); as name) {
-          <option [value]="name">{{ name }} (no longer linked to the client)</option>
-        }
-        @for (parlour of parlours(); track parlour.name) {
-          <option [value]="parlour.name">{{ parlour.name }}</option>
-        }
-      </select>
+      <app-select
+        inputId="ff-parlour"
+        formControlName="parlour"
+        placeholder="Select Service Provider"
+        allowNone
+        noneValue=""
+        [options]="parlourOptions()"
+        (changed)="parlourChanged()"
+      />
     </div>
     <div class="form-field">
       <label for="ff-province">Service Provider Province</label>

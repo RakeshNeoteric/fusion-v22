@@ -12,7 +12,7 @@ import {
 } from '../../../../testing/report.fixtures';
 import { ClientReportsPage } from './client-reports-page';
 import { ClientReportExcel } from './export/client-report-excel';
-import { typeDate } from '../../../../testing/form-controls';
+import { chooseOption, dropdownOptions, typeDate } from '../../../../testing/form-controls';
 
 const REPORT: ClientReport = {
   Data: [
@@ -72,10 +72,7 @@ describe('ClientReportsPage', () => {
   const serviceBoxes = () => [...host.querySelectorAll<HTMLInputElement>('.cr-service input')];
 
   async function choose(selector: string, value: string): Promise<void> {
-    const select = $<HTMLSelectElement>(selector)!;
-    const option = [...select.options].find((candidate) => candidate.text === value)!;
-    select.value = option.value;
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(selector.replace(/^#/, ''), value);
     await settle();
   }
 
@@ -96,8 +93,7 @@ describe('ClientReportsPage', () => {
 
   it('lists the active clients and defaults the period to last month', async () => {
     await render();
-    const clients = [...$<HTMLSelectElement>('#cr-client')!.options].map((option) => option.text);
-    expect(clients).toEqual(['Select Client', 'Acme', 'Zulu Insure']);
+    expect(await dropdownOptions('cr-client')).toEqual(['Select Client', 'Acme', 'Zulu Insure']);
     expect($<HTMLInputElement>('#cr-from')!.value).toBe('01/10/2026');
     expect($<HTMLInputElement>('#cr-to')!.value).toBe('31/10/2026');
     expect(serviceBoxes()).toHaveLength(0);
@@ -184,7 +180,7 @@ describe('ClientReportsPage', () => {
     $<HTMLButtonElement>('.cr-error button')!.click();
     await settle();
     expect($('.cr-error')).toBeNull();
-    expect($<HTMLSelectElement>('#cr-client')!.options).toHaveLength(3);
+    expect(await dropdownOptions('cr-client')).toHaveLength(3);
   });
 
   it('exports the report as viewed, with the drawn charts, from the dashboard tab', async () => {

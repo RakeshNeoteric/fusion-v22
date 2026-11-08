@@ -23,6 +23,8 @@ import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/rec
 import { requiredText } from '@shared/forms/validators';
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
+import { textOptions } from '@shared/forms/select-field/select-option';
+import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 editor toolbar. */
 const NOTE_TOOLBAR = [
@@ -73,7 +75,7 @@ type SmsForm = ReturnType<typeof smsForm>;
  */
 @Component({
   selector: 'app-link-service-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent],
+  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
@@ -142,6 +144,7 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
   protected readonly smsTypes = computed<readonly SmsType[]>(() =>
     this.isVoucher() ? SMS_TYPES : ['CaseCreation'],
   );
+  protected readonly smsTypeOptions = computed(() => textOptions(this.smsTypes()));
 
   constructor() {
     super();
