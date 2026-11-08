@@ -77,26 +77,19 @@ describe('Header', () => {
     expect(signOut).not.toHaveBeenCalled();
   });
 
-  function menuItem(text: string): HTMLButtonElement | undefined {
-    return [...document.querySelectorAll<HTMLButtonElement>('[mat-menu-item]')].find((item) =>
-      item.textContent?.includes(text),
-    );
-  }
-
-  it('opens My Profile from the user menu (v21 user popup)', async () => {
+  it('opens My Profile straight from the user’s name, with no menu (v21)', async () => {
     const { fixture, host } = await render();
-    host.querySelector<HTMLButtonElement>('.user-chip')?.click();
+    host.querySelector<HTMLButtonElement>('button.user-chip')?.click();
     await fixture.whenStable();
-    menuItem('My Profile')?.click();
     expect(openProfile).toHaveBeenCalledOnce();
+    expect(document.querySelector('.mat-mdc-menu-panel')).toBeNull();
+    expect(host.querySelector('.user-chip')?.textContent).not.toContain('expand');
   });
 
-  it('offers no My Profile when the app provides none', async () => {
-    const { fixture, host } = await render(false);
-    host.querySelector<HTMLButtonElement>('.user-chip')?.click();
-    await fixture.whenStable();
-    expect(menuItem('Sign out')).toBeDefined();
-    expect(menuItem('My Profile')).toBeUndefined();
+  it('only shows the name when the app provides no profile', async () => {
+    const { host } = await render(false);
+    expect(host.querySelector('button.user-chip')).toBeNull();
+    expect(host.querySelector('.user-chip')?.textContent).toContain('Jane Doe');
   });
 
   it('asks the shell to toggle the sidebar', async () => {

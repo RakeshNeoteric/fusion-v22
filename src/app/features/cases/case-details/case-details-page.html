@@ -77,54 +77,74 @@
               <img class="cd-action-img" src="/icons/case/view-more.png" alt="" />
             </button>
             <!-- v21 "View More". -->
-            <mat-menu #moreMenu="matMenu" xPosition="before">
-              <button mat-menu-item type="button" (click)="openContactHistory()">
-                <mat-icon svgIcon="event-note" />
-                <span>Contact History</span>
-              </button>
-              <button mat-menu-item type="button" (click)="openRating()">
-                <mat-icon svgIcon="star" />
-                <span>Case Rating</span>
-              </button>
-              @if (hasCosting()) {
-                <button mat-menu-item type="button" (click)="openAdditionalCosting()">
-                  <mat-icon svgIcon="payments" />
-                  <span>Additional Cost</span>
-                </button>
-                <button mat-menu-item type="button" (click)="openPhaseCosting()">
-                  <img class="cd-menu-img" src="/icons/case/phase-costing.png" alt="" />
-                  <span>Phase Costing</span>
-                </button>
-              }
-              <button
-                mat-menu-item
-                type="button"
-                [disabled]="workspace.readOnly()"
-                (click)="openMessage()"
-              >
-                <img class="cd-menu-img" src="/icons/case/sms-mail.png" alt="" />
-                <span>SMS / Email</span>
-              </button>
-              @if (finished()) {
+            <mat-menu #moreMenu="matMenu" xPosition="before" class="cd-more-menu">
+              <div class="cd-more-grid" role="none">
                 <button
                   mat-menu-item
                   type="button"
-                  [disabled]="!lifecycle.canReopen()"
-                  (click)="reopen()"
+                  class="cd-more-item"
+                  (click)="openContactHistory()"
                 >
-                  <mat-icon svgIcon="restore" />
-                  <span>Re-Open Case</span>
+                  <mat-icon svgIcon="event-note" />
+                  <span>Contact History</span>
                 </button>
-              }
-              <button
-                mat-menu-item
-                type="button"
-                [disabled]="workspace.readOnly()"
-                (click)="reassign()"
-              >
-                <mat-icon svgIcon="swap-person" />
-                <span>Re-Assign</span>
-              </button>
+                <button mat-menu-item type="button" class="cd-more-item" (click)="openRating()">
+                  <mat-icon svgIcon="star" />
+                  <span>Case Rating</span>
+                </button>
+                @if (hasCosting()) {
+                  <button
+                    mat-menu-item
+                    type="button"
+                    class="cd-more-item"
+                    (click)="openAdditionalCosting()"
+                  >
+                    <mat-icon svgIcon="payments" />
+                    <span>Additional Cost</span>
+                  </button>
+                  <button
+                    mat-menu-item
+                    type="button"
+                    class="cd-more-item"
+                    (click)="openPhaseCosting()"
+                  >
+                    <img class="cd-more-img" src="/icons/case/phase-costing.png" alt="" />
+                    <span>Phase Costing</span>
+                  </button>
+                }
+                <button
+                  mat-menu-item
+                  type="button"
+                  class="cd-more-item"
+                  [disabled]="workspace.readOnly()"
+                  (click)="openMessage()"
+                >
+                  <img class="cd-more-img" src="/icons/case/sms-mail.png" alt="" />
+                  <span>SMS / Email</span>
+                </button>
+                @if (finished()) {
+                  <button
+                    mat-menu-item
+                    type="button"
+                    class="cd-more-item"
+                    [disabled]="!lifecycle.canReopen()"
+                    (click)="reopen()"
+                  >
+                    <mat-icon svgIcon="restore" />
+                    <span>Re-Open Case</span>
+                  </button>
+                }
+                <button
+                  mat-menu-item
+                  type="button"
+                  class="cd-more-item"
+                  [disabled]="workspace.readOnly()"
+                  (click)="reassign()"
+                >
+                  <mat-icon svgIcon="swap-person" />
+                  <span>Re-Assign</span>
+                </button>
+              </div>
             </mat-menu>
           </div>
         </header>

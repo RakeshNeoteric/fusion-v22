@@ -43,7 +43,14 @@
   color: #333;
   font: inherit;
   font-size: 0.95rem;
+}
+
+button.user-chip {
   cursor: pointer;
+}
+
+button.user-chip:hover {
+  background-color: #e6e6e6;
 }
 
 .user-chip:focus-visible {
@@ -72,22 +79,6 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.user-card {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 280px;
-  padding: 8px 16px 12px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.user-email,
-.user-roles {
-  color: #666;
-  font-size: 0.85rem;
-  overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {

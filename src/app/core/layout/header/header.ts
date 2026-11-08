@@ -1,7 +1,7 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SessionService } from '@core/session/session.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
@@ -9,7 +9,7 @@ import { PROFILE_EDITOR } from './profile-editor';
 
 @Component({
   selector: 'app-header',
-  imports: [MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
+  imports: [NgTemplateOutlet, MatButtonModule, MatIconModule, MatTooltipModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './header.html',
   styleUrl: './header.css',
@@ -22,7 +22,8 @@ export class Header {
   protected readonly profile = inject(PROFILE_EDITOR, { optional: true });
 
   protected readonly user = this.session.user;
-  protected readonly initials = computed(() => initialsOf(this.user()?.displayName ?? ''));
+  protected readonly displayName = computed(() => this.user()?.displayName ?? '');
+  protected readonly initials = computed(() => initialsOf(this.displayName()));
 
   protected openProfile(): void {
     void this.profile?.open();

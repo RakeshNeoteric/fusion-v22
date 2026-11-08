@@ -13,34 +13,29 @@
     <img class="logo-text" src="/icons/logo-text.png" alt="Fusion Edge" height="20" />
   </div>
 
-  @if (user(); as user) {
+  @if (user()) {
     <div class="actions">
-      <button type="button" class="user-chip" [matMenuTriggerFor]="userMenu">
+      <!-- v21: the user's name opens their profile. -->
+      @if (profile) {
+        <button
+          type="button"
+          class="user-chip"
+          aria-haspopup="dialog"
+          matTooltip="My Profile"
+          (click)="openProfile()"
+        >
+          <ng-container *ngTemplateOutlet="chip" />
+        </button>
+      } @else {
+        <div class="user-chip">
+          <ng-container *ngTemplateOutlet="chip" />
+        </div>
+      }
+      <ng-template #chip>
         <span class="avatar" aria-hidden="true">{{ initials() }}</span>
         <span class="welcome">Welcome</span>
-        <strong class="user-name">{{ user.displayName }}</strong>
-        <mat-icon svgIcon="expand-more" />
-      </button>
-
-      <mat-menu #userMenu="matMenu" xPosition="before">
-        <div class="user-card">
-          <strong>{{ user.displayName }}</strong>
-          <span class="user-email">{{ user.email }}</span>
-          @if (user.roles.length) {
-            <span class="user-roles">{{ user.roles.join(', ') }}</span>
-          }
-        </div>
-        @if (profile) {
-          <button mat-menu-item type="button" (click)="openProfile()">
-            <mat-icon svgIcon="person" />
-            <span>My Profile</span>
-          </button>
-        }
-        <button mat-menu-item type="button" (click)="signOut()">
-          <mat-icon svgIcon="logout" />
-          <span>Sign out</span>
-        </button>
-      </mat-menu>
+        <strong class="user-name">{{ displayName() }}</strong>
+      </ng-template>
 
       <button
         mat-icon-button

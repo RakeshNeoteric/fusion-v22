@@ -93,12 +93,47 @@
   height: 26px;
   object-fit: contain;
 }
-/* v21's Phase Costing and SMS / Email images, sized like the menu's icons. */
-.cd-menu-img {
-  width: 24px;
-  height: 24px;
-  margin-right: 16px;
+/*
+ * v21 "View More": a grid of tiles, three to a row, each a large teal icon (or v21's image)
+ * over its name. The panel itself is styled in src/styles.css (.cd-more-menu).
+ */
+.cd-more-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 96px);
+  gap: 8px;
+  padding: 8px;
+}
+.cd-more-item.mat-mdc-menu-item {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 96px;
+  padding: 12px 6px;
+  border-radius: 10px;
+  text-align: center;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
+}
+.cd-more-item.mat-mdc-menu-item:not([disabled]):hover {
+  transform: scale(1.05);
+}
+.cd-more-item .mat-icon {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  color: var(--app-teal);
+}
+.cd-more-img {
+  width: 40px;
+  height: 36px;
   object-fit: contain;
+}
+.cd-more-item span {
+  color: #333;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: normal;
 }
 .cd-panel {
   margin-top: -32px;
