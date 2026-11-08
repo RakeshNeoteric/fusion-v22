@@ -5,9 +5,10 @@
   </div>
 }
 
+<!-- v21: one card, a row of Client, Services and Date Range, with View at the end. -->
 <form class="app-form cr-filters" [formGroup]="form" (ngSubmit)="view()" novalidate>
   <div class="form-field">
-    <label for="cr-client">Client <span class="required">*</span></label>
+    <label for="cr-client">Select Client(s) <span class="required">*</span></label>
     <app-select
       inputId="cr-client"
       formControlName="client"
@@ -21,48 +22,43 @@
   </div>
 
   <div class="form-field">
-    <label for="cr-from">From <span class="required">*</span></label>
-    <app-date-field inputId="cr-from" formControlName="from" />
-    @if (showError(controls.from)) {
-      <span class="field-error">Enter the first day.</span>
-    }
+    <label for="cr-services">Select Service(s)</label>
+    <app-select
+      inputId="cr-services"
+      formControlName="services"
+      multiple
+      [placeholder]="controls.client.value === null ? 'Select a client first' : 'Select Service(s)'"
+      [options]="serviceOptions()"
+    />
+    <span class="cr-hint">None chosen: all services.</span>
   </div>
+
   <div class="form-field">
-    <label for="cr-to">To <span class="required">*</span></label>
-    <app-date-field inputId="cr-to" formControlName="to" />
-    @if (showError(controls.to)) {
-      <span class="field-error">Enter the last day.</span>
-    } @else if (form.hasError('period') && (controls.from.touched || controls.to.touched)) {
-      <span class="field-error">The last day cannot be before the first.</span>
+    <label for="cr-period">Date Range <span class="required">*</span></label>
+    <app-date-range-field inputId="cr-period" formControlName="period" />
+    @if (showError(controls.period)) {
+      <span class="field-error">
+        {{
+          controls.period.hasError('period')
+            ? 'The last day cannot be before the first.'
+            : controls.period.hasError('date')
+              ? 'Enter the days as DD/MM/YYYY.'
+              : 'Choose the first and last day.'
+        }}
+      </span>
     }
   </div>
 
   <div class="cr-actions">
-    <button type="submit" class="app-button" [disabled]="status() !== 'ready' || viewing()">
-      {{ viewing() ? 'Loading…' : 'View' }}
-    </button>
     @if (report() && tab()?.kind === 'dashboard') {
       <button type="button" class="app-button" [disabled]="exporting()" (click)="exportExcel()">
         {{ exporting() ? 'Exporting…' : 'Export Excel' }}
       </button>
     }
+    <button type="submit" class="app-button" [disabled]="status() !== 'ready' || viewing()">
+      {{ viewing() ? 'Loading…' : 'View' }}
+    </button>
   </div>
-
-  @if (services().length) {
-    <fieldset class="cr-services">
-      <legend class="form-label">Services <span class="cr-hint">(none chosen: all)</span></legend>
-      @for (service of services(); track service.ServiceId) {
-        <label class="cr-service">
-          <input
-            type="checkbox"
-            [checked]="chosen(service.ServiceId)"
-            (change)="toggleService(service.ServiceId, $event)"
-          />
-          {{ service.ServiceName }}
-        </label>
-      }
-    </fieldset>
-  }
 </form>
 
 @if (report(); as shown) {

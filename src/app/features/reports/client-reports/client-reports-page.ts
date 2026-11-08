@@ -20,7 +20,7 @@ import { ClientReportApi } from '@api/reports/client-report.api';
 import { displayDate } from '@shared/reference/date-time';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
 import { CaseDirectory } from '../../cases/case-setup';
-import { dayBoundary, lastMonth, periodInOrder } from '../report-period';
+import { dayBoundary, lastMonth } from '../report-period';
 import { ReportTable, type TableColumn } from '../report-table';
 import {
   type DashboardLayout,
@@ -39,7 +39,13 @@ import {
 import { type ReportTab, type TableTab, reportTabs } from './report-tabs';
 import { ClientReportExcel } from './export/client-report-excel';
 import { voucherRedemptions } from './export/voucher-redemptions';
-import { DateField } from '@shared/forms/date-field/date-field';
+import {
+  type DateRange,
+  DateRangeField,
+  periodInOrder,
+  periodRequired,
+} from '@shared/forms/date-range-field/date-range-field';
+import { optionsOf } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
@@ -67,7 +73,14 @@ interface ShownReport {
  */
 @Component({
   selector: 'app-client-reports-page',
-  imports: [ReactiveFormsModule, FolderTabs, ReportTable, ReportDashboard, DateField, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    FolderTabs,
+    ReportTable,
+    ReportDashboard,
+    DateRangeField,
+    SelectField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './client-reports-page.html',
   styleUrl: './client-reports-page.css',
@@ -85,23 +98,16 @@ export class ClientReportsPage {
   private readonly excel = inject(ClientReportExcel);
   private readonly dashboardView = viewChild(ReportDashboard);
 
-  protected readonly form = new FormGroup(
-    {
-      client: new FormControl<number | null>(null, Validators.required),
-      services: new FormControl<readonly number[]>([], { nonNullable: true }),
-      from: new FormControl(lastMonth().from, {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
-      to: new FormControl(lastMonth().to, { nonNullable: true, validators: Validators.required }),
-    },
-    { validators: periodInOrder },
-  );
+  protected readonly form = new FormGroup({
+    client: new FormControl<number | null>(null, Validators.required),
+    services: new FormControl<readonly number[]>([], { nonNullable: true }),
+    period: new FormControl<DateRange>(lastMonth(), {
+      nonNullable: true,
+      validators: [periodRequired, periodInOrder],
+    }),
+  });
   protected readonly controls = this.form.controls;
   private readonly clientId = toSignal(this.controls.client.valueChanges, { initialValue: null });
-  private readonly chosenServices = toSignal(this.controls.services.valueChanges, {
-    initialValue: [] as readonly number[],
-  });
 
   /** Active clients, by name (v21). */
   protected readonly clients = computed(() => this.directory()?.clientsForNewCase() ?? []);
@@ -110,6 +116,13 @@ export class ClientReportsPage {
     const id = this.clientId();
     return id === null ? [] : (this.directory()?.servicesForNewCase(id) ?? []);
   });
+  protected readonly serviceOptions = computed(() =>
+    optionsOf(
+      this.services(),
+      (service) => service.ServiceId,
+      (service) => service.ServiceName,
+    ),
+  );
 
   protected readonly tab = computed(() => {
     const tabs = this.report()?.tabs ?? [];
@@ -149,16 +162,6 @@ export class ClientReportsPage {
     }
   }
 
-  protected chosen(serviceId: number): boolean {
-    return this.chosenServices().includes(serviceId);
-  }
-
-  protected toggleService(serviceId: number, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    const others = this.controls.services.value.filter((id) => id !== serviceId);
-    this.controls.services.setValue(checked ? [...others, serviceId] : others);
-  }
-
   protected showError(control: AbstractControl): boolean {
     return control.invalid && (control.touched || control.dirty);
   }
@@ -169,7 +172,8 @@ export class ClientReportsPage {
       this.form.markAllAsTouched();
       return;
     }
-    const { client: clientId, services: serviceIds, from, to } = this.form.getRawValue();
+    const { client: clientId, services: serviceIds, period } = this.form.getRawValue();
+    const { from, to } = period;
     const client = this.clients().find((candidate) => candidate.value === clientId);
     const directory = this.directory();
     if (!client || !directory) return;

@@ -82,6 +82,38 @@
   --mat-icon-button-icon-color: #888;
 }
 
+/*
+ * Date range field (DateRangeField): one box like the other inputs, holding Material's two day
+ * boxes ("01/10/2026 – 31/10/2026") and the calendar button.
+ */
+.app-form .date-range-field {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  padding: 10px 44px 10px 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+.app-form .date-range-field:focus-within {
+  border-color: #000;
+}
+.app-form .date-range-field.ng-invalid.ng-touched {
+  border-color: var(--app-danger);
+}
+.app-form .date-range-field--disabled {
+  background: #f5f5f5;
+  color: #555;
+}
+.app-form .date-range-field input {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  line-height: 18px;
+}
 /* Material calendar in the app's teal. */
 html {
   --mat-datepicker-calendar-date-selected-state-background-color: var(--app-teal);
@@ -89,6 +121,7 @@ html {
   --mat-datepicker-calendar-date-focus-state-background-color: rgb(5 185 188 / 20%);
   --mat-datepicker-calendar-date-hover-state-background-color: rgb(5 185 188 / 12%);
   --mat-datepicker-calendar-container-shape: 10px;
+  --mat-datepicker-calendar-date-in-range-state-background-color: rgb(5 185 188 / 18%);
 }
 
 /*

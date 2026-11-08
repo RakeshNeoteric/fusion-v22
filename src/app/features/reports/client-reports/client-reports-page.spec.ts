@@ -12,7 +12,14 @@ import {
 } from '../../../../testing/report.fixtures';
 import { ClientReportsPage } from './client-reports-page';
 import { ClientReportExcel } from './export/client-report-excel';
-import { chooseOption, dropdownOptions, typeDate } from '../../../../testing/form-controls';
+import {
+  chooseOption,
+  closeDropdown,
+  dropdownDisabled,
+  dropdownOptions,
+  dropdownText,
+  typeDate,
+} from '../../../../testing/form-controls';
 
 const REPORT: ClientReport = {
   Data: [
@@ -69,7 +76,15 @@ describe('ClientReportsPage', () => {
   const $ = <E extends Element>(selector: string) => host.querySelector<E>(selector);
   const tabLabels = () =>
     [...host.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent?.trim());
-  const serviceBoxes = () => [...host.querySelectorAll<HTMLInputElement>('.cr-service input')];
+  /** The Date Range field's two day boxes. */
+  const dayBoxes = () => [...host.querySelectorAll<HTMLInputElement>('.date-range-field input')];
+
+  /** Picks services in the multiple-choice list, then closes it. */
+  async function pickServices(...labels: string[]): Promise<void> {
+    for (const label of labels) await chooseOption('cr-services', label);
+    await closeDropdown();
+    await settle();
+  }
 
   async function choose(selector: string, value: string): Promise<void> {
     await chooseOption(selector.replace(/^#/, ''), value);
@@ -94,14 +109,16 @@ describe('ClientReportsPage', () => {
   it('lists the active clients and defaults the period to last month', async () => {
     await render();
     expect(await dropdownOptions('cr-client')).toEqual(['Select Client', 'Acme', 'Zulu Insure']);
-    expect($<HTMLInputElement>('#cr-from')!.value).toBe('01/10/2026');
-    expect($<HTMLInputElement>('#cr-to')!.value).toBe('31/10/2026');
-    expect(serviceBoxes()).toHaveLength(0);
+    expect(dayBoxes().map((box) => box.value)).toEqual(['01/10/2026', '31/10/2026']);
+    expect(dayBoxes()[0]?.id).toBe('cr-period');
+    expect(dropdownDisabled('cr-services')).toBe(false);
+    expect(dropdownText('cr-services')).toBe('Select a client first');
+    expect(await dropdownOptions('cr-services')).toEqual([]);
   });
 
   it('asks for a client and a period in order before viewing', async () => {
     await render();
-    await typeDate($<HTMLInputElement>('#cr-to')!, '01/09/2026');
+    await typeDate(dayBoxes()[1]!, '01/09/2026');
     await view();
     expect(host.textContent).toContain('Choose a client.');
     expect(host.textContent).toContain('The last day cannot be before the first.');
@@ -111,23 +128,18 @@ describe('ClientReportsPage', () => {
   it("shows the client's active services, and a new client starts with none chosen", async () => {
     await render();
     await choose('#cr-client', 'Zulu Insure');
-    expect(serviceBoxes().map((box) => box.parentElement?.textContent?.trim())).toEqual([
-      'Funeral',
-      'Groceries',
-    ]);
-    serviceBoxes()[1]!.click();
-    await settle();
-    expect(serviceBoxes()[1]!.checked).toBe(true);
+    expect(await dropdownOptions('cr-services')).toEqual(['Funeral', 'Groceries']);
+    await pickServices('Groceries');
+    expect(dropdownText('cr-services')).toBe('Groceries');
     await choose('#cr-client', 'Acme');
     await choose('#cr-client', 'Zulu Insure');
-    expect(serviceBoxes().some((box) => box.checked)).toBe(false);
+    expect(dropdownText('cr-services')).toBe('Select Service(s)');
   });
 
   it('views the period: the dashboard, the client, then the chosen services', async () => {
     await render();
     await choose('#cr-client', 'Zulu Insure');
-    serviceBoxes()[1]!.click();
-    await settle();
+    await pickServices('Groceries');
     await view();
 
     expect(load).toHaveBeenCalledWith({
