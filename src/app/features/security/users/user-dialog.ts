@@ -49,7 +49,7 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
               alt="Profile photo"
               removeLabel="Remove Photo"
               round
-              [size]="220"
+              [size]="130"
               [src]="photo.src()"
               [canChange]="!readOnly && !uploading()"
               [hasImage]="!!form.controls.ProfileImage.value"
@@ -171,25 +171,21 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
     </form>
   `,
   styles: `
-    /* v21: round photo on the left, the fields in two columns beside it. */
+    /* v21: round photo at the top left, the fields in two columns below it. */
     .user-layout {
       display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 28px;
+      flex-direction: column;
+      gap: 20px;
     }
     .user-photo {
       display: flex;
-      flex: 0 0 auto;
-      justify-content: center;
-      margin: 0 auto;
+      justify-content: flex-start;
     }
     .user-fields {
-      flex: 1 1 440px;
       min-width: 0;
     }
     .user-fields .form-field {
-      flex-basis: 200px;
+      flex-basis: 240px;
     }
     .user-profile-note {
       display: flex;
