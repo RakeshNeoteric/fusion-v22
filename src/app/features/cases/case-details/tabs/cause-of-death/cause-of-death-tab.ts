@@ -28,6 +28,7 @@ import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { storedToE164 } from '@shared/reference/phone';
 import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 /** Only an unnatural death has the mortuary and post-mortem details (v21). */
 const UNNATURAL = 'Unnatural';
@@ -59,7 +60,7 @@ function newCauseOfDeath(details: CaseDetails): CaseCauseOfDeathRecord {
  */
 @Component({
   selector: 'app-cause-of-death-tab',
-  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle],
+  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => CauseOfDeathTab) }],
   templateUrl: './cause-of-death-tab.html',

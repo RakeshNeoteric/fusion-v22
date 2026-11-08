@@ -62,7 +62,7 @@
       </div>
       <div class="form-field">
         <label for="val-holder-birth">Date Of Birth</label>
-        <input id="val-holder-birth" type="date" formControlName="dateOfBirth" />
+        <app-date-field inputId="val-holder-birth" formControlName="dateOfBirth" />
       </div>
     </div>
   </fieldset>
@@ -99,7 +99,12 @@
     <div class="tab-grid tab-grid-4">
       <div class="form-field">
         <label for="val-deceased-birth">Date Of Birth</label>
-        <input id="val-deceased-birth" type="date" readonly [value]="deceasedBirth()" />
+        <input
+          id="val-deceased-birth"
+          type="text"
+          readonly
+          [value]="displayDate(deceasedBirth())"
+        />
       </div>
       <div class="form-field">
         <label for="val-relationship">Relationship to Policyholder</label>

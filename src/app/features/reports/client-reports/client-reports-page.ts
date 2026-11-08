@@ -39,6 +39,7 @@ import {
 import { type ReportTab, type TableTab, reportTabs } from './report-tabs';
 import { ClientReportExcel } from './export/client-report-excel';
 import { voucherRedemptions } from './export/voucher-redemptions';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
@@ -65,7 +66,7 @@ interface ShownReport {
  */
 @Component({
   selector: 'app-client-reports-page',
-  imports: [ReactiveFormsModule, FolderTabs, ReportTable, ReportDashboard],
+  imports: [ReactiveFormsModule, FolderTabs, ReportTable, ReportDashboard, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './client-reports-page.html',
   styleUrl: './client-reports-page.css',

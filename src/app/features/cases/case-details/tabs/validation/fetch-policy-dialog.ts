@@ -9,6 +9,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { LinkCell, type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';
 import { policyHolderRecord } from '../case-records';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 type SearchMode = 'id' | 'id-policy';
 
@@ -27,7 +28,7 @@ export function policyBirthDate(value: number | null): string {
  */
 @Component({
   selector: 'app-fetch-policy-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, LinkTable, LinkCell],
+  imports: [ReactiveFormsModule, RecordDialogFrame, LinkTable, LinkCell, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="search()" novalidate>
@@ -77,7 +78,7 @@ export function policyBirthDate(value: number | null): string {
           </div>
           <div class="form-field">
             <label for="fp-death">Date of Death</label>
-            <input id="fp-death" type="date" formControlName="dateOfDeath" />
+            <app-date-field inputId="fp-death" formControlName="dateOfDeath" />
           </div>
         </div>
 

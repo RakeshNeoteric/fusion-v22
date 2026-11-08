@@ -96,7 +96,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "setupFiles": ["src/testing/grid-guard.ts", "src/testing/app-icons-setup.ts"]
+            "setupFiles": ["src/testing/grid-guard.ts", "src/testing/app-providers-setup.ts"]
           }
         },
         "lint": {

@@ -12,6 +12,7 @@ import {
 } from '../../../../testing/report.fixtures';
 import { ClientReportsPage } from './client-reports-page';
 import { ClientReportExcel } from './export/client-report-excel';
+import { typeDate } from '../../../../testing/form-controls';
 
 const REPORT: ClientReport = {
   Data: [
@@ -97,16 +98,14 @@ describe('ClientReportsPage', () => {
     await render();
     const clients = [...$<HTMLSelectElement>('#cr-client')!.options].map((option) => option.text);
     expect(clients).toEqual(['Select Client', 'Acme', 'Zulu Insure']);
-    expect($<HTMLInputElement>('#cr-from')!.value).toBe('2026-10-01');
-    expect($<HTMLInputElement>('#cr-to')!.value).toBe('2026-10-31');
+    expect($<HTMLInputElement>('#cr-from')!.value).toBe('01/10/2026');
+    expect($<HTMLInputElement>('#cr-to')!.value).toBe('31/10/2026');
     expect(serviceBoxes()).toHaveLength(0);
   });
 
   it('asks for a client and a period in order before viewing', async () => {
     await render();
-    const to = $<HTMLInputElement>('#cr-to')!;
-    to.value = '2026-09-01';
-    to.dispatchEvent(new Event('input'));
+    await typeDate($<HTMLInputElement>('#cr-to')!, '01/09/2026');
     await view();
     expect(host.textContent).toContain('Choose a client.');
     expect(host.textContent).toContain('The last day cannot be before the first.');

@@ -66,6 +66,31 @@
   font-size: 12px;
 }
 
+/* v21 date field (DateField): the text box with Material's calendar button inside it, right. */
+.app-form .date-field {
+  position: relative;
+  display: block;
+}
+.app-form .date-field input {
+  padding-right: 44px;
+}
+.app-form .date-field-toggle {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  --mat-icon-button-icon-color: #888;
+}
+
+/* Material calendar in the app's teal. */
+html {
+  --mat-datepicker-calendar-date-selected-state-background-color: var(--app-teal);
+  --mat-datepicker-calendar-date-today-outline-color: var(--app-teal);
+  --mat-datepicker-calendar-date-focus-state-background-color: rgb(5 185 188 / 20%);
+  --mat-datepicker-calendar-date-hover-state-background-color: rgb(5 185 188 / 12%);
+  --mat-datepicker-calendar-container-shape: 10px;
+}
+
 /* v21 "Is Active?" switch: 36×20, teal when on. */
 .app-form .switch-field {
   display: inline-flex;

@@ -83,14 +83,14 @@
     </div>
     <div class="form-field">
       <label for="di-birth">Date of Birth</label>
-      <input id="di-birth" type="date" [max]="today" formControlName="dateOfBirth" />
+      <app-date-field inputId="di-birth" [max]="today" formControlName="dateOfBirth" />
       @if (showError(controls.dateOfBirth)) {
         <span class="field-error">Date of Birth cannot be in the future.</span>
       }
     </div>
     <div class="form-field">
       <label for="di-death">Date of Death</label>
-      <input id="di-death" type="date" [max]="today" formControlName="dateOfDeath" />
+      <app-date-field inputId="di-death" [max]="today" formControlName="dateOfDeath" />
       @if (showError(controls.dateOfDeath)) {
         <span class="field-error">Date of Death cannot be in the future.</span>
       } @else if (deathBeforeBirth()) {

@@ -16,7 +16,9 @@ import { UserDirectoryService } from '@core/session/user-directory.service';
 import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { directoryUser, permission, role } from '../../../../testing/app-init.fixtures';
 import { ServiceTypeLookup } from '../../configuration/service-types/service-type-lookup';
-import { ServiceProviderDialog, today } from './service-provider-dialog';
+import { todayIsoDate } from '@shared/forms/dates/app-dates';
+import { displayDate } from '@shared/reference/date-time';
+import { ServiceProviderDialog } from './service-provider-dialog';
 
 const CURRENT_USER = 5;
 
@@ -189,7 +191,7 @@ describe('ServiceProviderDialog', () => {
   it('creates a provider, opened today by the current user', async () => {
     await open(null);
     expect(document.body.textContent).toContain('Create Service Provider');
-    expect(value('sp-opened-on')).toBe(today());
+    expect(value('sp-opened-on')).toBe(displayDate(todayIsoDate()));
     expect(value('sp-opened-by')).toBe('Me Self');
 
     await press('Save');
@@ -217,7 +219,7 @@ describe('ServiceProviderDialog', () => {
         Province: 'Gauteng',
         ServiceTypeCode: 'FUN',
         RatePerKm: 10.5,
-        ActiveOn: today(),
+        ActiveOn: todayIsoDate(),
         ActiveBy: CURRENT_USER,
         AuthorisedBy: 0,
         RateAuthorisedOn: NO_DATE,
@@ -235,7 +237,7 @@ describe('ServiceProviderDialog', () => {
   it('dates verification today, by the current user, and clears it when turned off', async () => {
     await open(stored);
     await answer('sp-verified-label', 'Yes');
-    expect(value('sp-verified-on')).toBe(today());
+    expect(value('sp-verified-on')).toBe(displayDate(todayIsoDate()));
     expect(element<HTMLSelectElement>('#sp-verified-by').selectedOptions[0]?.text).toBe('Me Self');
 
     await answer('sp-verified-label', 'No');
@@ -243,7 +245,7 @@ describe('ServiceProviderDialog', () => {
     expect(element<HTMLSelectElement>('#sp-verified-by').disabled).toBe(true);
 
     await choose('sp-authorised-by', 'Ann Opener');
-    expect(value('sp-authorised-on')).toBe(today());
+    expect(value('sp-authorised-on')).toBe(displayDate(todayIsoDate()));
     await press('Update');
     expect(api.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -251,7 +253,7 @@ describe('ServiceProviderDialog', () => {
         VerifiedOn: NO_DATE,
         VerifiedBy: 0,
         AuthorisedBy: 6,
-        RateAuthorisedOn: today(),
+        RateAuthorisedOn: todayIsoDate(),
         // Unchanged: still opened by whoever opened it.
         ActiveBy: 6,
         ActiveOn: '2026-01-10',

@@ -30,13 +30,7 @@ import { activePhases, caseTotals, isAuthorised, phaseTotal } from './costing-ru
 import { removalDocument, removalOrder } from './removal-order';
 import { removalOrderPdf } from './removal-order-pdf';
 import { openTransport } from './transport-dialog';
-
-/** Today as `yyyy-MM-dd`, in local time. */
-function today(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
+import { todayIsoDate } from '@shared/forms/dates/app-dates';
 
 function costForm() {
   const amount = (max: number) =>
@@ -218,7 +212,7 @@ export class PhaseCostingDialog {
     await this.run(async () => {
       await this.workspace.savePhase({
         ...this.costRecord(card, saved),
-        AuthorisedDate: today(),
+        AuthorisedDate: todayIsoDate(),
         AuthorisedByUserId: authorisedBy.value,
         AuthorisedByNumber: authorisedNumber.value,
       });

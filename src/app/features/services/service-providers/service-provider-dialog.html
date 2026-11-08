@@ -128,9 +128,8 @@
               <span class="required">*</span>
             }
           </label>
-          <input
-            id="sp-bee-expiry"
-            type="date"
+          <app-date-field
+            inputId="sp-bee-expiry"
             formControlName="BeeExpiryDate"
             [min]="earliestExpiry"
           />
@@ -354,7 +353,7 @@
 
       <div class="form-field">
         <label for="sp-authorised-on">Date Authorised</label>
-        <input id="sp-authorised-on" type="date" formControlName="RateAuthorisedOn" />
+        <app-date-field inputId="sp-authorised-on" formControlName="RateAuthorisedOn" />
       </div>
       <div class="form-field">
         <label for="sp-authorised-by">Authorised By</label>
@@ -367,7 +366,7 @@
       </div>
       <div class="form-field">
         <label for="sp-opened-on">Date Opened</label>
-        <input id="sp-opened-on" type="date" formControlName="ActiveOn" />
+        <app-date-field inputId="sp-opened-on" formControlName="ActiveOn" />
       </div>
       <div class="form-field">
         <label for="sp-opened-by">Opened By</label>
@@ -388,7 +387,7 @@
       </div>
       <div class="form-field">
         <label for="sp-verified-on">Date Verified</label>
-        <input id="sp-verified-on" type="date" formControlName="VerifiedOn" />
+        <app-date-field inputId="sp-verified-on" formControlName="VerifiedOn" />
       </div>
       <div class="form-field">
         <label for="sp-verified-by">Verified By</label>
@@ -413,7 +412,7 @@
       </div>
       <div class="form-field">
         <label for="sp-accredited-on">Date Accredited</label>
-        <input id="sp-accredited-on" type="date" formControlName="AccreditedOn" />
+        <app-date-field inputId="sp-accredited-on" formControlName="AccreditedOn" />
       </div>
       <div class="form-field">
         <label for="sp-accredited-by">Accredited By</label>

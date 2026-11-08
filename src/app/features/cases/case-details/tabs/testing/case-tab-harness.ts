@@ -253,6 +253,8 @@ export function caseTabHarness() {
     const input = element<HTMLInputElement>(`#${id}`);
     input.value = value;
     input.dispatchEvent(new Event('input'));
+    // As a browser does on leaving a changed field (Material's date fields read it).
+    input.dispatchEvent(new Event('change'));
     input.dispatchEvent(new Event('blur'));
     await settle();
   }

@@ -18,6 +18,7 @@ import { type ClientProvider, findProviderByName } from '../../client-providers'
 import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
 import { NO_PARLOUR, type ParlourDetails, parlourDetails } from './funeral-parlours';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 /** The saved funeral, or a new one; the case list may have loaded only the burial date. */
 function savedFuneral(details: CaseDetails): CaseFinalFuneralRecord {
@@ -59,7 +60,7 @@ function savedDetails(record: CaseFinalFuneralRecord): ParlourDetails {
  */
 @Component({
   selector: 'app-final-funeral-tab',
-  imports: [ReactiveFormsModule, PhoneField],
+  imports: [ReactiveFormsModule, PhoneField, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => FinalFuneralTab) }],
   templateUrl: './final-funeral-tab.html',

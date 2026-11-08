@@ -20,20 +20,14 @@ import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
 import { PROVINCES } from '@shared/reference/provinces';
 import { ServiceTypeLookup } from '../../configuration/service-types/service-type-lookup';
 import { type ContactRow, toContact, toContactRow } from './provider-contacts';
+import { todayIsoDate } from '@shared/forms/dates/app-dates';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 /** v21 limits. */
 export const MAX_CONTACTS = 5;
 /** Backend `decimal(5,2)`. */
 const MAX_RATE = 999.99;
 const CERTIFICATE_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
-
-/** Today as `YYYY-MM-DD`, in the user's time zone. */
-export function today(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 function userId(id: number | null | undefined): number | null {
   return id ? id : null;
@@ -67,7 +61,7 @@ function contactForm(row?: ContactRow): ContactForm {
  */
 @Component({
   selector: 'app-service-provider-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, MatButtonToggleModule],
+  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, MatButtonToggleModule, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './service-provider-dialog.html',
   styleUrl: './service-provider-dialog.css',
@@ -101,7 +95,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
   protected readonly uploading = signal(false);
   /** The certificate's file name, as shown next to "Choose File". */
   /** v21: the expiry date picker starts at today, since an expired certificate cannot be saved. */
-  protected readonly earliestExpiry = today();
+  protected readonly earliestExpiry = todayIsoDate();
   protected readonly certificateName = signal(fileName(this.record?.BeeCertificateStoragePath));
 
   protected readonly form = new FormGroup({
@@ -138,7 +132,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
     RateAuthorisedOn: new FormControl(dateOnly(this.record?.RateAuthorisedOn), {
       nonNullable: true,
     }),
-    ActiveOn: new FormControl(this.isNew ? today() : dateOnly(this.record?.ActiveOn), {
+    ActiveOn: new FormControl(this.isNew ? todayIsoDate() : dateOnly(this.record?.ActiveOn), {
       nonNullable: true,
     }),
     ActiveBy: new FormControl<number | null>(
@@ -275,7 +269,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
       AuthorisedBy: value.AuthorisedBy ?? 0,
       RateAuthorisedOn: value.RateAuthorisedOn || NO_DATE,
       IsActive: value.IsActive,
-      ActiveOn: value.ActiveOn || today(),
+      ActiveOn: value.ActiveOn || todayIsoDate(),
       ActiveBy: value.ActiveBy ?? 0,
       IsVerified: value.IsVerified,
       VerifiedOn: value.VerifiedOn || NO_DATE,
@@ -301,7 +295,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.applyBeeRules(true));
     controls.AuthorisedBy.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
-      controls.RateAuthorisedOn.setValue(id === null ? '' : today());
+      controls.RateAuthorisedOn.setValue(id === null ? '' : todayIsoDate());
     });
     for (const check of ['Verified', 'Accredited'] as const) {
       const { flag, by, on } = this.checkControls(check);
@@ -309,7 +303,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
         .pipe(takeUntilDestroyed())
         .subscribe(() => this.applyCheckRules(check, true));
       by.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
-        if (flag.value) on.setValue(id === null ? '' : today());
+        if (flag.value) on.setValue(id === null ? '' : todayIsoDate());
       });
     }
   }
@@ -339,7 +333,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
       by.enable({ emitEvent: false });
       if (changed) {
         if (by.value === null) by.setValue(this.currentUserId, { emitEvent: false });
-        on.setValue(today());
+        on.setValue(todayIsoDate());
       }
     } else {
       by.disable({ emitEvent: false });
@@ -371,7 +365,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
 
   private isExpired(): boolean {
     const expiry = this.form.controls.BeeExpiryDate.value;
-    return this.form.controls.BeeStatus.value && !!expiry && expiry < today();
+    return this.form.controls.BeeStatus.value && !!expiry && expiry < todayIsoDate();
   }
 }
 

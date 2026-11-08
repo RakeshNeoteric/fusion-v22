@@ -52,7 +52,7 @@ describe('Validation tab', () => {
     await openTab('Validation');
     await answer('Policy holder: do you have any ID Number?', 'Yes');
     await type('val-holder-id', '8001015009087');
-    expect(value('val-holder-birth')).toBe('1980-01-01');
+    expect(value('val-holder-birth')).toBe('01/01/1980');
     expect(disabled('val-holder-birth')).toBe(true);
   });
 
@@ -110,7 +110,7 @@ describe('Validation tab', () => {
     expect(value('val-policy')).toBe('FNB-77');
     expect(value('val-holder-first')).toBe('MARY');
     expect(value('val-holder-surname')).toBe('ANN MOYO');
-    expect(value('val-holder-birth')).toBe('1980-01-01');
+    expect(value('val-holder-birth')).toBe('01/01/1980');
   });
 
   it('stays open when the client has no policy system', async () => {

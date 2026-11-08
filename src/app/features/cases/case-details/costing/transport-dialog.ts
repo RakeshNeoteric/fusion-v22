@@ -9,6 +9,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { ChoiceToggle, YES_NO } from '@shared/forms/choice-toggle';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { localParts } from '@shared/reference/date-time';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 /** The phase's transport, as Phase Costing saves it. */
 export type TransportValues = Pick<
@@ -64,7 +65,7 @@ export function dispatchedMoment(date: string, time: string): string | null {
  */
 @Component({
   selector: 'app-transport-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle],
+  imports: [ReactiveFormsModule, RecordDialogFrame, ChoiceToggle, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="app-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -111,7 +112,7 @@ export function dispatchedMoment(date: string, time: string): string | null {
         <div class="form-row">
           <div class="form-field">
             <label for="tr-date">Vehicle Dispatched</label>
-            <input id="tr-date" type="date" formControlName="date" />
+            <app-date-field inputId="tr-date" formControlName="date" />
           </div>
           <div class="form-field">
             <label for="tr-time">Time</label>

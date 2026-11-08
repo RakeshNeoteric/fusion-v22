@@ -41,7 +41,7 @@ describe('Deceased Info tab', () => {
     expect(disabled('di-id')).toBe(true);
     await answer('Deceased: do you have any ID number?', 'Yes');
     await type('di-id', '8001014009088');
-    expect(value('di-birth')).toBe('1980-01-01');
+    expect(value('di-birth')).toBe('01/01/1980');
     await type('di-death', '2026-01-01');
     expect(value('di-age')).toBe('46');
     await type('di-place', 'Home');

@@ -35,6 +35,7 @@ import {
   withPolicyHolder,
 } from '../case-records';
 import { openFetchPolicy } from './fetch-policy-dialog';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 type MethodKey =
   | 'fusionDb'
@@ -78,7 +79,7 @@ interface ValidationRow {
  */
 @Component({
   selector: 'app-validation-tab',
-  imports: [ReactiveFormsModule, ChoiceToggle, LinkTable],
+  imports: [ReactiveFormsModule, ChoiceToggle, LinkTable, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => ValidationTab) }],
   templateUrl: './validation-tab.html',
@@ -132,6 +133,8 @@ export class ValidationTab extends CaseTabForm {
   );
   /** v21 shows the deceased's date of birth; it follows their ID number when it has one. */
   protected readonly deceasedBirth = signal('');
+  /** `yyyy-mm-dd` → DD/MM/YYYY for the read-only date of birth. */
+  protected readonly displayDate = displayDate;
   /** The policy holder is the deceased (Relationship "Self"): their details are the deceased's. */
   protected readonly holderIsDeceased = signal(false);
 

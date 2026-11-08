@@ -36,6 +36,8 @@ import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
 import { applyIdOrPassport, savedDeceased } from '../case-records';
 import { ageAtDeath } from './age-at-death';
+import { todayIsoDate } from '@shared/forms/dates/app-dates';
+import { DateField } from '@shared/forms/date-field/date-field';
 
 const GENDERS: readonly Choice<string>[] = [
   { value: 'Male', label: 'Male' },
@@ -54,15 +56,8 @@ const LOCATION_TYPES: readonly Choice<string>[] = [
 /** Provinces are South African: another country has none (v21). */
 const SOUTH_AFRICA = 'ZA';
 
-/** Today as `yyyy-MM-dd`, in local time. */
-function today(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
 function notInFuture(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value && control.value > today() ? { future: true } : null;
+  return control.value && control.value > todayIsoDate() ? { future: true } : null;
 }
 
 function deathAfterBirth(group: AbstractControl): ValidationErrors | null {
@@ -78,7 +73,7 @@ function deathAfterBirth(group: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-deceased-info-tab',
-  imports: [ReactiveFormsModule, ChoiceToggle, PhoneField],
+  imports: [ReactiveFormsModule, ChoiceToggle, PhoneField, DateField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => DeceasedInfoTab) }],
   templateUrl: './deceased-info-tab.html',
@@ -94,7 +89,7 @@ export class DeceasedInfoTab extends CaseTabForm {
   protected readonly locationTypes = LOCATION_TYPES;
   protected readonly provinces = PROVINCES;
   protected readonly countries = COUNTRIES;
-  protected readonly today = today();
+  protected readonly today = todayIsoDate();
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly age = signal<number | null>(null);
 
