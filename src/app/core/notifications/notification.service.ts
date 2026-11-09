@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
-type NotificationKind = 'success' | 'info' | 'warning' | 'error';
+import { type NotificationKind, Toast, type ToastData } from './toast';
 
 const DURATION_MS: Record<NotificationKind, number> = {
   success: 3000,
@@ -31,10 +30,13 @@ export class NotificationService {
     this.show('error', message);
   }
 
+  /** v21's toast, top right; a new message replaces the one showing. */
   private show(kind: NotificationKind, message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: DURATION_MS[kind],
-      horizontalPosition: 'center',
+    const durationMs = DURATION_MS[kind];
+    this.snackBar.openFromComponent<Toast, ToastData>(Toast, {
+      data: { kind, message, durationMs },
+      duration: durationMs,
+      horizontalPosition: 'end',
       verticalPosition: 'top',
       panelClass: ['app-notification', `app-notification--${kind}`],
       politeness: kind === 'error' || kind === 'warning' ? 'assertive' : 'polite',

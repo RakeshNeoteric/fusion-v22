@@ -55,26 +55,28 @@ body {
   background-color: var(--app-page-background);
 }
 
-/* Notifications (NotificationService) */
-.app-notification--success {
-  --mat-snack-bar-container-color: var(--app-success);
+/*
+ * Notifications (NotificationService): v21's toast (core/notifications/toast.ts) draws itself,
+ * so Material's snack bar is only the frame: no colour, shadow or padding of its own, 300px wide,
+ * 20px from the top right corner as in v21.
+ */
+.app-notification.mat-mdc-snack-bar-container {
+  margin: 20px;
+  --mat-snack-bar-container-color: transparent;
+  --mat-snack-bar-container-shape: 12px 12px 0 0;
 }
 
-.app-notification--info {
-  --mat-snack-bar-container-color: var(--app-navy);
+/* Two classes on the container: Material's own min-width (344px) has one and loads later. */
+.app-notification.mat-mdc-snack-bar-container .mat-mdc-snackbar-surface {
+  width: 300px;
+  min-width: 0;
+  max-width: calc(100vw - 40px);
+  padding: 0;
+  box-shadow: none;
 }
 
-.app-notification--warning {
-  --mat-snack-bar-container-color: var(--app-warning);
-}
-
-.app-notification--error {
-  --mat-snack-bar-container-color: var(--app-danger);
-}
-
-.app-notification {
-  --mat-snack-bar-supporting-text-color: #fff;
-  --mat-snack-bar-button-color: #fff;
+.app-notification .mat-mdc-snack-bar-label {
+  padding: 0;
 }
 
 /*
