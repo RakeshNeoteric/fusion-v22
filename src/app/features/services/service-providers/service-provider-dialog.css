@@ -176,7 +176,7 @@ mat-button-toggle-group {
   --mat-button-toggle-shape: 20px;
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .sp-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

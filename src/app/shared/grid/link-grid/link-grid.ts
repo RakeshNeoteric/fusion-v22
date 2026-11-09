@@ -19,7 +19,7 @@ import {
   RenderApiModule,
   TextFilterModule,
 } from 'ag-grid-community';
-import { APP_GRID_THEME, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
+import { APP_GRID_THEME, ICON_COLUMN_WIDTH, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
 import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 /** A column of a link grid: its text, which it is sorted and searched by. */
@@ -287,7 +287,7 @@ export class LinkGrid<T extends object> {
     return {
       headerName: header,
       colId: header,
-      width: 110,
+      width: ICON_COLUMN_WIDTH,
       resizable: false,
       // Icons only: no ⋮ column menu.
       suppressHeaderMenuButton: true,

@@ -14,6 +14,7 @@ import type { IInnerHeaderAngularComp } from 'ag-grid-angular';
 import type { ColDef, ColumnPinnedType, IHeaderParams } from 'ag-grid-community';
 import { type ChooseColumnsData, ChooseColumnsDialog } from './choose-columns-dialog';
 import { ColumnMenuActions, type SortChoice, hasColumnMenu } from './column-menu-actions';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /**
  * A column's header label with v21's ⋮ column menu: sort, pin, autosize, choose and reset
@@ -112,6 +113,11 @@ import { ColumnMenuActions, type SortChoice, hasColumnMenu } from './column-menu
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* A wrapped title stays centred, like the one-line titles (v21). */
+    .ag-header-cell-wrap-text app-column-menu-header .cmh-name {
+      white-space: normal;
+      text-align: center;
+    }
     /* v21: the ⋮ at the header's right edge, after the filter button. */
     app-column-menu-header .cmh-trigger {
       position: absolute;
@@ -202,8 +208,7 @@ export class ColumnMenuHeader implements IInnerHeaderAngularComp {
     if (!api) return;
     this.dialog.open<ChooseColumnsDialog, ChooseColumnsData>(ChooseColumnsDialog, {
       data: { api },
-      width: '360px',
-      maxWidth: '90vw',
+      ...dialogSize('xs'),
     });
   }
 }
@@ -214,4 +219,7 @@ export class ColumnMenuHeader implements IInnerHeaderAngularComp {
  */
 export const WITH_COLUMN_MENU = {
   headerComponentParams: { innerHeaderComponent: ColumnMenuHeader },
+  // A long title wraps onto a second line when its column is narrow, instead of being cut.
+  wrapHeaderText: true,
+  autoHeaderHeight: true,
 } as const satisfies ColDef;

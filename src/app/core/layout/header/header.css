@@ -86,7 +86,7 @@ button.user-chip:hover {
   text-overflow: ellipsis;
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .welcome,
   .logo-text {
     display: none;

@@ -29,13 +29,13 @@ export class RatingQuestionsPage {
     describe: (question) => question.Question,
     editor: (record) => this.dialogs.open(RatingQuestionDialog, record, PERMISSION, this.injector),
     columns: [
-      { kind: 'text', field: 'Question', header: 'Question', flex: 2, minWidth: 350 },
+      { kind: 'text', field: 'Question', header: 'Question', flex: 2, minWidth: 280 },
       {
         kind: 'select',
         field: 'RatingQuestionTypeId',
         header: 'Rating Question Type',
         options: () => this.questionTypes.options(),
-        minWidth: 280,
+        minWidth: 200,
       },
       { kind: 'number', field: 'ListRank', header: 'Rank', align: 'center', minWidth: 250 },
       { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 250 },

@@ -40,7 +40,7 @@ import {
   ToggleCell,
 } from '@shared/grid/entity-grid/entity-grid-cells';
 import { type GridRow, draftRow, savedRow } from '@shared/grid/entity-grid/entity-rows';
-import { APP_GRID_THEME, EDITABLE_GRID_MODULES } from '@shared/grid/grid-setup';
+import { APP_GRID_THEME, EDITABLE_GRID_MODULES, ICON_COLUMN_WIDTH } from '@shared/grid/grid-setup';
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { SelectField } from '@shared/forms/select-field/select-field';
@@ -85,7 +85,7 @@ const ACTION_COLUMN = {
   pinned: 'right',
   // Icons only: no ⋮ column menu.
   suppressHeaderMenuButton: true,
-  width: 110,
+  width: ICON_COLUMN_WIDTH,
   sortable: false,
   resizable: false,
   suppressMovable: true,
@@ -230,7 +230,7 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
     {
       headerName: 'Rank',
       colId: 'Rank',
-      width: 110,
+      width: ICON_COLUMN_WIDTH,
       minWidth: 90,
       valueGetter: ({ node }) => (node?.rowIndex ?? 0) + 1,
       cellClass: 'cell-center',

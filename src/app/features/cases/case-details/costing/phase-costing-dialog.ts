@@ -35,6 +35,7 @@ import { SelectField } from '@shared/forms/select-field/select-field';
 import { BusyButton } from '@shared/ui/busy/busy-button';
 import { Skeleton } from '@shared/ui/skeleton/skeleton';
 import { SkeletonFields } from '@shared/ui/skeleton/skeleton-fields';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 function costForm() {
   const amount = (max: number) =>
@@ -433,9 +434,7 @@ export class PhaseCostingDialog {
 export async function openPhaseCosting(dialog: MatDialog, injector: Injector): Promise<void> {
   const ref = dialog.open(PhaseCostingDialog, {
     injector,
-    width: '1200px',
-    maxWidth: '96vw',
-    maxHeight: '92vh',
+    ...dialogSize('xl'),
   });
   await firstValueFrom(ref.afterClosed());
 }

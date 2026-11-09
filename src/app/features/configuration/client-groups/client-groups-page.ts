@@ -28,7 +28,7 @@ export class ClientGroupsPage implements HasUnsavedChanges {
         // v21 rule.
         pattern: { regex: /^[A-Za-z\s]+$/, message: 'Name can contain only letters and spaces.' },
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
       { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 120 },
     ],

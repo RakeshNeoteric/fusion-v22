@@ -29,32 +29,32 @@ export class ServicesPage {
     describe: (service) => service.ServiceName,
     editor: (record) => this.dialogs.open(ServiceDialog, record, PERMISSION, this.injector),
     columns: [
-      { kind: 'text', field: 'ServiceName', header: 'Service Name', minWidth: 200 },
+      { kind: 'text', field: 'ServiceName', header: 'Service Name', minWidth: 160 },
       {
         kind: 'select',
         field: 'ServiceTypeCode',
         header: 'Service Type',
         options: () => this.serviceTypes.options(),
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
-      { kind: 'text', field: 'NotePlain', header: 'Note Plain', minWidth: 200 },
+      { kind: 'text', field: 'NotePlain', header: 'Note Plain', minWidth: 160 },
       // v21: a green tick or a red cross; Active keeps its switch.
       {
         kind: 'toggle',
         field: 'EnforceMobileNumber',
         header: 'Enforce Mobile',
         look: 'mark',
-        minWidth: 200,
+        minWidth: 160,
       },
       {
         kind: 'toggle',
         field: 'SendRefSMSEnabled',
         header: 'Send Ref SMS',
         look: 'mark',
-        minWidth: 200,
+        minWidth: 160,
       },
-      { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 200 },
+      { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 160 },
     ],
   };
 }

@@ -13,6 +13,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { money } from '@shared/reference/money';
 import type { ApprovalRow } from './approval-rows';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /** v21: at least 5 characters (spaces not counted here). */
 const atLeast5Characters = (control: AbstractControl<string>): ValidationErrors | null =>
@@ -81,8 +82,7 @@ export class RejectDialog {
 export async function askRejectReason(dialog: MatDialog, row: ApprovalRow): Promise<string | null> {
   const ref = dialog.open<RejectDialog, ApprovalRow, string>(RejectDialog, {
     data: row,
-    width: '600px',
-    maxWidth: '90vw',
+    ...dialogSize('sm'),
     autoFocus: '#rj-reason',
     disableClose: true,
   });

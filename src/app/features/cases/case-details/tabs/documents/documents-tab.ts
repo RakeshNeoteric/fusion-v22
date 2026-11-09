@@ -213,7 +213,7 @@ export class DocumentsTab {
       this.dialog,
       this.injector,
       MessageDialog,
-      { width: '800px', data: { kind: 'email', documents: this.rows() } },
+      { size: 'md', data: { kind: 'email', documents: this.rows() } },
     );
   }
 

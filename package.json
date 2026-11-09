@@ -12,7 +12,9 @@
     "lint": "ng lint",
     "format": "prettier --write \"src/**/*.{ts,html,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,css,json}\"",
-    "verify": "npm run format:check && npm run lint && npm run test:ci && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run check:responsive && npm run test:ci && npm run build",
+    "e2e:responsive": "playwright test",
+    "check:responsive": "node scripts/check-responsive.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -43,6 +45,7 @@
     "@angular/cli": "^22.2.4",
     "@angular/compiler-cli": "^22.2.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "@types/pdfmake": "~0.3.3",
     "angular-eslint": "22.6.0",
     "eslint": "^10.12.0",

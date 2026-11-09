@@ -13,6 +13,7 @@ import { DateField } from '@shared/forms/date-field/date-field';
 import type { SelectOption } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
 import { TimeField } from '@shared/forms/time-field/time-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /** The phase's transport, as Phase Costing saves it. */
 export type TransportValues = Pick<
@@ -231,8 +232,7 @@ export async function openTransport(
 ): Promise<TransportValues | null> {
   const ref = dialog.open<TransportDialog, TransportDialogData, TransportValues>(TransportDialog, {
     data,
-    width: '900px',
-    maxWidth: '95vw',
+    ...dialogSize('lg'),
   });
   return (await firstValueFrom(ref.afterClosed())) ?? null;
 }

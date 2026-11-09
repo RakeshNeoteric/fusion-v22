@@ -7,6 +7,7 @@ import {
 } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
+import { dialogSize } from '../dialog-size';
 
 export interface ConfirmOptions {
   readonly title: string;
@@ -45,7 +46,7 @@ export class ConfirmService {
   async ask(options: ConfirmOptions): Promise<boolean> {
     const ref = this.dialog.open<ConfirmDialog, ConfirmOptions, boolean>(ConfirmDialog, {
       data: options,
-      width: '420px',
+      ...dialogSize('xs'),
       autoFocus: 'dialog',
     });
     return (await firstValueFrom(ref.afterClosed())) === true;

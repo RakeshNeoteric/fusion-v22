@@ -47,7 +47,7 @@ export class TransportOperatorsPage implements HasUnsavedChanges {
       ),
     }),
     columns: [
-      { kind: 'text', field: 'Name', header: 'Name', required: true, flex: 2, minWidth: 200 },
+      { kind: 'text', field: 'Name', header: 'Name', required: true, flex: 2, minWidth: 160 },
       {
         kind: 'select',
         field: 'BranchId',
@@ -55,7 +55,7 @@ export class TransportOperatorsPage implements HasUnsavedChanges {
         required: true,
         options: () => this.branches.options(),
         missingLabel: missingBranchLabel,
-        minWidth: 200,
+        minWidth: 160,
       },
       {
         kind: 'display',

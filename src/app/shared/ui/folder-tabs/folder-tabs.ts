@@ -56,7 +56,8 @@ export interface FolderTab {
     .ft-tab {
       flex: none;
       white-space: nowrap;
-      padding: 10px 34px 10px 8px;
+      /* 34px for the slanted edge on large screens (v21); less on a laptop, so more tabs fit. */
+      padding: 10px clamp(18px, 1.8vw, 34px) 10px 8px;
       border: 1px solid #ccc;
       border-bottom: none;
       border-top-right-radius: 70px;
@@ -103,7 +104,8 @@ export class FolderTabs {
     afterRenderEffect(() => {
       const selected = this.selected();
       const tab = this.host.nativeElement.querySelector<HTMLElement>(`#${this.tabId(selected)}`);
-      tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      const strip = tab?.parentElement;
+      if (tab && strip) scrollTabIntoStrip(strip, tab);
     });
   }
 
@@ -131,4 +133,15 @@ export class FolderTabs {
     this.host.nativeElement.querySelector<HTMLElement>(`#${this.tabId(tab.id)}`)?.focus();
     this.choose.emit(tab.id);
   }
+}
+
+/**
+ * Scrolls the strip sideways just enough to show the tab. Only the strip moves:
+ * `scrollIntoView` would also scroll every container around it, the window included.
+ */
+export function scrollTabIntoStrip(strip: HTMLElement, tab: HTMLElement): void {
+  const box = strip.getBoundingClientRect();
+  const item = tab.getBoundingClientRect();
+  if (item.left < box.left) strip.scrollLeft -= box.left - item.left;
+  else if (item.right > box.right) strip.scrollLeft += item.right - box.right;
 }

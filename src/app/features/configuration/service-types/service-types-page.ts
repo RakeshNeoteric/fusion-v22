@@ -44,7 +44,7 @@ export class ServiceTypesPage implements HasUnsavedChanges {
         header: 'Description',
         required: true,
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
       { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 90 },
     ],

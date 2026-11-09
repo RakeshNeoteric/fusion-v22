@@ -64,6 +64,9 @@ export const LIST_GRID_MODULES: Module[] = [
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 
+/** An icon column (View, Save, Delete, Unlink): room for one icon and its padding. */
+export const ICON_COLUMN_WIDTH = 80;
+
 /** Report tables: read-only, each column sorted and searched by the grid (v21 report tabs). */
 export const REPORT_GRID_MODULES: Module[] = [...LIST_GRID_MODULES, TextFilterModule];
 

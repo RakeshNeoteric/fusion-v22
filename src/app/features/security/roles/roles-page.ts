@@ -65,7 +65,7 @@ export class RolesPage implements HasUnsavedChanges {
         required: true,
         pattern: ROLE_TEXT,
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
       {
         kind: 'text',

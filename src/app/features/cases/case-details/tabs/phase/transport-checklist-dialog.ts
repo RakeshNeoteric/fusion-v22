@@ -11,6 +11,7 @@ import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { storedToE164 } from '@shared/reference/phone';
 import { DateField } from '@shared/forms/date-field/date-field';
 import { TimeField } from '@shared/forms/time-field/time-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /** v21 ways the deceased travel; the value is what is stored. */
 const TRANSPORT_METHODS: readonly Choice<string>[] = [
@@ -161,7 +162,7 @@ export async function openTransportChecklist(
 ): Promise<CasePhaseRecord | null> {
   const ref = dialog.open<TransportChecklistDialog, TransportChecklistData, CasePhaseRecord>(
     TransportChecklistDialog,
-    { data, width: '1000px', maxWidth: '95vw' },
+    { data, ...dialogSize('lg') },
   );
   return (await firstValueFrom(ref.afterClosed())) ?? null;
 }

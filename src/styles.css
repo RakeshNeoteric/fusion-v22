@@ -17,6 +17,44 @@
    * Times. Same font everywhere, with fallbacks.
    */
   --app-font: Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /*
+   * Responsive design settings (RESPONSIVE.md). Screens use these, not their own numbers.
+   *
+   * Spacing scale: the gaps and paddings a screen may use.
+   */
+  --app-space-1: 4px;
+  --app-space-2: 8px;
+  --app-space-3: 12px;
+  --app-space-4: 16px;
+  --app-space-5: 20px;
+  --app-space-6: 24px;
+  --app-space-8: 32px;
+
+  /* Page padding: 12px on a 1280 laptop, 16px at 1920 (v21), up to 24px on a 2560 monitor. */
+  --app-page-padding: clamp(12px, 0.834vw, 24px);
+
+  /*
+   * Most a part may stretch to. Tables and the page itself have no limit: they use the width.
+   * Forms and text are easier to read when lines do not run across a wide monitor.
+   */
+  --app-form-max-width: 1400px;
+  --app-text-max-width: 75ch;
+
+  /*
+   * Breakpoints. CSS variables cannot be used in @media or @container, so they are written as
+   * plain numbers, always in the form `@media (width < 1280px)`, and only these:
+   *
+   *   < 1024px          below desktop: must not break (a narrow browser window)
+   *   1024px – 1279px   compact desktop
+   *   1280px – 1439px   standard desktop (the main design target)
+   *   1440px – 1919px   comfortable desktop
+   *   1920px – 2559px   large desktop
+   *   >= 2560px         wide screen
+   *
+   * A part placed in different spaces (a grid in a page or in a popup) uses @container on its
+   * own width instead.
+   */
 }
 
 html {
@@ -46,6 +84,14 @@ html {
 html,
 body {
   height: 100%;
+}
+
+/*
+ * Signed in, the window never scrolls: the app frame fills it and only its content area
+ * scrolls (core/layout/shell.ts). The login page, without the frame, scrolls as usual.
+ */
+html:has(app-shell) {
+  overflow: hidden;
 }
 
 body {

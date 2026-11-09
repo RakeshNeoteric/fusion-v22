@@ -44,7 +44,7 @@ export class BranchesPage implements HasUnsavedChanges {
         header: 'Branch Name',
         required: true,
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
       {
         kind: 'select',
@@ -60,7 +60,7 @@ export class BranchesPage implements HasUnsavedChanges {
         header: 'Country',
         required: true,
         options: () => COUNTRY_OPTIONS,
-        minWidth: 200,
+        minWidth: 160,
       },
       { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 150 },
     ],

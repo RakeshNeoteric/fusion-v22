@@ -5,10 +5,13 @@
 }
 /* v21: the tab's fields on a light teal panel. */
 .tab-panel {
+  /* Rows inside lay themselves out by the panel's width (RESPONSIVE.md, rule 4). */
+  container: case-tab / inline-size;
   display: flex;
   flex-direction: column;
   gap: 28px;
-  padding: 32px 40px;
+  /* 40px at sides on large screens (v21), less on a laptop. */
+  padding: 32px clamp(16px, 2.5vw, 40px);
   border-radius: 16px;
   background: #e8f6f6;
 }
@@ -102,8 +105,19 @@
   .tab-panel {
     padding: 20px 16px;
   }
+}
+/*
+ * A caller's five boxes and the remove button need about 960px in one row. Narrower (a laptop,
+ * or the tracker panel open beside the tabs): three per row, then two.
+ */
+@container case-tab (width < 960px) {
   .tab-caller {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container case-tab (width < 600px) {
+  .tab-caller {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .tab-section {

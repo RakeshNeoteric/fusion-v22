@@ -8,6 +8,7 @@ import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { requiredText } from '@shared/forms/validators';
 import { optionsOf } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /**
  * v21 "Clone (Copy) a Client": copies a client, with its services, documents and other
@@ -122,8 +123,7 @@ export class CloneClientDialog {
 /** Opens the clone popup; resolves true when a client was copied. */
 export async function cloneClient(dialog: MatDialog): Promise<boolean> {
   const ref = dialog.open<CloneClientDialog, undefined, Client>(CloneClientDialog, {
-    width: '700px',
-    maxWidth: '90vw',
+    ...dialogSize('md'),
     autoFocus: '#clone-source',
     disableClose: true,
   });

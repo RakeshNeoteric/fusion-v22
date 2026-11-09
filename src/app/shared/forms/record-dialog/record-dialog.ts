@@ -25,6 +25,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { BusyButton } from '@shared/ui/busy/busy-button';
 import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
+import { type DialogSize, dialogSize } from '@shared/ui/dialog-size';
 
 /** What a record form is opened with. */
 export interface RecordDialogData<T> {
@@ -190,14 +191,14 @@ export class RecordDialogs {
     record: T | null,
     permission: string,
     injector?: Injector,
-    /** Wider popups for long forms (v21 Service Provider). */
-    width = '800px',
+    /** Bigger popups for long forms (v21 Client, Service Provider). */
+    size: DialogSize = 'md',
   ): Promise<T | null> {
     const readOnly =
       record === null
         ? !this.permissions.canCreate(permission)
         : !this.permissions.canEdit(permission);
-    return this.show<T>(component, { record, readOnly }, injector, width);
+    return this.show<T>(component, { record, readOnly }, injector, size);
   }
 
   /** Opens a record form with the data given, when read-only follows another rule (My Profile). */
@@ -205,13 +206,12 @@ export class RecordDialogs {
     component: ComponentType<object>,
     data: RecordDialogData<T>,
     injector?: Injector,
-    width = '800px',
+    size: DialogSize = 'md',
   ): Promise<T | null> {
     const ref = this.dialog.open<object, RecordDialogData<T>, T>(component, {
       data,
       injector,
-      width,
-      maxWidth: '90vw',
+      ...dialogSize(size),
       // The first field, not the close button.
       autoFocus: '.rd-fields :is(input, select, textarea):not([disabled])',
       // Only ✖ and Cancel close it, so a stray click outside does not lose what was typed.

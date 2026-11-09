@@ -32,8 +32,7 @@ export class ClientsPage {
     source: inject(ClientApi),
     loadLookups: () => this.clientGroups.load(),
     describe: (client) => client.ClientName,
-    editor: (record) =>
-      this.dialogs.open(ClientDialog, record, PERMISSION, this.injector, '1100px'),
+    editor: (record) => this.dialogs.open(ClientDialog, record, PERMISSION, this.injector, 'xl'),
     titleActions: [
       {
         label: 'Clone (Copy) a Client',
@@ -42,18 +41,18 @@ export class ClientsPage {
       },
     ],
     columns: [
-      { kind: 'text', field: 'ClientName', header: 'Name', minWidth: 200 },
+      { kind: 'text', field: 'ClientName', header: 'Name', minWidth: 160 },
       {
         kind: 'display',
         id: 'ClientGroup',
         header: 'Client Group',
-        minWidth: 200,
+        minWidth: 160,
         value: (client) =>
           client.ClientGroup
             ? statusLabel(client.ClientGroup.Name, client.ClientGroup)
             : this.clientGroups.label(client.ClientGroupId),
       },
-      { kind: 'text', field: 'Address', header: 'Address', minWidth: 200 },
+      { kind: 'text', field: 'Address', header: 'Address', minWidth: 160 },
       {
         kind: 'display',
         id: 'Tel',

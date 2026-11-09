@@ -14,6 +14,7 @@ import { CaseIdentity } from '../../case-identity';
 import { CaseWorkspace } from '../../case-workspace';
 import { textOptions } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /**
  * v21 "New Complaint" popup: a title, a type and the details, logged against the open case.
@@ -129,8 +130,7 @@ export async function openComplaint(
   const ref = dialog.open(ComplaintDialog, {
     data,
     injector,
-    width: '800px',
-    maxWidth: '90vw',
+    ...dialogSize('md'),
     autoFocus: '.rd-fields :is(input, select, textarea):not([disabled])',
     disableClose: true,
   });

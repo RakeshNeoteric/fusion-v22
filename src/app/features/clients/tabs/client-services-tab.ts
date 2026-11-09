@@ -93,7 +93,7 @@ export class ClientServicesTab extends ClientLinkTab<ClientServiceLink> {
       providers: [{ provide: CLIENT_LINK_CONTEXT, useValue: context }],
       parent: this.injector,
     });
-    const saved = await this.dialogs.open(LinkServiceDialog, link, PERMISSION, injector, '900px');
+    const saved = await this.dialogs.open(LinkServiceDialog, link, PERMISSION, injector, 'lg');
     if (saved) this.put(saved);
   }
 

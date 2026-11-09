@@ -36,7 +36,13 @@ import {
   type MenuPoint,
   isContextMenuKey,
 } from '../context-menu/grid-context-menu';
-import { APP_GRID_THEME, EDITABLE_GRID_MODULES, PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../grid-setup';
+import {
+  APP_GRID_THEME,
+  EDITABLE_GRID_MODULES,
+  ICON_COLUMN_WIDTH,
+  PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+} from '../grid-setup';
 import {
   DeleteCell,
   type EntityGridContext,
@@ -72,12 +78,19 @@ type LoadStatus = 'loading' | 'ready' | 'failed';
 /** The icon columns (Link, View, Save, Delete): no text to copy, left out of a CSV export. */
 const ACTION_COLUMN_IDS: ReadonlySet<string> = new Set(['link', 'view', 'save', 'delete']);
 
+/**
+ * A yes/no or number column needs no more than this to be read, whatever the screen asks: a
+ * wider minimum only makes the table scroll sooner on a laptop. Columns still stretch wider.
+ */
+const NARROW_COLUMN_MAX_MIN_WIDTH = 120;
+
 const ACTION_COLUMN = {
   headerName: '',
   // Icons only: no ⋮ column menu.
   suppressHeaderMenuButton: true,
   pinned: 'right',
-  width: 110,
+  // Room for one icon: wider only took space from the data on laptops.
+  width: ICON_COLUMN_WIDTH,
   sortable: false,
   resizable: false,
   suppressMovable: true,
@@ -493,6 +506,7 @@ export class EntityGrid<T extends object> implements OnInit {
       headerName: column.header,
       flex: column.flex ?? 1,
       minWidth: column.minWidth ?? 120,
+      ...(column.pinned ? { pinned: column.pinned } : {}),
       valueGetter: ({ data }) => data?.entity[column.field],
       editable: ({ data }) => this.canEditCells() && !!data && !data.saving,
       cellClass: column.align === 'center' || column.kind === 'toggle' ? 'cell-center' : undefined,
@@ -512,13 +526,14 @@ export class EntityGrid<T extends object> implements OnInit {
           filter: 'agNumberColumnFilter',
           cellEditor: 'agNumberCellEditor',
           cellEditorParams: { min: column.min, max: column.max },
+          minWidth: Math.min(column.minWidth ?? 120, NARROW_COLUMN_MAX_MIN_WIDTH),
         };
       case 'toggle':
         return {
           ...base,
           editable: false,
           cellRenderer: column.look === 'mark' ? MarkCell : ToggleCell,
-          minWidth: column.minWidth ?? 100,
+          minWidth: Math.min(column.minWidth ?? 100, NARROW_COLUMN_MAX_MIN_WIDTH),
         };
       case 'select': {
         const options = column.options();
@@ -546,6 +561,7 @@ function displayColumnDef<T extends object>(column: DisplayColumn<T>): ColDef<Gr
     headerName: column.header,
     flex: column.flex ?? 1,
     minWidth: column.minWidth ?? 120,
+    ...(column.pinned ? { pinned: column.pinned } : {}),
     editable: false,
     filter: 'agTextColumnFilter',
     valueGetter: ({ data }) => (data ? column.value(data.entity) : ''),

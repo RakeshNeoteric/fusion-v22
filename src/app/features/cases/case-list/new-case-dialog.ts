@@ -9,6 +9,7 @@ import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import type { CaseDirectory } from '../case-setup';
 import { optionsOf } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /**
  * v21 "Create a New Call": pick a client, then one of its services; Next creates the case.
@@ -127,8 +128,7 @@ export async function openNewCase(
 ): Promise<CaseDetails | null> {
   const ref = dialog.open<NewCaseDialog, CaseDirectory, CaseDetails>(NewCaseDialog, {
     data: directory,
-    width: '700px',
-    maxWidth: '90vw',
+    ...dialogSize('md'),
     autoFocus: '#nc-client',
     disableClose: true,
   });

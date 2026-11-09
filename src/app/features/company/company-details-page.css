@@ -74,7 +74,7 @@
   flex: 0 0 22%;
   max-width: 22%;
 }
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .company-card .form-field {
     flex: 1 1 100%;
     max-width: 100%;

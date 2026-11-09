@@ -37,6 +37,7 @@ import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po
 import { type AdditionalCostGridContext, AdditionalCostDeleteCell } from './additional-cost-cells';
 import { BusyButton } from '@shared/ui/busy/busy-button';
 import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {
@@ -289,9 +290,7 @@ export class AdditionalCostingDialog {
 export async function openAdditionalCosting(dialog: MatDialog, injector: Injector): Promise<void> {
   const ref = dialog.open(AdditionalCostingDialog, {
     injector,
-    width: '1100px',
-    maxWidth: '96vw',
-    maxHeight: '92vh',
+    ...dialogSize('xl'),
   });
   await firstValueFrom(ref.afterClosed());
 }

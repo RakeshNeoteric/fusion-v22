@@ -125,6 +125,8 @@ export class LinkCell {
   `,
   styles: `
     .lt-wrap {
+      /* Holds the hidden caption, which is positioned. */
+      position: relative;
       overflow-x: auto;
       border: 1px solid #babfc7;
       border-radius: 8px;

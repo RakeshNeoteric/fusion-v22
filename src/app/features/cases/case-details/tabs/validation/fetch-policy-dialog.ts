@@ -10,6 +10,7 @@ import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
 import { LinkCell, type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';
 import { policyHolderRecord } from '../case-records';
 import { DateField } from '@shared/forms/date-field/date-field';
+import { dialogSize } from '@shared/ui/dialog-size';
 
 type SearchMode = 'id' | 'id-policy';
 
@@ -215,8 +216,7 @@ export async function openFetchPolicy(
 ): Promise<PolicyMatch | null> {
   const ref = dialog.open<FetchPolicyDialog, CaseDetails, PolicyMatch>(FetchPolicyDialog, {
     data: details,
-    width: '1000px',
-    maxWidth: '95vw',
+    ...dialogSize('lg'),
     autoFocus: '#fp-deceased',
   });
   return (await firstValueFrom(ref.afterClosed())) ?? null;

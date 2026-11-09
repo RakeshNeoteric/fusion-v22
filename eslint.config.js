@@ -18,6 +18,20 @@ const noEnvironmentImports = {
     'Read configuration through the APP_CONFIG injection token (core/config), not environment files.',
 };
 
+/**
+ * Responsive design (RESPONSIVE.md). A popup's size comes from `dialogSize('sm' | 'md' | ...)`
+ * and the app-wide limits (shared/ui/dialog-size.ts), never a typed-in CSS size, so popups stay
+ * consistent and always fit the window. Grid columns use numbers, so they are not affected.
+ */
+const responsiveRules = [
+  {
+    selector:
+      "Property[key.name=/^(width|minWidth|maxWidth|height|maxHeight)$/][value.type='Literal'][value.value=/^\\d+(\\.\\d+)?(px|vw|vh|rem|em)$/]",
+    message:
+      "Use dialogSize('xs' | 'sm' | 'md' | 'lg' | 'xl') for a popup's width (RESPONSIVE.md); the window limits are set once for all popups.",
+  },
+];
+
 module.exports = defineConfig([
   {
     files: ['**/*.ts'],
@@ -61,6 +75,9 @@ module.exports = defineConfig([
       eqeqeq: ['error', 'always'],
 
       'no-restricted-imports': ['error', { patterns: [noEnvironmentImports] }],
+
+      // Responsive design (RESPONSIVE.md): popups take one of the shared sizes.
+      'no-restricted-syntax': ['error', ...responsiveRules],
     },
   },
   {
@@ -80,6 +97,8 @@ module.exports = defineConfig([
   {
     files: ['**/*.spec.ts'],
     rules: {
+      // Tests size things freely (e.g. a skeleton's width).
+      'no-restricted-syntax': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },

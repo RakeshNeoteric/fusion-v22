@@ -31,14 +31,15 @@ export class ServiceProvidersPage {
     loadLookups: () => this.serviceTypes.load(),
     describe: (provider) => provider.Name,
     editor: (record) =>
-      this.dialogs.open(ServiceProviderDialog, record, PERMISSION, this.injector, '1150px'),
+      this.dialogs.open(ServiceProviderDialog, record, PERMISSION, this.injector, 'xl'),
     columns: [
-      { kind: 'text', field: 'Name', header: 'Name', flex: 2, minWidth: 200 },
+      // 18 columns: the name stays in view while the rest scroll.
+      { kind: 'text', field: 'Name', header: 'Name', flex: 2, minWidth: 200, pinned: 'left' },
       { kind: 'text', field: 'VATNumber', header: 'VAT Number', minWidth: 160 },
       { kind: 'text', field: 'CompanyRegNo', header: 'Company Reg. No', minWidth: 170 },
       { kind: 'text', field: 'Branch', header: 'Branch', minWidth: 150 },
-      { kind: 'text', field: 'OfficeAddress', header: 'Office Address', minWidth: 200 },
-      { kind: 'text', field: 'StorageAddress', header: 'Storage Address', minWidth: 200 },
+      { kind: 'text', field: 'OfficeAddress', header: 'Office Address', minWidth: 160 },
+      { kind: 'text', field: 'StorageAddress', header: 'Storage Address', minWidth: 160 },
       { kind: 'text', field: 'TownCity', header: 'Town / City', minWidth: 150 },
       { kind: 'text', field: 'Province', header: 'Province', minWidth: 150 },
       {

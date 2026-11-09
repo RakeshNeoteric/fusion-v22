@@ -240,7 +240,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       ExitDialog,
-      { width: '640px' },
+      { size: 'sm' },
     );
     if (choice === 'incomplete') await this.leave();
     else if (choice === 'complete') await this.closeCase();
@@ -264,7 +264,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       ReassignDialog,
-      { width: '800px' },
+      { size: 'md' },
     );
     if (done) this.rebuildTab();
   }
@@ -288,7 +288,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       ContactHistoryDialog,
-      { width: '1000px' },
+      { size: 'lg' },
     );
   }
 
@@ -299,7 +299,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       MessageDialog,
-      { width: '800px', data: { kind: 'sms' } },
+      { size: 'md', data: { kind: 'sms' } },
     );
   }
 
@@ -313,7 +313,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       RatingDialog,
-      { width: '900px', data },
+      { size: 'lg', data },
     );
     if (outcome === 'closed') await this.router.navigate(['/cases']);
   }
@@ -366,7 +366,7 @@ export class CaseDetailsPage implements HasUnsavedChanges {
       this.dialog,
       this.injector,
       ReasonDialog,
-      { width: '800px', data: action },
+      { size: 'md', data: action },
     );
     return done === true;
   }

@@ -2,6 +2,7 @@ import type { ComponentType } from '@angular/cdk/portal';
 import type { Injector } from '@angular/core';
 import type { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
+import { type DialogSize, dialogSize } from '@shared/ui/dialog-size';
 
 /**
  * Opens a case popup and waits for what it closes with (`undefined` when closed with ✖ or
@@ -11,13 +12,12 @@ export async function openCaseDialog<C, R, D = undefined>(
   dialog: MatDialog,
   injector: Injector,
   component: ComponentType<C>,
-  options: { readonly width: string; readonly data?: D },
+  options: { readonly size: DialogSize; readonly data?: D },
 ): Promise<R | undefined> {
   const ref = dialog.open<C, D, R>(component, {
     data: options.data,
     injector,
-    width: options.width,
-    maxWidth: '90vw',
+    ...dialogSize(options.size),
     autoFocus: '.rd-fields :is(input, select, textarea):not([disabled])',
     disableClose: true,
   });

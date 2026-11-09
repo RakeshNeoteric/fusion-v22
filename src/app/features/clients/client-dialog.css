@@ -116,7 +116,7 @@ textarea {
   resize: vertical;
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .cl-company,
   .cl-contact,
   .cl-data {
@@ -133,7 +133,7 @@ textarea {
   max-width: 260px;
   margin-top: 8px;
 }
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .cl-web {
     width: auto;
   }

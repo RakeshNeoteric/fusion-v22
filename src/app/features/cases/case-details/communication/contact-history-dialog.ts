@@ -90,7 +90,7 @@ export class ContactHistoryDialog {
   protected async newNote(): Promise<void> {
     if (this.readOnly()) return;
     await openCaseDialog<NoteDialog, true>(this.dialog, this.injector, NoteDialog, {
-      width: '700px',
+      size: 'md',
     });
   }
 }

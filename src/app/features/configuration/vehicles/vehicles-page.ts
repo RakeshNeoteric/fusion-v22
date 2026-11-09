@@ -38,9 +38,9 @@ export class VehiclesPage implements HasUnsavedChanges {
         header: 'Register number',
         required: true,
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
-      { kind: 'text', field: 'Description', header: 'Description', required: true, minWidth: 200 },
+      { kind: 'text', field: 'Description', header: 'Description', required: true, minWidth: 160 },
       {
         kind: 'select',
         field: 'BranchId',
@@ -48,7 +48,7 @@ export class VehiclesPage implements HasUnsavedChanges {
         required: true,
         options: () => this.branches.options(),
         missingLabel: missingBranchLabel,
-        minWidth: 200,
+        minWidth: 160,
       },
       {
         kind: 'display',

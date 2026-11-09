@@ -12,6 +12,8 @@ interface ColumnLayout {
   readonly minWidth?: number;
   /** Cell text alignment. Default: start (toggles are always centred). */
   readonly align?: 'start' | 'center';
+  /** Kept in view on the left while a wide table scrolls (e.g. the name). */
+  readonly pinned?: 'left';
 }
 
 interface ColumnBase<T> extends ColumnLayout {

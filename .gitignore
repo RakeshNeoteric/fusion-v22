@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Playwright: signed-in session, screenshots and reports (never commit)
+/.e2e

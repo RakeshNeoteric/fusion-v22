@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogClose, type MatDialog } from '@angular/material/dialog';
 import { formatDateTime } from '@shared/reference/date-time';
 import { type HistoryRow, noteChanges } from './history-rows';
+import { SIDE_PANEL } from '@shared/ui/dialog-size';
 
 /** "Dayakar Nuchu" → "DN" */
 function initials(name: string): string {
@@ -297,11 +298,7 @@ export class ContactLogDialog {
 export function openContactLog(dialog: MatDialog, log: HistoryRow): void {
   dialog.open(ContactLogDialog, {
     data: log,
-    position: { right: '0', top: '0' },
-    height: '100vh',
-    width: '460px',
-    maxWidth: '100vw',
-    panelClass: 'app-side-panel',
+    ...SIDE_PANEL,
     autoFocus: 'dialog',
   });
 }

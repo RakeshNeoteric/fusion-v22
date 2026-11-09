@@ -51,7 +51,7 @@ export class BodyLocationsPage implements HasUnsavedChanges {
           message: 'Description may only contain letters, numbers and spaces.',
         },
         flex: 2,
-        minWidth: 200,
+        minWidth: 160,
       },
       { kind: 'toggle', field: 'IsActive', header: 'Active' },
     ],

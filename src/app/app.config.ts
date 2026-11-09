@@ -15,6 +15,7 @@ import { PROFILE_EDITOR, type ProfileEditor } from '@core/layout/header/profile-
 import { SessionService } from '@core/session/session.service';
 import { provideAppDates } from '@shared/forms/dates/app-dates';
 import { routes } from './app.routes';
+import { provideDialogDefaults } from '@shared/ui/dialog-size';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,6 +25,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([errorInterceptor, apiUrlInterceptor, authInterceptor])),
     provideAppIcons(),
     provideAppDates(),
+    provideDialogDefaults(),
     // Sign-in and AppInit finish before the first route is chosen, so guards see the real session.
     provideAppInitializer(() => inject(SessionService).start()),
     provideRouter(routes, withComponentInputBinding()),
