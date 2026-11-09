@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import type { CaseDocumentRecord } from '@api/cases/case.api';
 import type { ClientDocumentLink } from '@api/clients/client-links.api';
 import type { ClientWithLinks } from '@api/clients/client.api';
@@ -108,6 +108,28 @@ describe('Documents tab', () => {
     expect(rowTexts()[0]?.[2]).toBe('Upload form.pdf View Download');
   });
 
+  it('shows how much of the file is sent in its row while it uploads', async () => {
+    const stored = new Subject<unknown>();
+    api.uploadDocument.mockImplementation(
+      (_record: CaseDocumentRecord, _file: File, progress: (percent: number) => void) => {
+        progress(40);
+        return stored;
+      },
+    );
+    await show(onDefaultTabs);
+    await openTab('Documents');
+
+    await pick('Claim Form', 'form.pdf');
+    const bar = element<HTMLElement>('[role="progressbar"]');
+    expect(bar.getAttribute('aria-valuenow')).toBe('40');
+    expect(rowTexts()[0]?.[2]).toMatch(/^Uploading form\.pdf\s*40%$/);
+
+    stored.next(null);
+    stored.complete();
+    await settle();
+    expect(document.querySelector('[role="progressbar"]')).toBeNull();
+  });
+
   it('replaces the uploaded file once confirmed', async () => {
     await show({ ...onDefaultTabs, CaseDocument: [upload()] });
     await openTab('Documents');
@@ -128,6 +150,7 @@ describe('Documents tab', () => {
         FileStoragePath: `${BASE}Case%2FREF1_80_death.pdf`,
       }),
       expect.any(File),
+      expect.any(Function),
     );
   });
 

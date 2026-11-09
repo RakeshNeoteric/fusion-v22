@@ -81,7 +81,15 @@
         </div>
       </div>
       <div class="ac-actions">
-        <button type="submit" class="app-button" [disabled]="busy()">Add</button>
+        <button
+          type="submit"
+          class="app-button"
+          [disabled]="busy()"
+          [appBusy]="adding()"
+          busyText="Adding…"
+        >
+          Add
+        </button>
       </div>
     </form>
   }

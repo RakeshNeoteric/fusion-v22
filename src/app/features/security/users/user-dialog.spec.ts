@@ -168,7 +168,11 @@ describe('UserDialog', () => {
   it('replaces the photo only when the user is saved, keeping the old file', async () => {
     await open(stored);
     await choosePhoto();
-    expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'UserProfile');
+    expect(files.upload).toHaveBeenCalledWith(
+      expect.any(File),
+      'UserProfile',
+      expect.any(Function),
+    );
     expect(files.delete).not.toHaveBeenCalled();
 
     await press('Update');

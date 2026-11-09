@@ -23,6 +23,7 @@ import { type ContactRow, toContact, toContactRow } from './provider-contacts';
 import { todayIsoDate } from '@shared/forms/dates/app-dates';
 import { DateField } from '@shared/forms/date-field/date-field';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 
 /** v21 limits. */
 export const MAX_CONTACTS = 5;
@@ -69,6 +70,7 @@ function contactForm(row?: ContactRow): ContactForm {
     MatButtonToggleModule,
     DateField,
     SelectField,
+    UploadProgressBar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './service-provider-dialog.html',
@@ -85,7 +87,7 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
   private readonly directory = inject(UserDirectoryService);
   private readonly currentUserId = inject(SessionService).user()?.id ?? null;
   private readonly record = this.data.record;
-  private readonly certificates = new DialogFiles('ServiceProvider');
+  protected readonly certificates = new DialogFiles('ServiceProvider');
 
   protected readonly title = this.isNew
     ? 'Create Service Provider'

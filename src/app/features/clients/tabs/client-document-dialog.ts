@@ -16,6 +16,8 @@ import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/rec
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
+import { type Observable, finalize } from 'rxjs';
 
 /** v21 editor toolbar, without media: the note is stored as plain text. */
 const NOTE_TOOLBAR = [
@@ -35,7 +37,13 @@ const ACCEPTED_FILES = '.pdf,image/*';
  */
 @Component({
   selector: 'app-client-document-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    RecordDialogFrame,
+    QuillEditorComponent,
+    SelectField,
+    UploadProgressBar,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
@@ -47,6 +55,7 @@ const ACCEPTED_FILES = '.pdf,image/*';
         [isNew]="isNew"
         [readOnly]="readOnly"
         [saving]="saving()"
+        [busyLabel]="upload() ? 'Uploading…' : 'Saving…'"
       >
         <div class="form-row">
           <div class="form-field">
@@ -108,6 +117,9 @@ const ACCEPTED_FILES = '.pdf,image/*';
               <span class="cd-none">No file chosen</span>
             }
           </div>
+          @if (upload(); as state) {
+            <app-upload-progress class="cd-progress" [upload]="state" />
+          }
         </div>
       </app-record-dialog-frame>
     </form>
@@ -124,13 +136,24 @@ export class ClientDocumentDialog extends RecordDialog<ClientDocumentLink> {
   protected readonly accepted = ACCEPTED_FILES;
   protected readonly fileName = storedFileName;
   protected readonly source = {
-    create: (link: ClientDocumentLink) =>
-      this.api.saveDocument(link, this.form.controls.Content.value),
-    update: (link: ClientDocumentLink) =>
-      this.api.saveDocument(link, this.form.controls.Content.value),
+    create: (link: ClientDocumentLink) => this.store(link),
+    update: (link: ClientDocumentLink) => this.store(link),
   };
+  /** The chosen file while it is sent with Save, and how far along it is. */
+  protected readonly upload = signal<UploadState | null>(null);
 
   private readonly record = this.data.record;
+  /** Saves the link, sending the chosen file with it (if any) and showing how much is sent. */
+  private store(link: ClientDocumentLink): Observable<ClientDocumentLink> {
+    const file = this.form.controls.Content.value;
+    if (file) this.upload.set({ name: file.name, percent: 0 });
+    return this.api
+      .saveDocument(link, file, (percent) => {
+        if (file) this.upload.set({ name: file.name, percent });
+      })
+      .pipe(finalize(() => this.upload.set(null)));
+  }
+
   protected readonly title = this.isNew
     ? 'Add Client Document'
     : this.readOnly

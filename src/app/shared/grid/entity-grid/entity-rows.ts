@@ -10,6 +10,8 @@ export interface GridRow<T extends object> {
   readonly entity: T;
   readonly original: T | null;
   readonly saving: boolean;
+  /** Being deleted: its Delete button shows a spinner. */
+  readonly deleting?: boolean;
 }
 
 export type EditResult<T extends object> =

@@ -20,6 +20,7 @@ import { openContactLog } from './contact-log-dialog';
 import { NoteDialog } from './note-dialog';
 import { SelectField, type SelectValue } from '@shared/forms/select-field/select-field';
 import { textOptions } from '@shared/forms/select-field/select-option';
+import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
 
 const ALL = '';
 
@@ -29,7 +30,7 @@ const ALL = '';
  */
 @Component({
   selector: 'app-contact-history-dialog',
-  imports: [RecordDialogFrame, CaseIdentity, LinkTable, SelectField],
+  imports: [RecordDialogFrame, CaseIdentity, LinkTable, SelectField, SkeletonTable],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './contact-history-dialog.html',
   styleUrl: './contact-history-dialog.css',

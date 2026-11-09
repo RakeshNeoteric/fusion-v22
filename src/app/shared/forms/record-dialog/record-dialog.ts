@@ -23,6 +23,7 @@ import type { CrudSource } from '@api/config/config-crud.api';
 import type { AppIconName } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
+import { BusyButton } from '@shared/ui/busy/busy-button';
 import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 
 /** What a record form is opened with. */
@@ -41,7 +42,7 @@ export interface RecordDialogData<T> {
  */
 @Component({
   selector: 'app-record-dialog-frame',
-  imports: [MatDialogModule, DialogHeader],
+  imports: [MatDialogModule, DialogHeader, BusyButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Styles the projected fields and inputs, so they cannot be encapsulated; all scoped to .record-dialog.
   encapsulation: ViewEncapsulation.None,
@@ -61,7 +62,13 @@ export interface RecordDialogData<T> {
         </button>
       }
       @if (!readOnly() && savable()) {
-        <button type="submit" class="app-button" [disabled]="saving()">
+        <button
+          type="submit"
+          class="app-button"
+          [disabled]="saving()"
+          [appBusy]="saving() && busyLabel() !== null"
+          [busyText]="busyLabel() ?? ''"
+        >
           {{ saveLabel() ?? (isNew() ? 'Save' : 'Update') }}
         </button>
       }
@@ -78,6 +85,11 @@ export class RecordDialogFrame {
   readonly icon = input<AppIconName | null>('edit');
   /** Instead of Save / Update, e.g. "Clone (Copy) Client". */
   readonly saveLabel = input<string>();
+  /**
+   * On the Save button while saving, beside a spinner, e.g. "Sending…". Null when the popup is
+   * busy with another of its buttons: Save is then only greyed out.
+   */
+  readonly busyLabel = input<string | null>('Saving…');
   /** v21 Client popup: no Cancel, only ✖. */
   readonly cancelable = input(true);
   /** False hides Save for a while (v21 Client popup: only on its Details tab). */

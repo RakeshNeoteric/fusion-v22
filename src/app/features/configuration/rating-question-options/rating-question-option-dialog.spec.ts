@@ -1,7 +1,7 @@
 import { ApplicationRef, Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
-import { firstValueFrom, of } from 'rxjs';
+import { Subject, firstValueFrom, of } from 'rxjs';
 import {
   type RatingQuestionOption,
   RatingQuestionOptionApi,
@@ -159,6 +159,24 @@ describe('RatingQuestionOptionDialog', () => {
       expect.objectContaining({ RatingQuestionTypeId: 1, QuestionOption: 'Yes', RatingValue: 10 }),
     );
     expect((await result)?.RatingQuestionOptionId).toBe(7);
+  });
+
+  it('shows "Saving…" with a spinner on Save while it saves', async () => {
+    const stored = new Subject<RatingQuestionOption>();
+    api.create.mockReturnValue(stored);
+    await open(null);
+    await choose('rqo-type', 'Yes/No');
+    await fill('rqo-rating', '5');
+    await press('Save');
+    const button = element<HTMLButtonElement>('button[type="submit"]');
+    expect(button.textContent?.trim()).toBe('Saving…');
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    expect(button.querySelector('app-spinner')).not.toBeNull();
+
+    stored.next({ ...saved, RatingQuestionOptionId: 9 });
+    stored.complete();
+    expect((await result)?.RatingQuestionOptionId).toBe(9);
   });
 
   it('keeps an older saved answer that is not in the type name', async () => {

@@ -3,7 +3,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { AgGridAngular } from 'ag-grid-angular';
 import type { GridApi } from 'ag-grid-community';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { type BodyLocation, BodyLocationApi } from '@api/config/body-location.api';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { NotificationService } from '@core/notifications/notification.service';
@@ -240,6 +240,25 @@ describe('BodyLocationsPage', () => {
     expect(api.softDelete).toHaveBeenCalledWith(location(1));
     expect(codes()).toEqual(['CODE2']);
     expect(notify.success).toHaveBeenCalledWith('Body Location deleted.');
+  });
+
+  it('shows a spinner in place of Delete while the row is deleted', async () => {
+    const deleted = new Subject<BodyLocation>();
+    ask.mockResolvedValue(true);
+    api.softDelete.mockReturnValue(deleted);
+    await render();
+    (await rowButton('id:1', 'Delete'))?.click();
+    await settle();
+    await vi.waitFor(() => {
+      const cell = host.querySelector('.ag-row[row-id="id:1"] app-delete-cell');
+      if (!cell?.querySelector('[aria-label="Deleting"] app-spinner'))
+        throw new Error('no spinner');
+    });
+
+    deleted.next(location(1, { IsDeleted: true }));
+    deleted.complete();
+    await settle();
+    expect(codes()).toEqual(['CODE2']);
   });
 
   it('keeps the row when delete is cancelled', async () => {

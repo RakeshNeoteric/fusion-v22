@@ -1,7 +1,8 @@
-import { inject } from '@angular/core';
+import { inject, signal } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { type FileCategory, FileStorageApi } from '@api/files/file-storage.api';
+import type { UploadState } from '@shared/ui/upload-progress/upload-progress';
 
 /**
  * A file a record popup points at (user photo, BEE certificate). A new file is uploaded when
@@ -15,6 +16,8 @@ export class DialogFiles {
   private readonly files = inject(FileStorageApi);
   /** Uploaded since the record was last saved. */
   private readonly uploaded = new Set<string>();
+  /** The file being uploaded and how far along it is; null when none is. */
+  readonly progress = signal<UploadState | null>(null);
 
   constructor(private readonly category: FileCategory) {
     inject(MatDialogRef)
@@ -24,9 +27,18 @@ export class DialogFiles {
 
   /** Stores the file and returns its path. */
   async upload(file: File): Promise<string> {
-    const path = await firstValueFrom(this.files.upload(file, this.category));
-    this.uploaded.add(path);
-    return path;
+    this.progress.set({ name: file.name, percent: 0 });
+    try {
+      const path = await firstValueFrom(
+        this.files.upload(file, this.category, (percent) =>
+          this.progress.set({ name: file.name, percent }),
+        ),
+      );
+      this.uploaded.add(path);
+      return path;
+    } finally {
+      this.progress.set(null);
+    }
   }
 
   /**

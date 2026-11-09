@@ -273,6 +273,7 @@ describe('client link popups', () => {
         IsDeleted: false,
       }),
       expect.objectContaining({ name: 'contract.pdf' }),
+      expect.any(Function),
     );
     expect((await result)?.ClientDocumentId).toBe(50);
   });
@@ -303,6 +304,7 @@ describe('client link popups', () => {
     expect(links.saveDocument).toHaveBeenCalledWith(
       expect.objectContaining({ ClientDocumentId: 5, DocumentStoragePath: null }),
       null,
+      expect.any(Function),
     );
     // Another client may use the same file (a clone shares its files): it is kept.
     expect(files.delete).not.toHaveBeenCalled();

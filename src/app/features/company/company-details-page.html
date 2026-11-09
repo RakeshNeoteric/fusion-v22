@@ -30,6 +30,9 @@
           (picked)="uploadLogo($event)"
           (removed)="removeLogo()"
         />
+        @if (logoUpload(); as upload) {
+          <app-upload-progress class="company-upload" [upload]="upload" />
+        }
         @if (canEdit && !canChangeLogo()) {
           <p class="logo-hint">Save the company details to add a logo.</p>
         }
@@ -178,7 +181,12 @@
 
         @if (canEdit) {
           <div class="company-actions">
-            <button type="submit" class="app-button company-save" [disabled]="saving()">
+            <button
+              type="submit"
+              class="app-button company-save"
+              [disabled]="saving()"
+              [appBusy]="saving()"
+            >
               Save
             </button>
           </div>

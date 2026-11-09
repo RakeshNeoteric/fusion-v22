@@ -37,6 +37,7 @@ import {
   setMenuVisible,
   toRows,
 } from './permission-matrix';
+import { BusyButton } from '@shared/ui/busy/busy-button';
 
 type Status = 'loading' | 'ready' | 'failed' | 'missing';
 
@@ -48,7 +49,7 @@ type Status = 'loading' | 'ready' | 'failed' | 'missing';
  */
 @Component({
   selector: 'app-permissions-page',
-  imports: [MatButtonToggleModule],
+  imports: [MatButtonToggleModule, BusyButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './permissions-page.html',
   styleUrl: './permissions-page.css',

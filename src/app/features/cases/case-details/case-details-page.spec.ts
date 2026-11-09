@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { Router, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { CaseApi, type CaseDetails } from '@api/cases/case.api';
 import type { DirectoryUser } from '@api/models/app.models';
 import { provideAppIcons } from '@core/icons/app-icons';
@@ -68,6 +68,27 @@ describe('CaseDetailsPage', () => {
     [...(fixture.nativeElement as HTMLElement).querySelectorAll('[role="tab"]')].map((tab) =>
       tab.textContent?.trim(),
     );
+
+  it('shows the page in grey placeholders while the case loads, then the case', async () => {
+    const loaded = new Subject<CaseDetails>();
+    api.open.mockReturnValue(loaded);
+    fixture = TestBed.createComponent(CaseDetailsPage);
+    fixture.componentRef.setInput('id', 4);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('[role="status"]')?.textContent).toBe('Loading case…');
+    expect(page.querySelectorAll('app-case-details-skeleton app-skeleton').length).toBeGreaterThan(
+      10,
+    );
+    expect(tabs()).toEqual([]);
+
+    loaded.next(caseDetails({ CaseDetailId: 4, CaseOpenedBy: 'jane@example.com' }));
+    loaded.complete();
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
+    expect(page.querySelector('app-case-details-skeleton')).toBeNull();
+    expect(tabs()).toContain('Caller');
+  });
 
   it('shows the header and the tabs the service type allows, opening the case for this user', async () => {
     await show(

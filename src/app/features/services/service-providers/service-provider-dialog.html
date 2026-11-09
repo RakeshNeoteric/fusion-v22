@@ -4,6 +4,7 @@
     [isNew]="isNew"
     [readOnly]="readOnly"
     [saving]="saving() || uploading()"
+    [busyLabel]="saving() ? 'Saving…' : null"
   >
     <section class="app-section" aria-labelledby="sp-details-title">
       <h3 class="app-section-title" id="sp-details-title">Service Provider Details:</h3>
@@ -202,6 +203,9 @@
               (change)="chooseCertificate($event)"
             />
           </div>
+          @if (certificates.progress(); as upload) {
+            <app-upload-progress class="sp-upload-progress" [upload]="upload" />
+          }
         </div>
       </div>
     </section>

@@ -1,7 +1,10 @@
 <app-dialog-header title="Phase Costing" icon="edit" (closed)="close()" />
 <mat-dialog-content class="app-form pc-content">
   @if (loading()) {
-    <p role="status">Loading phase costing…</p>
+    <section class="pc-card">
+      <app-skeleton width="320px" height="22px" />
+      <app-skeleton-fields label="Loading phase costing…" [count]="9" />
+    </section>
   } @else {
     @for (card of cards(); track card.id) {
       <section
@@ -154,6 +157,8 @@
             type="button"
             class="app-button pc-authorise"
             [disabled]="readOnly() || authorised(card) || busy()"
+            [appBusy]="authorising() === card.id"
+            busyText="Authorising…"
             [matTooltip]="authorised(card) ? 'Already authorised' : ''"
             (click)="authorise(card)"
           >

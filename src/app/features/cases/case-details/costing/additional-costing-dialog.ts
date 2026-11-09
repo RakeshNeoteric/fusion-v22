@@ -35,6 +35,7 @@ import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { CaseWorkspace } from '../case-workspace';
 import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po';
 import { type AdditionalCostGridContext, AdditionalCostDeleteCell } from './additional-cost-cells';
+import { BusyButton } from '@shared/ui/busy/busy-button';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {
@@ -51,7 +52,14 @@ function tidyAddress(address: string): string {
  */
 @Component({
   selector: 'app-additional-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, PhoneField, DialogHeader, AgGridAngular],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    PhoneField,
+    DialogHeader,
+    AgGridAngular,
+    BusyButton,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './additional-costing-dialog.html',
   styleUrl: './additional-costing-dialog.css',
@@ -66,6 +74,9 @@ export class AdditionalCostingDialog {
 
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly busy = signal(false);
+  protected readonly adding = signal(false);
+  /** The cost being deleted: its bin turns into a spinner. */
+  private readonly deleting = signal<number | null>(null);
   protected readonly printing = signal(false);
 
   protected readonly gridModules = [
@@ -92,6 +103,7 @@ export class AdditionalCostingDialog {
   protected readonly gridContext: AdditionalCostGridContext = {
     remove: (cost) => void this.remove(cost),
     busy: () => this.busy(),
+    deleting: () => this.deleting(),
   };
   /** v21 columns; the bin only while the case can be changed. */
   protected readonly columnDefs = computed((): ColDef<CaseAdditionalCostRecord>[] => [
@@ -185,6 +197,7 @@ export class AdditionalCostingDialog {
       return;
     }
     const value = this.form.getRawValue();
+    this.adding.set(true);
     await this.run(async () => {
       await this.workspace.saveAdditionalCost({
         CaseAdditionalCostId: 0,
@@ -204,6 +217,7 @@ export class AdditionalCostingDialog {
       this.form.reset();
       this.notifications.success('Additional cost added successfully.');
     });
+    this.adding.set(false);
   }
 
   /**
@@ -247,11 +261,13 @@ export class AdditionalCostingDialog {
       confirmText: 'Delete',
     });
     if (!sure) return;
+    this.deleting.set(cost.CaseAdditionalCostId);
     await this.run(async () => {
       await this.workspace.saveAdditionalCost({ ...cost, IsDeleted: true });
       await this.workspace.saveTotals();
       this.notifications.success('Additional cost deleted successfully.');
     });
+    this.deleting.set(null);
   }
 
   private async run(work: () => Promise<void>): Promise<void> {

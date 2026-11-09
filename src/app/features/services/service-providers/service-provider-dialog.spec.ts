@@ -309,7 +309,11 @@ describe('ServiceProviderDialog', () => {
     });
     input.dispatchEvent(new Event('change'));
     await settle();
-    expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'ServiceProvider');
+    expect(files.upload).toHaveBeenCalledWith(
+      expect.any(File),
+      'ServiceProvider',
+      expect.any(Function),
+    );
     expect(document.body.textContent).toContain('bee.pdf');
 
     await press('Cancel');

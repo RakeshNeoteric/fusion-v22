@@ -23,6 +23,7 @@ import { SelectField } from '@shared/forms/select-field/select-field';
       <app-record-dialog-frame
         title="Create a New Call"
         saveLabel="Next"
+        busyLabel="Creating case…"
         [isNew]="true"
         [saving]="saving()"
       >

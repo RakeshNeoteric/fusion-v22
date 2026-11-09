@@ -27,6 +27,9 @@ import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { ImagePicker } from '@shared/ui/image-picker/image-picker';
 import { StoredImage } from '@shared/ui/image-picker/stored-image';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { BusyButton } from '@shared/ui/busy/busy-button';
+import { UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
+import type { UploadState } from '@shared/ui/upload-progress/upload-progress';
 
 const PERMISSION = 'CMP';
 const DEFAULT_LOGO = '/images/building.jpg';
@@ -52,7 +55,15 @@ type AddressForm = ReturnType<typeof addressGroup>;
  */
 @Component({
   selector: 'app-company-details-page',
-  imports: [ReactiveFormsModule, MatButtonToggleModule, PhoneField, ImagePicker, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonToggleModule,
+    PhoneField,
+    ImagePicker,
+    SelectField,
+    BusyButton,
+    UploadProgressBar,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './company-details-page.html',
   styleUrl: './company-details-page.css',
@@ -165,16 +176,26 @@ export class CompanyDetailsPage implements OnInit, HasUnsavedChanges {
     }
   }
 
+  /** The logo being uploaded and how far along it is. */
+  protected readonly logoUpload = signal<UploadState | null>(null);
+
   protected async uploadLogo(file: File): Promise<void> {
     const saved = this.physical();
     if (!saved || !this.canChangeLogo()) return;
     try {
-      const path = await firstValueFrom(this.files.upload(file, 'CompanyDetails'));
+      this.logoUpload.set({ name: file.name, percent: 0 });
+      const path = await firstValueFrom(
+        this.files.upload(file, 'CompanyDetails', (percent) =>
+          this.logoUpload.set({ name: file.name, percent }),
+        ),
+      );
       await this.storeLogoPath(saved, path);
       this.logo.show(file);
       this.notifications.success('Logo uploaded.');
     } catch {
       // The error interceptor has already told the user why.
+    } finally {
+      this.logoUpload.set(null);
     }
   }
 

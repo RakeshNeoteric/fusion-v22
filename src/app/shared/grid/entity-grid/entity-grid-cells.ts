@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/c
 import type { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams } from 'ag-grid-community';
 import type { GridRow } from './entity-rows';
+import { Spinner } from '@shared/ui/busy/spinner';
 
 /** What the cells may ask of the grid (given to AG Grid as its `context`). */
 export interface EntityGridContext {
@@ -224,10 +225,15 @@ export class ViewCell extends EntityCell {}
 /** Delete (soft delete) for one row, with confirmation by the grid. */
 @Component({
   selector: 'app-delete-cell',
+  imports: [Spinner],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (params(); as p) {
-      @if (row(); as r) {
+      @if (row()?.deleting) {
+        <span class="cell-busy" role="status" aria-label="Deleting">
+          <app-spinner size="16px" />
+        </span>
+      } @else if (row(); as r) {
         <button
           type="button"
           class="cell-button"
@@ -241,6 +247,14 @@ export class ViewCell extends EntityCell {}
       }
     }
   `,
-  styles: CELL_BUTTON_STYLES,
+  styles: [
+    CELL_BUTTON_STYLES,
+    `
+      .cell-busy {
+        display: flex;
+        color: #c62828;
+      }
+    `,
+  ],
 })
 export class DeleteCell extends EntityCell {}

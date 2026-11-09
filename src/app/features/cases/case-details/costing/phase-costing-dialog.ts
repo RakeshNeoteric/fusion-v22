@@ -32,6 +32,9 @@ import { openTransport } from './transport-dialog';
 import { fromIsoDate, toIsoDate, todayIsoDate } from '@shared/forms/dates/app-dates';
 import { DateField } from '@shared/forms/date-field/date-field';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { BusyButton } from '@shared/ui/busy/busy-button';
+import { Skeleton } from '@shared/ui/skeleton/skeleton';
+import { SkeletonFields } from '@shared/ui/skeleton/skeleton-fields';
 
 function costForm() {
   const amount = (max: number) =>
@@ -80,6 +83,9 @@ interface PhaseCard {
     SelectField,
     PhoneDisplay,
     DateField,
+    BusyButton,
+    Skeleton,
+    SkeletonFields,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './phase-costing-dialog.html',
@@ -103,6 +109,8 @@ export class PhaseCostingDialog {
   protected readonly busy = signal(false);
   /** The card whose removal document is being built. */
   protected readonly printing = signal<number | null>(null);
+  /** The card being authorised. */
+  protected readonly authorising = signal<number | null>(null);
   protected readonly cards = signal<readonly PhaseCard[]>([]);
   /** Bumped when a card's values change, so totals follow. */
   private readonly edits = signal(0);
@@ -215,6 +223,7 @@ export class PhaseCostingDialog {
       this.notifications.warning(`Please complete Phase ${card.number} before authorising it.`);
       return;
     }
+    this.authorising.set(card.id);
     await this.run(async () => {
       await this.workspace.savePhase({
         ...this.costRecord(card, saved),
@@ -226,6 +235,7 @@ export class PhaseCostingDialog {
       this.reset(card);
       this.notifications.success(`Phase ${card.number} authorised.`);
     });
+    this.authorising.set(null);
   }
 
   /** v21 Transport (internal providers): the vehicle and operator, saved straight away. */

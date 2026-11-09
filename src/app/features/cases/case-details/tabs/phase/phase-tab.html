@@ -32,6 +32,8 @@
           type="button"
           class="app-button"
           [disabled]="readOnly() || notified() || busy()"
+          [appBusy]="busy()"
+          busyText="Notifying…"
           (click)="notify()"
         >
           {{ notified() ? 'Notified' : 'Notify' }}

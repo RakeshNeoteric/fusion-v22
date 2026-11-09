@@ -12,6 +12,8 @@ import { CaseHeldElsewhereError, CaseLifecycle } from './case-lifecycle';
 import { type RatingQuestionRow, ratingProgress } from './rating-rules';
 import { textOptions } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { BusyButton } from '@shared/ui/busy/busy-button';
+import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
 
 /** What the popup is opened with: the questions when the opener has loaded them already. */
 export interface RatingDialogData {
@@ -37,6 +39,8 @@ type LoadState = 'loading' | 'ready' | 'failed';
     LinkCell,
     SelectField,
     PhoneDisplay,
+    BusyButton,
+    SkeletonTable,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rating-dialog.html',
@@ -68,6 +72,8 @@ export class RatingDialog {
     return ratingProgress(this.rows().map((row) => ({ answer: this.answer(row) })));
   });
   protected readonly saving = signal(false);
+  /** Saving for Close Rating Completed (rather than Update). */
+  protected readonly closing = signal(false);
 
   protected readonly columns: readonly LinkColumn<RatingQuestionRow>[] = [
     { header: 'Question', text: (row) => row.question },
@@ -128,6 +134,7 @@ export class RatingDialog {
   private async save(close: boolean): Promise<boolean> {
     if (this.readOnly() || this.saving()) return false;
     this.saving.set(true);
+    this.closing.set(close);
     try {
       const answers = new Map(this.rows().map((row) => [row.linkId, this.answer(row)]));
       await this.lifecycle.saveRatings(this.rows(), answers, close);
@@ -136,6 +143,7 @@ export class RatingDialog {
       if (error instanceof CaseHeldElsewhereError) this.notifications.error(error.message);
       // Otherwise the error interceptor has said why.
       this.saving.set(false);
+      this.closing.set(false);
       return false;
     }
   }

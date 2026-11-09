@@ -22,6 +22,7 @@ import { UserDirectoryService, displayNameOf } from '@core/session/user-director
 import { CASES_PERMISSION, type CaseDirectory, isFinished } from '../case-setup';
 import { type ClientProvider, clientProviders } from './client-providers';
 import { caseTotals } from './costing/costing-rules';
+import type { UploadProgress } from '@api/files/upload-progress';
 
 /** Parts of the case the backend changes by itself (uploads, approvals, status rules). */
 export type ReloadableKey =
@@ -210,8 +211,12 @@ export class CaseWorkspace {
    * Uploads the file for a client document, then reloads the case's documents: the backend
    * only says where it stored the file by reloading.
    */
-  async uploadDocument(record: CaseDocumentRecord, file: File): Promise<void> {
-    await firstValueFrom(this.api.uploadDocument(record, file));
+  async uploadDocument(
+    record: CaseDocumentRecord,
+    file: File,
+    progress?: UploadProgress,
+  ): Promise<void> {
+    await firstValueFrom(this.api.uploadDocument(record, file, progress));
     await this.reload('CaseDocument');
   }
 

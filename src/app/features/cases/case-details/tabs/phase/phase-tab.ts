@@ -23,6 +23,7 @@ import { CaseTabForm } from '../case-tab-form';
 import { collectFromFor, phaseRecord } from './phase-rules';
 import { openTransportChecklist } from './transport-checklist-dialog';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { BusyButton } from '@shared/ui/busy/busy-button';
 
 /** What the phase copies from its collecting provider. */
 interface CollectDetails {
@@ -48,7 +49,7 @@ const NO_REMOVE: RemoveDetails = { physicalAddress: '', storageAddress: '' };
  */
 @Component({
   selector: 'app-phase-tab',
-  imports: [ReactiveFormsModule, PhoneField, SelectField],
+  imports: [ReactiveFormsModule, PhoneField, SelectField, BusyButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => PhaseTab) }],
   host: { '(pointerleave)': 'autoSave()' },

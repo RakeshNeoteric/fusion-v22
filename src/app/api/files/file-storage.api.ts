@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
+import { type UploadProgress, trackUpload } from './upload-progress';
 
 /** Backend `FileCategory`: the folder a file is stored in. */
 export type FileCategory = 'UserProfile' | 'Case' | 'Client' | 'ServiceProvider' | 'CompanyDetails';
@@ -17,15 +18,22 @@ export class FileStorageApi {
   /**
    * Stores a new file and returns its storage path. The backend stores a file under its own
    * name (`Client/logo.png`) and replaces one already there, so each upload gets a unique
-   * name: two clients' `logo.png` are then two files.
+   * name: two clients' `logo.png` are then two files. `progress` hears how much is sent.
    */
-  upload(file: File, category: FileCategory): Observable<string> {
+  upload(file: File, category: FileCategory, progress?: UploadProgress): Observable<string> {
     const form = new FormData();
     form.append('File', file, uniqueName(file.name));
     const params = new HttpParams().set('Mode', 'CreateNew').set('FilePath', category);
     return this.http
-      .post<{ FilePath: string }>('File/upload', form, { params })
-      .pipe(map((response) => storagePath(response.FilePath)));
+      .post<{ FilePath: string }>('File/upload', form, {
+        params,
+        observe: 'events',
+        reportProgress: true,
+      })
+      .pipe(
+        trackUpload(progress),
+        map((response) => storagePath(response.FilePath)),
+      );
   }
 
   /** The file's content, for showing it (e.g. a logo). */

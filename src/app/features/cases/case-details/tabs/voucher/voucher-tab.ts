@@ -27,6 +27,7 @@ import {
   voucherRequests,
   voucherSettings,
 } from './voucher-rules';
+import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
 
 const NO_SETTINGS: VoucherSettings = { provider: null, maxAmount: null, maxCount: null };
 /** Never shown: every value in stock has a field. Keeps the template's binding typed. */
@@ -38,7 +39,7 @@ const NO_FIELD = new FormControl<number | null>({ value: null, disabled: true })
  */
 @Component({
   selector: 'app-voucher-tab',
-  imports: [ReactiveFormsModule, LinkTable, LinkCell],
+  imports: [ReactiveFormsModule, LinkTable, LinkCell, SkeletonTable],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './voucher-tab.html',
   styleUrls: ['../case-tab.css', './voucher-tab.css'],

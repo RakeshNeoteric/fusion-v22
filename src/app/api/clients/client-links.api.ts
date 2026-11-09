@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 import type { RatingQuestion } from '@api/config/rating-question.api';
 import type { ServiceProvider } from '@api/services/service-provider.api';
+import { type UploadProgress, trackUpload } from '@api/files/upload-progress';
 
 /** Backend `SMSTypes`, sent as names. Services that are not voucher services only send CaseCreation. */
 export const SMS_TYPES = ['CaseCreation', 'VoucherRequestSMS', 'VoucherRedeemSMS'] as const;
@@ -120,9 +121,14 @@ export class ClientLinksApi {
   /**
    * Adds (id 0) or replaces a client document, as form data with the file, if any, as
    * `Content`; the backend stores the file and returns the row with its download URL.
-   * Unlinking (`IsDeleted: true`) with the stored URL also deletes the file.
+   * Unlinking (`IsDeleted: true`) with the stored URL also deletes the file. `progress` hears how
+   * much of the file is sent.
    */
-  saveDocument(link: ClientDocumentLink, file: File | null): Observable<ClientDocumentLink> {
+  saveDocument(
+    link: ClientDocumentLink,
+    file: File | null,
+    progress?: UploadProgress,
+  ): Observable<ClientDocumentLink> {
     const form = new FormData();
     form.append('ClientDocumentId', String(link.ClientDocumentId));
     form.append('ClientId', String(link.ClientId));
@@ -134,9 +140,12 @@ export class ClientLinksApi {
     if (link.DocumentStoragePath) form.append('DocumentStoragePath', link.DocumentStoragePath);
     if (file) form.append('Content', file, file.name);
     const id = link.ClientDocumentId;
-    return this.http.post<ClientDocumentLink>(
-      id > 0 ? `Client/ClientDocument/${id}` : 'Client/ClientDocument',
-      form,
-    );
+    return this.http
+      .post<ClientDocumentLink>(
+        id > 0 ? `Client/ClientDocument/${id}` : 'Client/ClientDocument',
+        form,
+        { observe: 'events', reportProgress: true },
+      )
+      .pipe(trackUpload(progress));
   }
 }

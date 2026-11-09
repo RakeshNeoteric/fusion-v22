@@ -13,6 +13,7 @@ import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
 import { formatDateTime } from '@shared/reference/date-time';
 import { ImagePicker } from '@shared/ui/image-picker/image-picker';
 import { StoredImage } from '@shared/ui/image-picker/stored-image';
+import { UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 
 const DEFAULT_PHOTO = '/images/profile.png';
 
@@ -33,7 +34,7 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
  */
 @Component({
   selector: 'app-user-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, ImagePicker],
+  imports: [ReactiveFormsModule, RecordDialogFrame, PhoneField, ImagePicker, UploadProgressBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
@@ -42,6 +43,7 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
         [isNew]="isNew"
         [readOnly]="readOnly"
         [saving]="saving() || uploading()"
+        [busyLabel]="saving() ? 'Saving…' : null"
       >
         <div class="user-layout">
           <div class="user-photo">
@@ -56,6 +58,9 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
               (picked)="uploadPhoto($event)"
               (removed)="removePhoto()"
             />
+            @if (photoFiles.progress(); as upload) {
+              <app-upload-progress class="upload-bar" [upload]="upload" />
+            }
           </div>
 
           <div class="user-fields">
@@ -171,6 +176,11 @@ export interface UserDialogData extends RecordDialogData<AppUser> {
     </form>
   `,
   styles: `
+    .upload-bar {
+      width: 100%;
+      max-width: 200px;
+      margin-top: 8px;
+    }
     /* v21: round photo at the top left, the fields in two columns below it. */
     .user-layout {
       display: flex;
@@ -205,7 +215,7 @@ export class UserDialog extends RecordDialog<AppUser> {
   /** The backend does not record sign-ins yet: it sends year 1 then, and nothing is shown. */
   protected readonly lastLogin = recorded(this.record?.LastLoginDateTime);
   private readonly storedPhoto = this.record?.ProfileImage || '';
-  private readonly photoFiles = new DialogFiles('UserProfile');
+  protected readonly photoFiles = new DialogFiles('UserProfile');
 
   protected readonly title = this.profile
     ? 'My Profile'

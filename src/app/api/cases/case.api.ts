@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import type { CompanyAddress } from '@api/config/company-details.api';
 import type { CaseVoucherRecord } from '@api/vouchers/voucher.api';
+import { type UploadProgress, trackUpload } from '@api/files/upload-progress';
 
 /** Backend `CaseStatus`, sent as its name. */
 export const CASE_STATUSES = ['New', 'Active', 'Pending', 'Closed', 'Aborted'] as const;
@@ -625,8 +626,13 @@ export class CaseApi {
    * Uploads the file for one of the client's documents, as form data: a new row (id 0) or a
    * replacement, which sends the stored file's URL so the backend deletes that file. The
    * backend's reply only has the new file's URL for a new row, so reload the case to see it.
+   * `progress` hears how much of the file is sent.
    */
-  uploadDocument(record: CaseDocumentRecord, file: File): Observable<unknown> {
+  uploadDocument(
+    record: CaseDocumentRecord,
+    file: File,
+    progress?: UploadProgress,
+  ): Observable<unknown> {
     const form = new FormData();
     const id = record.CaseDocumentId;
     if (id > 0) form.append('CaseDocumentId', String(id));
@@ -636,7 +642,12 @@ export class CaseApi {
     if (record.FileStoragePath) form.append('FileStoragePath', record.FileStoragePath);
     if (record.UploadedDate) form.append('UploadedDate', record.UploadedDate);
     form.append('Content', file, file.name);
-    return this.http.post(id > 0 ? `CaseDocument/${id}` : 'CaseDocument', form);
+    return this.http
+      .post(id > 0 ? `CaseDocument/${id}` : 'CaseDocument', form, {
+        observe: 'events',
+        reportProgress: true,
+      })
+      .pipe(trackUpload(progress));
   }
 
   /** Adds a note to the case's history (some notes change the case's status: see the type). */

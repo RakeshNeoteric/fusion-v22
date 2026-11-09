@@ -31,6 +31,8 @@ import { ClientRatingQuestionsTab } from './tabs/client-rating-questions-tab';
 import { ClientServiceProvidersTab } from './tabs/client-service-providers-tab';
 import { ClientServicesTab } from './tabs/client-services-tab';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
+import { UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 
 const PERMISSION = 'CLIENT';
 
@@ -168,6 +170,8 @@ const NEW_CLIENT: Client = {
     ClientDocumentsTab,
     ClientServiceProvidersTab,
     SelectField,
+    SkeletonTable,
+    UploadProgressBar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './client-dialog.html',
@@ -195,7 +199,7 @@ export class ClientDialog {
   protected readonly savedHere = signal<Client | undefined>(undefined);
 
   private readonly storedLogo = this.data.record?.CompanyLogoStoragePath ?? '';
-  private readonly logoFiles = new DialogFiles('Client');
+  protected readonly logoFiles = new DialogFiles('Client');
 
   protected readonly title = computed(() => {
     const client = this.client();

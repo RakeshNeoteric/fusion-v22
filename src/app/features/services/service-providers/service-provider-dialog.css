@@ -190,3 +190,8 @@ mat-button-toggle-group {
     display: none;
   }
 }
+
+.sp-upload-progress {
+  max-width: 360px;
+  margin-top: 8px;
+}

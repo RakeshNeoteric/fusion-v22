@@ -44,6 +44,7 @@ import { DocumentsTab } from './tabs/documents/documents-tab';
 import { VoucherTab } from './tabs/voucher/voucher-tab';
 import { collectFromFor, nextPhase } from './tabs/phase/phase-rules';
 import { CaseTabForm } from './tabs/case-tab-form';
+import { CaseDetailsSkeleton } from './case-details-skeleton';
 import { CaseWorkspace } from './case-workspace';
 import { CaseCommunication } from './communication/case-communication';
 import { ContactHistoryDialog } from './communication/contact-history-dialog';
@@ -92,6 +93,7 @@ const CASE_STAGES = ['Case Initiation', 'Evaluation', 'Ongoing', 'On Hold', 'Res
     ComplaintsTab,
     DocumentsTab,
     VoucherTab,
+    CaseDetailsSkeleton,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CaseWorkspace, CaseLifecycle, CaseCommunication],

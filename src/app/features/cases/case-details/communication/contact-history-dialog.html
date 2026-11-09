@@ -20,7 +20,7 @@
 
   @switch (state()) {
     @case ('loading') {
-      <p role="status">Loading contact history…</p>
+      <app-skeleton-table label="Loading contact history…" [columns]="5" [rows]="5" />
     }
     @case ('failed') {
       <div class="ch-failed" role="alert">

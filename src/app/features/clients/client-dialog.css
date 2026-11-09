@@ -71,6 +71,9 @@
 .cl-active {
   margin-right: auto;
 }
+.cl-loading {
+  margin: 16px 0;
+}
 .cl-status {
   padding: 24px 0;
   color: #5f6b6b;
@@ -89,4 +92,10 @@ textarea {
   .cl-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.cl-upload {
+  width: 100%;
+  max-width: 260px;
+  margin-top: 8px;
 }

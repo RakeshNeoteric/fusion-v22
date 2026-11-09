@@ -23,6 +23,8 @@ import {
 } from '../../communication/message-dialog';
 import { openCaseDialog } from '../../lifecycle/open-case-dialog';
 import { type DocumentRow, documentRows, uploadedFileName } from './document-rows';
+import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
+import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 
 /**
  * v21 Documents tab: one row per document the client asks for, with the client's template and
@@ -30,10 +32,13 @@ import { type DocumentRow, documentRows, uploadedFileName } from './document-row
  */
 @Component({
   selector: 'app-documents-tab',
-  imports: [LinkTable, LinkCell],
+  imports: [LinkTable, LinkCell, SkeletonTable, UploadProgressBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../case-tab.css',
   styles: `
+    .doc-progress {
+      min-width: 180px;
+    }
     .doc-bar {
       display: flex;
       justify-content: flex-end;
@@ -77,7 +82,7 @@ import { type DocumentRow, documentRows, uploadedFileName } from './document-row
     </div>
     @switch (state()) {
       @case ('loading') {
-        <p role="status">Loading documents…</p>
+        <app-skeleton-table label="Loading documents…" [columns]="4" [rows]="4" />
       }
       @case ('failed') {
         <p role="alert">Failed to load the client's documents.</p>
@@ -116,43 +121,47 @@ import { type DocumentRow, documentRows, uploadedFileName } from './document-row
             }
           </ng-template>
           <ng-template appLinkCell="Upload File" let-row>
-            <span class="doc-file">
-              <button
-                type="button"
-                class="doc-action"
-                [attr.aria-label]="'Upload ' + row.name"
-                [disabled]="workspace.readOnly() || busy()"
-                (click)="picker.click()"
-              >
-                Upload
-              </button>
-              <input
-                #picker
-                type="file"
-                class="doc-hidden"
-                [attr.aria-label]="'File for ' + row.name"
-                (change)="choose(row, picker)"
-              />
-              @if (row.uploaded; as path) {
-                {{ uploadedName(row) }}
+            @if (uploadFor(row); as state) {
+              <app-upload-progress class="doc-progress" [upload]="state" />
+            } @else {
+              <span class="doc-file">
                 <button
                   type="button"
                   class="doc-action"
-                  [attr.aria-label]="'View ' + uploadedName(row)"
-                  (click)="viewer.preview(path)"
+                  [attr.aria-label]="'Upload ' + row.name"
+                  [disabled]="workspace.readOnly() || busy()"
+                  (click)="picker.click()"
                 >
-                  View
+                  Upload
                 </button>
-                <button
-                  type="button"
-                  class="doc-action"
-                  [attr.aria-label]="'Download ' + uploadedName(row)"
-                  (click)="viewer.download(path)"
-                >
-                  Download
-                </button>
-              }
-            </span>
+                <input
+                  #picker
+                  type="file"
+                  class="doc-hidden"
+                  [attr.aria-label]="'File for ' + row.name"
+                  (change)="choose(row, picker)"
+                />
+                @if (row.uploaded; as path) {
+                  {{ uploadedName(row) }}
+                  <button
+                    type="button"
+                    class="doc-action"
+                    [attr.aria-label]="'View ' + uploadedName(row)"
+                    (click)="viewer.preview(path)"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    class="doc-action"
+                    [attr.aria-label]="'Download ' + uploadedName(row)"
+                    (click)="viewer.download(path)"
+                  >
+                    Download
+                  </button>
+                }
+              </span>
+            }
           </ng-template>
         </app-link-table>
       }
@@ -215,6 +224,17 @@ export class DocumentsTab {
     return row.upload ? uploadedFileName(row.upload) : '';
   }
 
+  /** The document whose file is being uploaded, and how far along it is. */
+  protected readonly upload = signal<{
+    readonly document: number;
+    readonly state: UploadState;
+  } | null>(null);
+
+  protected uploadFor(row: DocumentRow): UploadState | null {
+    const current = this.upload();
+    return current?.document === row.clientDocumentId ? current.state : null;
+  }
+
   protected async choose(row: DocumentRow, input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     input.value = '';
@@ -232,6 +252,10 @@ export class DocumentsTab {
       return;
     }
     this.busy.set(true);
+    const document = row.clientDocumentId;
+    const report = (percent: number) =>
+      this.upload.set({ document, state: { name: file.name, percent } });
+    report(0);
     try {
       await this.workspace.uploadDocument(
         {
@@ -244,12 +268,14 @@ export class DocumentsTab {
           UploadedDate: new Date().toISOString(),
         },
         file,
+        report,
       );
       this.notifications.success('File uploaded successfully.');
     } catch {
       // The error interceptor has said why.
     } finally {
       this.busy.set(false);
+      this.upload.set(null);
     }
   }
 

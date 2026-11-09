@@ -190,7 +190,11 @@ describe('CompanyDetailsPage', () => {
     input.dispatchEvent(new Event('change'));
     await settle();
 
-    expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'CompanyDetails');
+    expect(files.upload).toHaveBeenCalledWith(
+      expect.any(File),
+      'CompanyDetails',
+      expect.any(Function),
+    );
     expect(savedAddresses()).toEqual([physical({ LogoStoragePath: 'CompanyDetails/logo.png' })]);
     expect(notify.success).toHaveBeenCalledWith('Logo uploaded.');
   });

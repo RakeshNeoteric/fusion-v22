@@ -3,6 +3,7 @@
     [title]="title()"
     [isNew]="clientId() === 0"
     [saving]="saving() || uploading()"
+    [busyLabel]="saving() ? 'Saving…' : null"
     [cancelable]="false"
     [savable]="!readOnly && tab() === 'details'"
     [closeResult]="savedHere()"
@@ -65,6 +66,9 @@
               (picked)="uploadLogo($event)"
               (removed)="removeLogo()"
             />
+            @if (logoFiles.progress(); as upload) {
+              <app-upload-progress class="cl-upload" [upload]="upload" />
+            }
           </div>
 
           <div class="cl-contact">
@@ -277,7 +281,12 @@
               The client's links could not be loaded. Close and open it again.
             </p>
           } @else {
-            <p class="cl-status">Loading…</p>
+            <app-skeleton-table
+              class="cl-loading"
+              label="Loading the client's links…"
+              [columns]="4"
+              [rows]="4"
+            />
           }
         </section>
       }

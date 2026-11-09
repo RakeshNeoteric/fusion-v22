@@ -342,7 +342,7 @@ describe('ClientDialog', () => {
     });
     input.dispatchEvent(new Event('change'));
     await settle();
-    expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'Client');
+    expect(files.upload).toHaveBeenCalledWith(expect.any(File), 'Client', expect.any(Function));
     await press('Update');
     expect(api.update).toHaveBeenCalledWith(
       expect.objectContaining({ CompanyLogoStoragePath: 'Client/new.png' }),

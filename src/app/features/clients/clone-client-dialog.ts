@@ -22,6 +22,7 @@ import { SelectField } from '@shared/forms/select-field/select-field';
       <app-record-dialog-frame
         title="Clone (Copy) a Client"
         saveLabel="Clone (Copy) Client"
+        busyLabel="Cloning…"
         [isNew]="true"
         [saving]="saving()"
       >

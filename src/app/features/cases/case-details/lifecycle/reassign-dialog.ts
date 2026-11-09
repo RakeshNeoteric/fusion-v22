@@ -27,6 +27,7 @@ const CONTROLLER_ROLE = 'Case Controller';
         title="Re-Assign"
         [isNew]="true"
         saveLabel="Assign Case Controller"
+        busyLabel="Assigning…"
         [saving]="saving()"
       >
         <app-case-identity idPrefix="ra" />

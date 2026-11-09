@@ -35,6 +35,7 @@ export function policyBirthDate(value: number | null): string {
       <app-record-dialog-frame
         title="Fetch Policy Details"
         saveLabel="Get Policy Details"
+        busyLabel="Searching…"
         [isNew]="true"
         [saving]="searching()"
       >

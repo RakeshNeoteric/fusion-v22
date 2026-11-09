@@ -281,14 +281,14 @@ export class EntityGrid<T extends object> implements OnInit {
     });
     if (!confirmed) return;
 
-    this.patch(key, (current) => ({ ...current, saving: true }));
+    this.patch(key, (current) => ({ ...current, saving: true, deleting: true }));
     try {
       // The saved values are sent, so unsaved edits are not stored by the delete.
       await firstValueFrom(source.softDelete(original));
       this.rows.update((rows) => rows.filter((candidate) => candidate.key !== key));
       this.notifications.success(`${entityName} deleted.`);
     } catch {
-      this.patch(key, (current) => ({ ...current, saving: false }));
+      this.patch(key, (current) => ({ ...current, saving: false, deleting: false }));
     }
   }
 

@@ -111,3 +111,9 @@
   font-size: 18px;
   font-weight: 700;
 }
+
+.company-upload {
+  width: 100%;
+  max-width: 260px;
+  margin-top: 8px;
+}

@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+.sk-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Fields: label over an empty input box. */
+.sk-fields {
+  display: grid;
+  grid-template-columns: repeat(var(--skeleton-columns, 3), minmax(0, 1fr));
+  gap: 22px 24px;
+}
+.sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.sk-input {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e4eaec;
+  border-radius: 8px;
+  background: #fff;
+}
+@media (width <= 900px) {
+  .sk-fields {
+    grid-template-columns: repeat(min(var(--skeleton-columns, 3), 2), minmax(0, 1fr));
+  }
+}
+@media (width <= 600px) {
+  .sk-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Table: a header row and grey rows. */
+.sk-table {
+  overflow: hidden;
+  border: 1px solid #e4eaec;
+  border-radius: 8px;
+  background: #fff;
+}
+.sk-row {
+  display: flex;
+  border-top: 1px solid #edf2f2;
+}
+.sk-head {
+  border-top: none;
+  background: #f4fafa;
+}
+.sk-cell {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+}

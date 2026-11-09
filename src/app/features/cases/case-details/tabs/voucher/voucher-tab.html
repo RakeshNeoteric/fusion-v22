@@ -1,6 +1,6 @@
 @switch (state()) {
   @case ('loading') {
-    <p role="status">Loading vouchers…</p>
+    <app-skeleton-table label="Loading vouchers…" [columns]="5" [rows]="4" />
   }
   @case ('failed') {
     <div class="vc-failed" role="alert">
