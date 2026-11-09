@@ -31,7 +31,18 @@ const avs = (costs: CaseAdditionalCostRecord[] = []) =>
 describe('Additional Cost', () => {
   const { api, notify, show, settle, fromMenu, element, type, press, text } = caseTabHarness();
 
-  const open = () => fromMenu('Additional Cost');
+  /** The pinned Total row's text (the grid splits pinned rows across its sections). */
+  const totalRow = () =>
+    [...document.querySelectorAll('app-additional-costing-dialog .ag-row-pinned')]
+      .map((row) => row.textContent ?? '')
+      .join(' ');
+
+  /** Opens the popup; the costs grid draws its cells on the next animation frame. */
+  async function open(): Promise<void> {
+    await fromMenu('Additional Cost');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
+  }
 
   const { printed } = capturePdfs();
 
@@ -88,6 +99,10 @@ describe('Additional Cost', () => {
   it('deletes a cost once confirmed, keeping the row marked deleted', async () => {
     await show(avs([cost()]));
     await open();
+    // v21: the red bin in its own column, and the total pinned under Cost.
+    expect(element('button[aria-label="Delete Flowers"] svg')).toBeTruthy();
+    expect(totalRow()).toContain('300.00');
+    expect(totalRow()).toContain('Total');
     element<HTMLButtonElement>('button[aria-label="Delete Flowers"]').click();
     await settle();
     const confirm = [
@@ -101,7 +116,7 @@ describe('Additional Cost', () => {
       AdditionalCostTotal: 0,
       TotalCost: 0,
     });
-    expect(text()).toContain('No additional costs yet.');
+    expect(text()).toContain('No Rows To Show');
   });
 
   it('only lists the costs of a case someone else has open', async () => {

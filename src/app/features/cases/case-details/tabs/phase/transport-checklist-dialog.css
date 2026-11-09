@@ -13,12 +13,17 @@
   font-size: 17px;
   font-weight: 600;
 }
+/* v21: the choices sit just after their question, not at the far right. */
 .tc-question {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px 24px;
+}
+/* Short entries (numbers, a date, a time, a name): not stretched across the popup. */
+.tc-narrow .form-field {
+  flex: 0 1 340px;
 }
 .tc-section > .form-field {
   flex: none;

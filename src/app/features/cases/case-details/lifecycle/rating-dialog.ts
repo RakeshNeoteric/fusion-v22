@@ -1,10 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormRecord, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NotificationService } from '@core/notifications/notification.service';
 import { RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
-import { displayStoredPhone } from '@shared/reference/phone';
+import { PhoneField } from '@shared/forms/phone-field/phone-field';
+import { storedToE164 } from '@shared/reference/phone';
 import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
 import { CaseIdentity } from '../case-identity';
 import { CaseWorkspace } from '../case-workspace';
@@ -29,7 +38,15 @@ type LoadState = 'loading' | 'ready' | 'failed';
  */
 @Component({
   selector: 'app-rating-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, CaseIdentity, LinkTable, LinkCell, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    RecordDialogFrame,
+    CaseIdentity,
+    LinkTable,
+    LinkCell,
+    SelectField,
+    PhoneField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rating-dialog.html',
   styleUrl: './rating-dialog.css',
@@ -45,8 +62,12 @@ export class RatingDialog {
   protected readonly contactName = computed(() =>
     `${this.caller()?.FirstName ?? ''} ${this.caller()?.LastName ?? ''}`.trim(),
   );
-  protected readonly contactPhone = computed(() =>
-    displayStoredPhone(this.caller()?.ContactNumber),
+  /** The caller's number with its flag and dial code; shown only, never typed here. */
+  protected readonly contactPhone = new FormControl(
+    { value: '', disabled: true },
+    {
+      nonNullable: true,
+    },
   );
   protected readonly readOnly = this.workspace.readOnly;
 
@@ -73,6 +94,10 @@ export class RatingDialog {
   protected readonly rowName = (row: RatingQuestionRow) => row.question;
 
   constructor() {
+    effect(() => {
+      const number = storedToE164(this.caller()?.ContactNumber);
+      untracked(() => this.contactPhone.setValue(number));
+    });
     const preloaded = this.data?.rows;
     if (preloaded) this.show(preloaded);
     else void this.load();

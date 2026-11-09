@@ -13,7 +13,8 @@
       [disabled]="readOnly() || state() !== 'ready'"
       (click)="newNote()"
     >
-      + New Note
+      <span class="ch-plus" aria-hidden="true"></span>
+      New Note
     </button>
   </div>
 
@@ -49,35 +50,8 @@
         [columns]="columns"
         [rowKey]="key"
         [nameOf]="name"
-        (view)="selected.set($event)"
+        (view)="view($event)"
       />
-      @if (selected(); as log) {
-        <section class="ch-details" aria-labelledby="ch-details-heading">
-          <div class="ch-details-head">
-            <h3 id="ch-details-heading">Contact Log Details</h3>
-            <button
-              type="button"
-              class="ch-details-close"
-              aria-label="Close details"
-              (click)="selected.set(null)"
-            >
-              ✕
-            </button>
-          </div>
-          <dl>
-            <dt>Type</dt>
-            <dd>
-              <span class="ch-badge">{{ log.type }}</span>
-            </dd>
-            <dt>User</dt>
-            <dd>{{ log.user }}</dd>
-            <dt>Date</dt>
-            <dd>{{ formatDateTime(log.createdDate) }}</dd>
-          </dl>
-          <h4>Description</h4>
-          <p class="ch-note">{{ log.note }}</p>
-        </section>
-      }
     }
   }
 </app-record-dialog-frame>

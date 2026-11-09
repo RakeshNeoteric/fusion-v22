@@ -108,17 +108,22 @@ describe('Contact History and SMS / Email', () => {
         `app-contact-history-dialog button[aria-label^="View: SMS"]`,
       ).click();
       await settle();
-      const details = element('.ch-details').textContent ?? '';
-      expect(details).toContain('Contact Log Details');
-      expect(details).toContain('Carl Ng');
-      expect(element('.ch-note').textContent).toBe('Your case is open\nRef REF1');
+      // v21: a panel at the right of the screen, on top of the history, so always in view.
+      const panel = document.querySelector('app-contact-log-dialog');
+      expect(panel?.closest('.app-side-panel')).not.toBeNull();
+      expect(panel?.textContent).toContain('Contact Log Details');
+      expect(panel?.textContent).toContain('Carl Ng');
+      expect(panel?.querySelector('.cl-note')?.textContent).toBe('Your case is open\nRef REF1');
+      panel?.querySelector<HTMLButtonElement>('button[aria-label="Close details"]')?.click();
+      await settle();
+      expect(document.querySelector('app-contact-log-dialog')).toBeNull();
     });
 
     it('adds a note: a type and at least 3 characters', async () => {
       const details = held({ CaseHistory: HISTORY });
       await show(details);
       await fromMenu('Contact History');
-      await pressIn('app-contact-history-dialog', '+ New Note');
+      await pressIn('app-contact-history-dialog', 'New Note');
 
       expect(text()).toContain('New Note');
       await pressIn('app-note-dialog', 'Add Note');
@@ -158,7 +163,7 @@ describe('Contact History and SMS / Email', () => {
       expect(historyCells()).toHaveLength(2);
       const newNote = [
         ...document.querySelectorAll<HTMLButtonElement>('app-contact-history-dialog button'),
-      ].find((button) => button.textContent?.trim() === '+ New Note');
+      ].find((button) => button.textContent?.trim() === 'New Note');
       expect(newNote?.disabled).toBe(true);
     });
   });

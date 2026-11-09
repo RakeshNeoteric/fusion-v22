@@ -34,6 +34,11 @@ html {
   gap: 12px;
 }
 
+/* A panel down the right of the screen (v21 drawer), e.g. Contact Log Details. */
+.app-side-panel {
+  --mat-dialog-container-shape: 0;
+}
+
 /*
  * v21 section box inside a popup (e.g. "Service Provider Details:"): white, light-grey border,
  * 8px corners, a faint shadow, and a teal bold title inside the box.

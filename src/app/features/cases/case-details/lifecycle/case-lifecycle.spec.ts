@@ -175,7 +175,10 @@ describe('Case lifecycle (Case Details header)', () => {
       expect(api.exit).not.toHaveBeenCalled();
       expect(text()).toContain('Case Rating');
       expect(value('cr-contact-name')).toBe('Ann Lee');
-      expect(value('cr-contact-phone')).toBe('+27 82 123 4567');
+      // The caller's number with its flag and dial code, shown only.
+      const phone = document.querySelector<HTMLInputElement>('#cr-contact-phone');
+      expect(phone?.disabled).toBe(true);
+      expect(phone?.closest('app-phone-field')?.textContent).toContain('+27');
       const questions = [...document.querySelectorAll('app-rating-dialog tbody tr')].map((row) =>
         row.querySelector('td')?.textContent?.trim(),
       );

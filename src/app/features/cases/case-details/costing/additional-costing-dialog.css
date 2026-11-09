@@ -11,13 +11,17 @@
 .ac-dark {
   background: var(--app-navy);
 }
+/* v21: the new cost in a white box with a light border and a faint shadow. */
 .ac-form {
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 20px 24px;
-  border-radius: 12px;
-  background: #e8f6f6;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
 }
 .ac-heading {
   margin: 0;
@@ -26,60 +30,15 @@
 }
 .ac-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 24px;
 }
-.ac-wide {
-  grid-column: 1 / -1;
+@media (width <= 900px) {
+  .ac-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-.ac-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-.ac-table caption {
-  margin-bottom: 8px;
-  color: var(--app-navy);
-  font-weight: 600;
-  text-align: left;
-}
-.ac-table :is(th, td) {
-  padding: 8px 10px;
-  border-bottom: 1px solid #dde6e6;
-  text-align: left;
-  overflow-wrap: anywhere;
-}
-.ac-table thead th {
-  background: #e7f9f9;
-}
-.ac-table tfoot :is(th, td) {
-  font-weight: 700;
-}
-.ac-table .ac-number {
-  text-align: right;
-  white-space: nowrap;
-}
-.ac-none {
-  color: #5f6b6b;
-  text-align: center;
-}
-.ac-delete {
-  padding: 4px 12px;
-  border: none;
-  border-radius: 6px;
-  background: var(--app-danger);
-  color: #fff;
-  cursor: pointer;
-}
-.ac-delete:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.ac-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+/* v21: the costs grid, its full height (the popup scrolls). */
+.ac-grid-table {
+  flex: none;
 }

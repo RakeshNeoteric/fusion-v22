@@ -1,5 +1,5 @@
 import type { CaseHistoryRecord } from '@api/cases/case.api';
-import { historyRows, historyTypes } from './history-rows';
+import { historyRows, historyTypes, noteChanges } from './history-rows';
 
 const entry = (
   id: number,
@@ -44,5 +44,30 @@ describe('historyRows', () => {
       names,
     );
     expect(historyTypes(rows)).toEqual(['Admin', 'SMS']);
+  });
+});
+
+describe('noteChanges', () => {
+  it('reads the backend’s change lines, with readable field names', () => {
+    const note =
+      'CaseControllerUserId: louisa@fms.co.za -> \r\nCaseOpenedBy:  -> dayakar@neo.com\nAgentId: a -> b';
+    expect(noteChanges(note)).toEqual([
+      { field: 'Case Controller User Id', from: 'louisa@fms.co.za', to: '' },
+      { field: 'Case Opened By', from: '', to: 'dayakar@neo.com' },
+      { field: 'Agent Id', from: 'a', to: 'b' },
+    ]);
+  });
+
+  it('keeps a value that has its own arrow or colon in the new value', () => {
+    expect(noteChanges('Comments: none -> Called at 10:30 -> then left')).toEqual([
+      { field: 'Comments', from: 'none', to: 'Called at 10:30 -> then left' },
+    ]);
+  });
+
+  it('leaves other notes as they are', () => {
+    expect(noteChanges('Family called back')).toBeNull();
+    expect(noteChanges('Case Opened')).toBeNull();
+    expect(noteChanges('Status: done -> ok\nThen the family called')).toBeNull();
+    expect(noteChanges('  ')).toBeNull();
   });
 });

@@ -7,14 +7,18 @@
     [saving]="saving()"
   >
     <app-case-identity idPrefix="cr" />
-    <div class="form-row">
+    <div class="form-row cr-contact">
       <div class="form-field">
         <label for="cr-contact-name">Contact Name</label>
         <input id="cr-contact-name" type="text" [value]="contactName()" disabled />
       </div>
       <div class="form-field">
         <label for="cr-contact-phone">Contact Phone</label>
-        <input id="cr-contact-phone" type="text" [value]="contactPhone()" disabled />
+        <app-phone-field
+          inputId="cr-contact-phone"
+          label="Contact Phone"
+          [formControl]="contactPhone"
+        />
       </div>
     </div>
 

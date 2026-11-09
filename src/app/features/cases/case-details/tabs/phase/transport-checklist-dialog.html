@@ -6,7 +6,7 @@
     [saving]="saving()"
     saveLabel="Save"
   >
-    <div class="form-row">
+    <div class="form-row tc-narrow">
       <div class="form-field">
         <label for="tc-reference">Case Reference Number</label>
         <input
@@ -48,7 +48,7 @@
           [choices]="yesNo"
         />
       </div>
-      <div class="form-row">
+      <div class="form-row tc-narrow">
         <div class="form-field">
           <label for="tc-removal-date">Removal Date</label>
           <app-date-field inputId="tc-removal-date" formControlName="removalDate" />
@@ -118,7 +118,7 @@
 
     <fieldset class="tc-section">
       <legend class="tc-heading">Accompanying Family Information</legend>
-      <div class="form-row">
+      <div class="form-row tc-narrow">
         <div class="form-field">
           <label for="tc-family-name">Name</label>
           <input id="tc-family-name" type="text" formControlName="familyName" />

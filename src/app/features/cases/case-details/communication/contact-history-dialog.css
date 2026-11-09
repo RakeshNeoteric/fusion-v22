@@ -4,6 +4,49 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 16px;
+}
+/* v21: Case Reference Number and Case Number side by side. */
+.ch-head app-case-identity {
+  flex: 1 1 520px;
+  max-width: 700px;
+  /* The head spaces itself, so New Note lines up with the boxes, not below them. */
+  margin-bottom: 0;
+}
+/* As high as the boxes beside it. */
+.ch-head .app-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 20px;
+}
+/* v21: a white circle with a teal plus, drawn as two bars so it sits exactly in the middle. */
+.ch-plus {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+}
+.ch-plus::before,
+.ch-plus::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--app-teal);
+  content: '';
+  transform: translate(-50%, -50%);
+}
+.ch-plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.ch-head .app-button:disabled .ch-plus {
+  opacity: 0.8;
 }
 .ch-filter {
   max-width: 280px;
@@ -12,55 +55,4 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-.ch-details {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fafafa;
-}
-.ch-details-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.ch-details-head h3 {
-  margin: 0;
-  color: var(--app-teal);
-  font-size: 16px;
-}
-.ch-details-close {
-  border: none;
-  background: none;
-  color: red;
-  font-weight: 700;
-  cursor: pointer;
-}
-.ch-details dl {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 16px;
-  margin: 12px 0;
-}
-.ch-details dt {
-  color: #5f6b6b;
-}
-.ch-details dd {
-  margin: 0;
-  font-weight: 600;
-}
-.ch-details h4 {
-  margin: 0 0 6px;
-}
-.ch-badge {
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: rgb(5 185 188 / 15%);
-}
-/* Notes keep their line breaks. */
-.ch-note {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }

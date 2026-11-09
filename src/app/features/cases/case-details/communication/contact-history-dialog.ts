@@ -16,6 +16,7 @@ import { CaseWorkspace } from '../case-workspace';
 import { openCaseDialog } from '../lifecycle/open-case-dialog';
 import { CaseCommunication } from './case-communication';
 import { type HistoryRow, historyRows, historyTypes } from './history-rows';
+import { openContactLog } from './contact-log-dialog';
 import { NoteDialog } from './note-dialog';
 import { SelectField, type SelectValue } from '@shared/forms/select-field/select-field';
 import { textOptions } from '@shared/forms/select-field/select-option';
@@ -43,7 +44,6 @@ export class ContactHistoryDialog {
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly state = signal<'loading' | 'failed' | 'ready'>('loading');
   protected readonly type = signal(ALL);
-  protected readonly selected = signal<HistoryRow | null>(null);
 
   private readonly all = computed(() =>
     historyRows(this.workspace.details()?.CaseHistory ?? [], (id) => this.users.displayName(id)),
@@ -62,7 +62,6 @@ export class ContactHistoryDialog {
   protected readonly key = (row: HistoryRow) => row.id;
   protected readonly name = (row: HistoryRow) =>
     `${row.type} ${formatDateTime(row.createdDate)}`.trim();
-  protected readonly formatDateTime = formatDateTime;
 
   constructor() {
     void this.load();
@@ -80,7 +79,11 @@ export class ContactHistoryDialog {
 
   protected filter(type: SelectValue<string>): void {
     this.type.set(typeof type === 'string' ? type : ALL);
-    this.selected.set(null);
+  }
+
+  /** v21: the entry in full, in a panel at the right of the screen. */
+  protected view(log: HistoryRow): void {
+    openContactLog(this.dialog, log);
   }
 
   protected async newNote(): Promise<void> {

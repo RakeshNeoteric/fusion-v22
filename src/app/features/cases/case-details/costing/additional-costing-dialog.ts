@@ -8,6 +8,16 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { type MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+  type ColDef,
+  type GetRowIdFunc,
+  type RowStyle,
+  type RowClassParams,
+  NumberFilterModule,
+  PinnedRowModule,
+  TextFilterModule,
+} from 'ag-grid-community';
 import { firstValueFrom } from 'rxjs';
 import type { CaseAdditionalCostRecord } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
@@ -19,10 +29,12 @@ import { EMAIL_PATTERN, requiredText } from '@shared/forms/validators';
 import { money, round2 } from '@shared/reference/money';
 import { localParts } from '@shared/reference/date-time';
 import { displayStoredPhone } from '@shared/reference/phone';
+import { APP_GRID_THEME, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { CaseWorkspace } from '../case-workspace';
 import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po';
+import { type AdditionalCostGridContext, AdditionalCostDeleteCell } from './additional-cost-cells';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {
@@ -39,7 +51,7 @@ function tidyAddress(address: string): string {
  */
 @Component({
   selector: 'app-additional-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, PhoneField, DialogHeader],
+  imports: [ReactiveFormsModule, MatDialogModule, PhoneField, DialogHeader, AgGridAngular],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './additional-costing-dialog.html',
   styleUrl: './additional-costing-dialog.css',
@@ -55,8 +67,64 @@ export class AdditionalCostingDialog {
   protected readonly readOnly = this.workspace.readOnly;
   protected readonly busy = signal(false);
   protected readonly printing = signal(false);
-  protected readonly money = money;
-  protected readonly phone = displayStoredPhone;
+
+  protected readonly gridModules = [
+    ...LIST_GRID_MODULES,
+    TextFilterModule,
+    NumberFilterModule,
+    PinnedRowModule,
+  ];
+  protected readonly gridTheme = APP_GRID_THEME;
+  protected readonly pageSizes = [10, 20, 50];
+  protected readonly defaultColDef: ColDef<CaseAdditionalCostRecord> = {
+    flex: 1,
+    minWidth: 120,
+    sortable: true,
+    resizable: true,
+    // v21: one line per row; the grid cuts long text with "…".
+    filter: 'agTextColumnFilter',
+  };
+  protected readonly rowId: GetRowIdFunc<CaseAdditionalCostRecord> = ({ data, rowPinned }) =>
+    rowPinned ? 'total' : String(data.CaseAdditionalCostId);
+  /** The pinned Total row in bold. */
+  protected readonly rowStyle = ({ node }: RowClassParams): RowStyle | undefined =>
+    node.rowPinned ? { fontWeight: '700' } : undefined;
+  protected readonly gridContext: AdditionalCostGridContext = {
+    remove: (cost) => void this.remove(cost),
+    busy: () => this.busy(),
+  };
+  /** v21 columns; the bin only while the case can be changed. */
+  protected readonly columnDefs = computed((): ColDef<CaseAdditionalCostRecord>[] => [
+    { headerName: 'Service Provider', field: 'ServiceProviderName' },
+    { headerName: 'VAT Number', field: 'VATNumber' },
+    { headerName: 'Company Reg. No', field: 'CompanyRegNo' },
+    { headerName: 'Email', field: 'Email' },
+    {
+      headerName: 'Cost',
+      field: 'Amount',
+      filter: 'agNumberColumnFilter',
+      type: 'rightAligned',
+      valueFormatter: ({ value }) => money(Number(value) || 0),
+    },
+    { headerName: 'Description', field: 'Description' },
+    ...(this.readOnly()
+      ? []
+      : [
+          {
+            headerName: 'Delete',
+            colId: 'delete',
+            width: 90,
+            minWidth: 90,
+            maxWidth: 90,
+            flex: 0,
+            sortable: false,
+            filter: false,
+            resizable: false,
+            pinned: 'right' as const,
+            cellRenderer: AdditionalCostDeleteCell,
+          },
+        ]),
+  ]);
 
   /** Costs not deleted, oldest first. */
   protected readonly costs = computed(() =>
@@ -66,6 +134,10 @@ export class AdditionalCostingDialog {
   );
   protected readonly total = computed(() =>
     round2(this.costs().reduce((sum, cost) => sum + (Number(cost.Amount) || 0), 0)),
+  );
+  /** v21: the total under Cost, "Total" beside it under Description. */
+  protected readonly totalRow = computed(
+    () => [{ Amount: this.total(), Description: 'Total' }] as CaseAdditionalCostRecord[],
   );
 
   protected readonly form = new FormGroup({

@@ -60,12 +60,19 @@
         </div>
         <div class="form-field">
           <label for="ac-amount">Cost <span class="required">*</span></label>
-          <input id="ac-amount" type="number" min="0" step="0.01" formControlName="amount" />
+          <input
+            id="ac-amount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0"
+            formControlName="amount"
+          />
           @if (showError(controls.amount)) {
             <span class="field-error">Enter a cost above 0.</span>
           }
         </div>
-        <div class="form-field ac-wide">
+        <div class="form-field">
           <label for="ac-description">Description <span class="required">*</span></label>
           <input id="ac-description" type="text" maxlength="200" formControlName="description" />
           @if (showError(controls.description)) {
@@ -79,62 +86,25 @@
     </form>
   }
 
-  <table class="ac-table">
-    <caption>
-      Additional costs
-    </caption>
-    <thead>
-      <tr>
-        <th scope="col">Service Provider</th>
-        <th scope="col">VAT Number</th>
-        <th scope="col">Company Reg. No</th>
-        <th scope="col">Email</th>
-        <th scope="col">Contact</th>
-        <th scope="col" class="ac-number">Cost</th>
-        <th scope="col">Description</th>
-        @if (!readOnly()) {
-          <th scope="col"><span class="ac-hidden">Delete</span></th>
-        }
-      </tr>
-    </thead>
-    <tbody>
-      @for (cost of costs(); track cost.CaseAdditionalCostId) {
-        <tr>
-          <td>{{ cost.ServiceProviderName }}</td>
-          <td>{{ cost.VATNumber }}</td>
-          <td>{{ cost.CompanyRegNo }}</td>
-          <td>{{ cost.Email }}</td>
-          <td>{{ phone(cost.Telephone) }}</td>
-          <td class="ac-number">{{ money(cost.Amount) }}</td>
-          <td>{{ cost.Description }}</td>
-          @if (!readOnly()) {
-            <td>
-              <button
-                type="button"
-                class="ac-delete"
-                [disabled]="busy()"
-                [attr.aria-label]="'Delete ' + cost.Description"
-                (click)="remove(cost)"
-              >
-                Delete
-              </button>
-            </td>
-          }
-        </tr>
-      } @empty {
-        <tr>
-          <td [attr.colspan]="readOnly() ? 7 : 8" class="ac-none">No additional costs yet.</td>
-        </tr>
-      }
-    </tbody>
-    <tfoot>
-      <tr>
-        <th scope="row" colspan="5">Total</th>
-        <td class="ac-number">{{ money(total()) }}</td>
-        <td [attr.colspan]="readOnly() ? 1 : 2"></td>
-      </tr>
-    </tfoot>
-  </table>
+  <!-- v21: the costs in a grid, 20 a page, the total pinned under Cost. -->
+  <ag-grid-angular
+    class="ac-grid-table"
+    domLayout="autoHeight"
+    overlayNoRowsTemplate="No Rows To Show"
+    [modules]="gridModules"
+    [theme]="gridTheme"
+    [rowData]="costs()"
+    [columnDefs]="columnDefs()"
+    [defaultColDef]="defaultColDef"
+    [pinnedBottomRowData]="totalRow()"
+    [context]="gridContext"
+    [getRowId]="rowId"
+    [getRowStyle]="rowStyle"
+    [animateRows]="false"
+    [pagination]="true"
+    [paginationPageSize]="20"
+    [paginationPageSizeSelector]="pageSizes"
+  />
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button type="button" class="app-button app-button--cancel" (click)="close()">Close</button>
