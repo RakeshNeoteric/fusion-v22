@@ -6,6 +6,7 @@ import type { MenuConfig, UserRolePermissions } from '@api/models/app.models';
 import { AuthService } from '@core/auth/auth.service';
 import { silentErrors } from '@core/http/http-context';
 import { toApiError } from '@core/http/api-error';
+import { RequestCache } from '@core/http/request-cache';
 import { PermissionService } from '@core/permissions/permission.service';
 import { UserDirectoryService } from './user-directory.service';
 
@@ -50,6 +51,7 @@ export class SessionService {
   private readonly appApi = inject(AppApi);
   private readonly permissions = inject(PermissionService);
   private readonly directory = inject(UserDirectoryService);
+  private readonly cache = inject(RequestCache);
   private readonly location = inject(Location);
 
   private readonly currentState = signal<SessionState>({ status: 'signed-out' });
@@ -101,6 +103,7 @@ export class SessionService {
   async signOut(): Promise<void> {
     this.permissions.clear();
     this.directory.clear();
+    this.cache.clear();
     this.currentMenus.set([]);
     this.currentState.set({ status: 'signed-out' });
     await this.auth.logout();

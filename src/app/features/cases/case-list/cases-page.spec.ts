@@ -3,8 +3,8 @@ import { By } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, provideRouter } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { of } from 'rxjs';
-import { CaseApi } from '@api/cases/case.api';
+import { Subject, of, throwError } from 'rxjs';
+import { CaseApi, type CaseDetails } from '@api/cases/case.api';
 import { PageActions } from '@core/layout/page-actions';
 import { CASE_INIT, caseDetails, caseDeceased } from '../../../../testing/case.fixtures';
 import { CasesPage } from './cases-page';
@@ -142,6 +142,32 @@ describe('CasesPage', () => {
     await settle();
     expect(groups()).toEqual([]);
     expect(host().textContent).toContain('No cases found.');
+  });
+
+  it('coming back shows the last list at once, then the fresh one', async () => {
+    const fresh = new Subject<CaseDetails[]>();
+    api.list.mockReturnValue(fresh);
+    fixture.destroy();
+    fixture = TestBed.createComponent(CasesPage);
+    await settle();
+
+    // The fresh list has not arrived: the last one shows, not the loading screen.
+    expect(groups()).toEqual(['Zulu Insure (1)', 'Groceries (1)', 'Acme (1)', 'Funeral (1)']);
+    expect(api.init).toHaveBeenCalledTimes(1);
+
+    fresh.next([caseDetails({ CaseDetailId: 4, CaseClientId: 2, CaseClientServiceId: 5 })]);
+    fresh.complete();
+    await settle();
+    expect(groups()).toEqual(['Acme (1)', 'Funeral (1)']);
+  });
+
+  it('keeps the last list when loading a fresh one fails', async () => {
+    api.list.mockReturnValue(throwError(() => new Error('down')));
+    fixture.destroy();
+    fixture = TestBed.createComponent(CasesPage);
+    await settle();
+    expect(groups()).toHaveLength(4);
+    expect(host().textContent).not.toContain('Try again');
   });
 
   it('opens a new case once it is created', async () => {

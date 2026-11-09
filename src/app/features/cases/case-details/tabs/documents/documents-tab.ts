@@ -11,14 +11,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { AgGridAngular } from 'ag-grid-angular';
 import { type ColDef, type GetRowIdFunc, TextFilterModule } from 'ag-grid-community';
-import { firstValueFrom } from 'rxjs';
 import type { ClientDocumentLink } from '@api/clients/client-links.api';
-import { DocumentTypeApi } from '@api/config/document.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { FileViewer, storedFileName } from '@shared/files/file-viewer';
 import { formatDateTime } from '@shared/reference/date-time';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { APP_GRID_THEME, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
+import { CaseLookups } from '../../../case-lookups';
 import { CaseWorkspace } from '../../case-workspace';
 import {
   MessageDialog,
@@ -128,7 +127,7 @@ import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 })
 export class DocumentsTab {
   protected readonly workspace = inject(CaseWorkspace);
-  private readonly types = inject(DocumentTypeApi);
+  private readonly lookups = inject(CaseLookups);
   private readonly confirm = inject(ConfirmService);
   private readonly notifications = inject(NotificationService);
   protected readonly viewer = inject(FileViewer);
@@ -281,7 +280,7 @@ export class DocumentsTab {
     try {
       const [client, types] = await Promise.all([
         this.workspace.loadClient(),
-        firstValueFrom(this.types.listIncludingDeleted()),
+        this.lookups.allDocumentTypes(),
       ]);
       this.clientDocuments.set(client?.ClientDocument ?? []);
       this.typeNames.set(new Map(types.map((type) => [type.DocumentId, type.Description])));

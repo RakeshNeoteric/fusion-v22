@@ -17,11 +17,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CaseApi } from '@api/cases/case.api';
 import type { HasUnsavedChanges } from '@shared/navigation/unsaved-changes.guard';
 import { FolderTabs } from '@shared/ui/folder-tabs/folder-tabs';
 import { NotificationService } from '@core/notifications/notification.service';
+import { CaseLookups } from '../case-lookups';
 import {
   type CaseTab,
   type CaseTabKey,
@@ -102,6 +103,7 @@ const CASE_STAGES = ['Case Initiation', 'Evaluation', 'Ongoing', 'On Hold', 'Res
 })
 export class CaseDetailsPage implements HasUnsavedChanges {
   private readonly api = inject(CaseApi);
+  private readonly lookups = inject(CaseLookups);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
@@ -175,9 +177,10 @@ export class CaseDetailsPage implements HasUnsavedChanges {
     if (this.details()?.CaseDetailId !== id) await this.release();
     this.status.set('loading');
     try {
-      const { details, init } = await firstValueFrom(
-        forkJoin({ details: this.api.open(id), init: this.api.init() }),
-      );
+      const [details, init] = await Promise.all([
+        firstValueFrom(this.api.open(id)),
+        this.lookups.init(),
+      ]);
       this.workspace.show(details, new CaseDirectory(init));
       this.tab.set(this.tabs()[0]?.id ?? 'caller');
       this.status.set('ready');

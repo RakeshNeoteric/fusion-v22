@@ -24,8 +24,7 @@ import {
   type SortChangedEvent,
   type ValueGetterParams,
 } from 'ag-grid-community';
-import { firstValueFrom, forkJoin } from 'rxjs';
-import { CaseApi, type CaseDetails } from '@api/cases/case.api';
+import type { CaseDetails } from '@api/cases/case.api';
 import { displayDate } from '@shared/reference/date-time';
 import { PageActions } from '@core/layout/page-actions';
 import { PermissionService } from '@core/permissions/permission.service';
@@ -47,6 +46,7 @@ import {
   DEFAULT_GROUPING,
   groupCases,
 } from './case-grouping';
+import { CaseLookups } from '../case-lookups';
 import { CASES_PERMISSION, CaseDirectory, callerName, deceasedName } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
 import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
@@ -91,7 +91,7 @@ function cellText(row: CaseRow, key: CaseSortKey): string {
   styleUrl: './cases-page.css',
 })
 export class CasesPage {
-  private readonly api = inject(CaseApi);
+  private readonly lookups = inject(CaseLookups);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly pageActions = inject(PageActions);
@@ -194,19 +194,29 @@ export class CasesPage {
     });
   }
 
+  /**
+   * Coming back to the list shows the last one at once, while a fresh one loads behind and then
+   * replaces it (open groups, filters and sorting stay). The first time, it waits for the data.
+   */
   protected async load(): Promise<void> {
-    this.status.set('loading');
+    const lastCases = this.lookups.lastCaseList();
+    const lastInit = this.lookups.lastInit();
+    const shown = !!lastCases && !!lastInit;
+    if (shown) this.show(lastCases, new CaseDirectory(lastInit));
+    else this.status.set('loading');
     try {
-      const { cases, init } = await firstValueFrom(
-        forkJoin({ cases: this.api.list(), init: this.api.init() }),
-      );
-      const directory = new CaseDirectory(init);
-      this.directory.set(directory);
-      this.cases.set(cases.map((details) => this.toRow(details, directory)));
-      this.status.set('ready');
+      const [cases, init] = await Promise.all([this.lookups.loadCaseList(), this.lookups.init()]);
+      this.show(cases, new CaseDirectory(init));
     } catch {
-      this.status.set('failed');
+      // The error was shown; the last list, if any, stays.
+      if (!shown) this.status.set('failed');
     }
+  }
+
+  private show(cases: readonly CaseDetails[], directory: CaseDirectory): void {
+    this.directory.set(directory);
+    this.cases.set(cases.map((details) => this.toRow(details, directory)));
+    this.status.set('ready');
   }
 
   protected sorted(event: SortChangedEvent<CaseListRow>): void {

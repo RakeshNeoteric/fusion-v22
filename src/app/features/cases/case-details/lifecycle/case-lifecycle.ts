@@ -1,10 +1,9 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { CaseApi, type CaseNoteType, type CaseStatus } from '@api/cases/case.api';
-import { RatingQuestionOptionApi } from '@api/config/rating-question-option.api';
-import { RatingQuestionTypeApi } from '@api/config/rating-question-type.api';
 import { isFinished } from '../../case-setup';
 import { CaseCommunication } from '../communication/case-communication';
+import { CaseLookups } from '../../case-lookups';
 import { CaseWorkspace } from '../case-workspace';
 import { type RatingQuestionRow, ratingQuestions, ratingRecords } from './rating-rules';
 
@@ -26,8 +25,7 @@ export class CaseLifecycle {
   private readonly api = inject(CaseApi);
   private readonly workspace = inject(CaseWorkspace);
   private readonly communication = inject(CaseCommunication);
-  private readonly ratingTypes = inject(RatingQuestionTypeApi);
-  private readonly ratingOptions = inject(RatingQuestionOptionApi);
+  private readonly lookups = inject(CaseLookups);
 
   /** Closed and aborted cases can be re-opened by whoever may change cases (v21). */
   readonly canReopen = computed(() => {
@@ -100,8 +98,8 @@ export class CaseLifecycle {
   async ratingQuestions(): Promise<RatingQuestionRow[]> {
     const [client, types, options] = await Promise.all([
       this.workspace.loadClient(),
-      firstValueFrom(this.ratingTypes.listIncludingDeleted()),
-      firstValueFrom(this.ratingOptions.listIncludingDeleted()),
+      this.lookups.allRatingTypes(),
+      this.lookups.allRatingOptions(),
     ]);
     return ratingQuestions(client, { types, options }, this.require().CaseRatings ?? []);
   }

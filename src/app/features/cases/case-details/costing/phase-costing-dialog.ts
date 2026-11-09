@@ -13,8 +13,8 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
 import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import type { CasePhaseRecord } from '@api/cases/case.api';
-import { type TransportOperator, TransportOperatorApi } from '@api/config/transport-operator.api';
-import { type Vehicle, VehicleApi } from '@api/config/vehicle.api';
+import type { TransportOperator } from '@api/config/transport-operator.api';
+import type { Vehicle } from '@api/config/vehicle.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
@@ -24,6 +24,7 @@ import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { money } from '@shared/reference/money';
 import { PhoneDisplay } from '@shared/forms/phone-field/phone-display';
 import type { ClientProvider } from '../client-providers';
+import { CaseLookups } from '../../case-lookups';
 import { CaseWorkspace } from '../case-workspace';
 import { activePhases, caseTotals, isAuthorised, phaseTotal } from './costing-rules';
 import { removalDocument, removalOrder } from './removal-order';
@@ -97,8 +98,7 @@ export class PhaseCostingDialog {
   private readonly users = inject(UserDirectoryService);
   private readonly session = inject(SessionService);
   private readonly notifications = inject(NotificationService);
-  private readonly vehicleApi = inject(VehicleApi);
-  private readonly operatorApi = inject(TransportOperatorApi);
+  private readonly lookups = inject(CaseLookups);
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
@@ -359,8 +359,8 @@ export class PhaseCostingDialog {
     const settle = <T>(request: Promise<T>, fallback: T) => request.catch(() => fallback);
     const [providers, vehicles, operators] = await Promise.all([
       settle(this.workspace.loadProviders(), []),
-      settle(firstValueFrom(this.vehicleApi.listIncludingDeleted()), []),
-      settle(firstValueFrom(this.operatorApi.listIncludingDeleted()), []),
+      settle(this.lookups.allVehicles(), []),
+      settle(this.lookups.allTransportOperators(), []),
     ]);
     this.providers.set(providers);
     this.vehicles.set(vehicles);
