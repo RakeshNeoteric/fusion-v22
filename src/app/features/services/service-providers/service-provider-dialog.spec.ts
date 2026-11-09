@@ -317,6 +317,30 @@ describe('ServiceProviderDialog', () => {
     expect(files.delete).toHaveBeenCalledExactlyOnceWith('ServiceProvider/new.pdf');
   });
 
+  it('labels the first contact row only, with + there and a bin on the others (v21)', async () => {
+    await open(stored);
+    element<HTMLButtonElement>('button[aria-label="Add contact"]').click();
+    await settle();
+    const rows = [...document.querySelectorAll('app-service-provider-dialog .sp-contact')];
+    expect(rows.map((row) => row.classList.contains('sp-contact--more'))).toEqual([false, true]);
+    expect(rows[0]?.querySelector('button[aria-label="Add contact"]')).not.toBeNull();
+    expect(rows[0]?.querySelector('button[aria-label^="Remove contact"]')).toBeNull();
+    expect(rows[1]?.querySelector('button[aria-label="Remove contact 2"] svg')).not.toBeNull();
+    expect(rows[1]?.querySelector('button[aria-label="Add contact"]')).toBeNull();
+  });
+
+  it('shows Can Edit Address (No), which the backend does not store, as in v21', async () => {
+    await open(stored);
+    const group = element<HTMLElement>('mat-button-toggle-group[formcontrolname="CanEditAddress"]');
+    expect(group.getAttribute('aria-labelledby')).toBe('sp-edit-address-label');
+    expect(group.querySelector('.no-toggle')?.classList).toContain('mat-button-toggle-checked');
+    await answer('sp-edit-address-label', 'Yes');
+    expect(group.querySelector('.yes-toggle')?.classList).toContain('mat-button-toggle-checked');
+    await press('Update');
+    expect(api.update).toHaveBeenCalledOnce();
+    expect(Object.keys(api.update.mock.calls[0]![0] as object)).not.toContain('CanEditAddress');
+  });
+
   it('adds up to five contacts and removes them again', async () => {
     await open(stored);
     for (let count = 1; count < 5; count++) {

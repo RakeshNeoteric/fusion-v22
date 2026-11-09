@@ -136,6 +136,11 @@ export class ServiceProviderDialog extends RecordDialog<ServiceProvider> {
       Validators.max(MAX_RATE),
     ]),
     DesignationNumber: this.text(this.record?.DesignationNumber),
+    /**
+     * v21 shows this switch, but the backend has no field for it, so it is not saved
+     * (as in v21). It is ready for when the backend adds one.
+     */
+    CanEditAddress: new FormControl(false, { nonNullable: true }),
     AuthorisedBy: new FormControl<number | null>(userId(this.record?.AuthorisedBy)),
     RateAuthorisedOn: new FormControl(dateOnly(this.record?.RateAuthorisedOn), {
       nonNullable: true,

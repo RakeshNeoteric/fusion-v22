@@ -81,6 +81,14 @@ describe('PhoneField', () => {
     expect(countryButton().querySelector('img')?.getAttribute('src')).toBe('flags/za.svg');
   });
 
+  it('shows an example number for the chosen country after its dial code (v21)', async () => {
+    await render('');
+    expect(numberInput().placeholder).toBe('71 123 4567');
+    await chooseCountry('IN');
+    expect(numberInput().placeholder).toMatch(/^\d[\d ]+\d$/);
+    expect(numberInput().placeholder).not.toContain('+');
+  });
+
   it('lists South Africa and India first, each with its flag (v21)', async () => {
     await render('');
     await openList();

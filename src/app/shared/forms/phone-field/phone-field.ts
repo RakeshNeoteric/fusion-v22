@@ -19,9 +19,11 @@ import {
 import {
   type CountryCode,
   getCountryCallingCode,
+  getExampleNumber,
   isSupportedCountry,
   parsePhoneNumberFromString,
 } from 'libphonenumber-js';
+import examples from 'libphonenumber-js/mobile/examples';
 import { COUNTRIES } from '@shared/reference/countries';
 
 interface DialCountry {
@@ -84,6 +86,7 @@ const DIAL_COUNTRIES: readonly DialCountry[] = (() => {
       autocomplete="tel-national"
       [id]="inputId()"
       [attr.aria-label]="label()"
+      [placeholder]="example()"
       [value]="number()"
       [disabled]="disabled()"
       (input)="changeNumber($event)"
@@ -280,6 +283,16 @@ export class PhoneField implements ControlValueAccessor, Validator {
         dial: getCountryCallingCode(this.countryCode()),
       },
   );
+
+  /**
+   * v21 (ngx-intl-tel-input): an example number for the chosen country, written after its
+   * dial code, e.g. `71 123 4567` for South Africa.
+   */
+  protected readonly example = computed(() => {
+    const { code, dial } = this.selected();
+    const example = isSupportedCountry(code) ? getExampleNumber(code, examples) : undefined;
+    return example?.formatInternational().replace(`+${dial}`, '').trim() ?? '';
+  });
 
   /** Matches the country name, its code (ZA) or its dial code (27 / +27). */
   protected readonly filtered = computed(() => {

@@ -82,7 +82,19 @@ textarea {
 .sp-contact-actions {
   display: flex;
   gap: 6px;
-  padding-top: 26px;
+  padding-top: 24px;
+}
+/* v21: the labels show on the first row only (kept for screen readers on the others). */
+.sp-contact--more label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sp-contact--more .sp-contact-actions {
+  padding-top: 0;
 }
 .sp-icon-button,
 .sp-add {
@@ -110,16 +122,41 @@ textarea {
 .sp-danger {
   color: #e74c3c;
 }
+.sp-add,
+.sp-remove {
+  width: 44px;
+  height: 42px;
+  border-radius: 8px;
+}
+/* v21: a filled teal + and a red-outlined bin. */
 .sp-add {
-  border: 2px solid var(--app-teal);
-  background: #fff;
-  color: var(--app-teal);
+  border: none;
+  background: var(--app-teal);
+  color: #fff;
   font-size: 22px;
   font-weight: 600;
 }
 .sp-add:hover:not(:disabled) {
-  background: var(--app-teal);
-  color: #fff;
+  background: #039a9c;
+}
+.sp-remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e74c3c;
+  background: #fff;
+  color: #e74c3c;
+  cursor: pointer;
+}
+.sp-remove svg {
+  width: 15px;
+  height: 15px;
+  fill: currentcolor;
+}
+.sp-remove:hover {
+  background: rgb(231 76 60 / 6%);
 }
 .sp-add:disabled {
   opacity: 0.4;
@@ -127,6 +164,7 @@ textarea {
 }
 .sp-icon-button:focus-visible,
 .sp-add:focus-visible,
+.sp-remove:focus-visible,
 .sp-choose:focus-visible {
   outline: 2px solid #000;
   outline-offset: 2px;
