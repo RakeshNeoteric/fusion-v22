@@ -69,9 +69,6 @@
 
   <fieldset class="tab-section" [formGroup]="deceased">
     <legend class="tab-heading">Deceased Information</legend>
-    @if (deceasedLocked() && !readOnly()) {
-      <p class="val-note">Change these on the Deceased Info tab.</p>
-    }
     <div class="tab-grid tab-grid-4">
       <div class="form-field">
         <label for="val-deceased-first">First Name</label>
@@ -99,10 +96,11 @@
     <div class="tab-grid tab-grid-4">
       <div class="form-field">
         <label for="val-deceased-birth">Date Of Birth</label>
+        <!-- Worked out from the deceased's ID number, so never typed (v21: disabled). -->
         <input
           id="val-deceased-birth"
           type="text"
-          readonly
+          disabled
           [value]="displayDate(deceasedBirth())"
         />
       </div>
@@ -146,7 +144,8 @@
         }
       </div>
     }
-    <div class="tab-grid val-grid">
+    <!-- v21: date, person and Benefit Valid in one row, Validate at the far right. -->
+    <div class="val-row">
       <div class="form-field">
         <label for="val-date">Date of Validation</label>
         <input id="val-date" type="text" readonly [value]="today" />
@@ -155,16 +154,14 @@
         <label for="val-by">Validated By</label>
         <app-select inputId="val-by" formControlName="validatedBy" [options]="userOptions()" />
       </div>
-    </div>
-    <label class="switch-field">
-      <span class="switch">
-        <input type="checkbox" role="switch" formControlName="benefitValid" />
-        <span class="slider"></span>
-      </span>
-      Benefit Valid
-    </label>
-    <div>
-      <button type="submit" class="app-button" [disabled]="readOnly() || validating()">
+      <label class="switch-field val-benefit">
+        Benefit Valid
+        <span class="switch">
+          <input type="checkbox" role="switch" formControlName="benefitValid" />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <button type="submit" class="app-button val-submit" [disabled]="readOnly() || validating()">
         Validate
       </button>
     </div>
@@ -172,16 +169,12 @@
 
   <section class="tab-panel val-history" aria-labelledby="val-history-title">
     <h3 id="val-history-title" class="tab-heading val-title">Previous Validation</h3>
-    @if (history().length) {
-      <app-link-table
-        caption="Previous validations"
-        [rows]="history()"
-        [columns]="historyColumns"
-        [rowKey]="historyKey"
-        [nameOf]="historyName"
-      />
-    } @else {
-      <p>No validations yet.</p>
-    }
+    <app-link-table
+      caption="Previous validations"
+      [rows]="history()"
+      [columns]="historyColumns"
+      [rowKey]="historyKey"
+      [nameOf]="historyName"
+    />
   </section>
 </div>

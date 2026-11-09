@@ -12,11 +12,10 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
 import type { CasePhaseRecord } from '@api/cases/case.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
-import { displayStoredPhone, storedToE164 } from '@shared/reference/phone';
+import { storedToE164 } from '@shared/reference/phone';
 import type { PhaseKey } from '../../../case-setup';
 import type { ClientProvider } from '../../client-providers';
 import { CaseWorkspace } from '../../case-workspace';
@@ -36,18 +35,10 @@ interface CollectDetails {
 interface RemoveDetails {
   readonly physicalAddress: string;
   readonly storageAddress: string;
-  /** As stored (E.164). */
-  readonly telephone: string;
-  readonly fax: string;
 }
 
 const NO_COLLECT: CollectDetails = { manager: '', physicalAddress: '', storageAddress: '' };
-const NO_REMOVE: RemoveDetails = {
-  physicalAddress: '',
-  storageAddress: '',
-  telephone: '',
-  fax: '',
-};
+const NO_REMOVE: RemoveDetails = { physicalAddress: '', storageAddress: '' };
 
 /**
  * v21 Phase 1–4 tab: one leg of moving the deceased, from where they are collected (by one of the
@@ -57,7 +48,7 @@ const NO_REMOVE: RemoveDetails = {
  */
 @Component({
   selector: 'app-phase-tab',
-  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, SelectField],
+  imports: [ReactiveFormsModule, PhoneField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => PhaseTab) }],
   host: { '(pointerleave)': 'autoSave()' },
@@ -98,8 +89,6 @@ export class PhaseTab extends CaseTabForm implements OnInit {
     })),
     ...this.providers().map((provider) => ({ value: provider.id, label: provider.name })),
   ]);
-  protected readonly removeTelephone = computed(() => displayStoredPhone(this.remove().telephone));
-  protected readonly removeFax = computed(() => displayStoredPhone(this.remove().fax));
   /**
    * The next phase may be added once this one has its provider: the collecting one on phase 1,
    * the one removed to on later phases (v21).
@@ -112,6 +101,9 @@ export class PhaseTab extends CaseTabForm implements OnInit {
     telephone: new FormControl('', { nonNullable: true }),
     fax: new FormControl('', { nonNullable: true }),
     removeProvider: new FormControl<number | null>(null),
+    /** Copied from the provider removed to, and can be changed (like Collect From's). */
+    removeTelephone: new FormControl('', { nonNullable: true }),
+    removeFax: new FormControl('', { nonNullable: true }),
     upliftFamily: new FormControl(false, { nonNullable: true }),
     firstName: new FormControl('', { nonNullable: true }),
     surname: new FormControl('', { nonNullable: true }),
@@ -166,11 +158,13 @@ export class PhaseTab extends CaseTabForm implements OnInit {
         ? {
             physicalAddress: provider.physicalAddress,
             storageAddress: provider.storageAddress,
-            telephone: provider.telephone,
-            fax: provider.fax,
           }
         : NO_REMOVE,
     );
+    this.form.patchValue({
+      removeTelephone: provider?.telephone ?? '',
+      removeFax: provider?.fax ?? '',
+    });
     this.refreshReady();
   }
 
@@ -275,8 +269,8 @@ export class PhaseTab extends CaseTabForm implements OnInit {
       RemoveServiceProviderId: value.removeProvider ?? 0,
       RemoveToPhysicalAddress: text(remove.physicalAddress),
       RemoveToStorageAddress: text(remove.storageAddress),
-      RemoveTelephone: remove.telephone || null,
-      RemoveFaxNumber: remove.fax || null,
+      RemoveTelephone: value.removeTelephone || null,
+      RemoveFaxNumber: value.removeFax || null,
       UpliftFamily: value.upliftFamily ? 'Yes' : 'No',
       FirstName: text(value.firstName),
       SurName: text(value.surname),
@@ -297,8 +291,6 @@ export class PhaseTab extends CaseTabForm implements OnInit {
     this.remove.set({
       physicalAddress: saved.RemoveToPhysicalAddress ?? '',
       storageAddress: saved.RemoveToStorageAddress ?? '',
-      telephone: storedToE164(saved.RemoveTelephone),
-      fax: storedToE164(saved.RemoveFaxNumber),
     });
     this.form.reset(
       {
@@ -306,6 +298,8 @@ export class PhaseTab extends CaseTabForm implements OnInit {
         telephone: storedToE164(saved.CollectTelephone),
         fax: storedToE164(saved.CollectFaxNumber),
         removeProvider: saved.RemoveServiceProviderId || null,
+        removeTelephone: storedToE164(saved.RemoveTelephone),
+        removeFax: storedToE164(saved.RemoveFaxNumber),
         upliftFamily: upliftFamily(saved.UpliftFamily),
         firstName: saved.FirstName ?? '',
         surname: saved.SurName ?? '',

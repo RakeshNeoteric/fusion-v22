@@ -70,9 +70,17 @@ describe('Phase tabs', () => {
     expect(value('ph-manager')).toBe('Manager 1');
     expect(value('ph-collect-storage')).toBe('1 Cold Store');
     await choose('ph-remove-provider', 'Doves');
-    expect(value('ph-remove-telephone')).toBe('+27 82 123 4567');
-    element<HTMLButtonElement>('mat-slide-toggle button').click();
+    // The provider's number, with its flag and dial code; it can be changed.
+    expect(value('ph-remove-telephone')).toBe('082 123 4567');
+    expect(disabled('ph-remove-telephone')).toBe(false);
+    expect(
+      element<HTMLElement>('#ph-remove-telephone')
+        .closest('app-phone-field')
+        ?.querySelector('.phone-country')?.textContent,
+    ).toContain('+27');
+    element<HTMLInputElement>('input[formcontrolname="upliftFamily"]').click();
     await type('ph-first', 'Ann');
+    await type('ph-remove-telephone', '083 555 1234');
     await openTab('Caller');
 
     expect(selectedTab()).toBe('Caller');
@@ -88,7 +96,7 @@ describe('Phase tabs', () => {
       RemoveServiceProviderId: 2,
       RemoveToPhysicalAddress: '2 Main Road',
       RemoveToStorageAddress: '2 Cold Store',
-      RemoveTelephone: '+27821234567',
+      RemoveTelephone: '+27835551234',
       RemoveFaxNumber: '+27114567890',
       UpliftFamily: 'Yes',
       FirstName: 'Ann',

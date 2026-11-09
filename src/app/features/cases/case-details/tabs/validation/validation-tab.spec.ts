@@ -71,7 +71,9 @@ describe('Validation tab', () => {
     await show(held({ CaseClientServiceId: 6 }));
     await openTab('Validation');
     expect(disabled('val-deceased-first')).toBe(true);
-    expect(text()).toContain('Change these on the Deceased Info tab.');
+    expect(disabled('val-relationship')).toBe(true);
+    expect(disabled('val-deceased-birth')).toBe(true);
+    expect(text()).not.toContain('Change these on the Deceased Info tab.');
   });
 
   it("fills the policy holder from the client's policy system", async () => {

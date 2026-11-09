@@ -115,17 +115,32 @@
       </div>
       <div class="form-field">
         <label for="ph-remove-telephone">Telephone</label>
-        <input id="ph-remove-telephone" type="text" readonly [value]="removeTelephone()" />
+        <app-phone-field
+          inputId="ph-remove-telephone"
+          label="Telephone"
+          formControlName="removeTelephone"
+        />
+        @if (showError(controls.removeTelephone)) {
+          <span class="field-error">Enter a valid number.</span>
+        }
       </div>
       <div class="form-field">
         <label for="ph-remove-fax">Fax Number</label>
-        <input id="ph-remove-fax" type="text" readonly [value]="removeFax()" />
+        <app-phone-field inputId="ph-remove-fax" label="Fax Number" formControlName="removeFax" />
+        @if (showError(controls.removeFax)) {
+          <span class="field-error">Enter a valid number.</span>
+        }
       </div>
     </div>
     <div class="tab-grid tab-grid-4">
-      <div class="form-field">
-        <span class="form-label" id="ph-uplift-label">Uplift Family</span>
-        <mat-slide-toggle formControlName="upliftFamily" aria-labelledby="ph-uplift-label" />
+      <div class="form-field tab-switch">
+        <label class="switch-field">
+          Uplift Family
+          <span class="switch">
+            <input type="checkbox" role="switch" formControlName="upliftFamily" />
+            <span class="slider"></span>
+          </span>
+        </label>
       </div>
       <div class="form-field">
         <label for="ph-first">First Name</label>

@@ -125,3 +125,11 @@
 .tab-section > .form-field {
   flex: none;
 }
+
+/* An on/off field (v21): the label beside a teal switch, level with the boxes in its row. */
+.tab-switch {
+  justify-content: flex-end;
+}
+.tab-switch .switch-field {
+  min-height: 40px;
+}

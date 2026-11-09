@@ -43,12 +43,14 @@
           <span class="field-error">State Mortuary is required for an unnatural death.</span>
         }
       </div>
-      <div class="form-field">
-        <span class="form-label" id="cod-post-mortem-label">Post Mortem done?</span>
-        <mat-slide-toggle
-          formControlName="postMortemDone"
-          aria-labelledby="cod-post-mortem-label"
-        />
+      <div class="form-field tab-switch">
+        <label class="switch-field">
+          Post Mortem done?
+          <span class="switch">
+            <input type="checkbox" role="switch" formControlName="postMortemDone" />
+            <span class="slider"></span>
+          </span>
+        </label>
       </div>
     </div>
     <div class="tab-grid tab-grid-4">

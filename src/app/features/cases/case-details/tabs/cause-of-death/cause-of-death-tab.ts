@@ -16,7 +16,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
 import {
   CAUSES_OF_DEATH,
   type CaseCauseOfDeathRecord,
@@ -63,7 +62,7 @@ function newCauseOfDeath(details: CaseDetails): CaseCauseOfDeathRecord {
  */
 @Component({
   selector: 'app-cause-of-death-tab',
-  imports: [ReactiveFormsModule, PhoneField, MatSlideToggle, DateField, SelectField, TimeField],
+  imports: [ReactiveFormsModule, PhoneField, DateField, SelectField, TimeField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => CauseOfDeathTab) }],
   templateUrl: './cause-of-death-tab.html',
