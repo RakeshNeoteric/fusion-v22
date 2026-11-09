@@ -2,6 +2,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   type ApplicationConfig,
   EnvironmentInjector,
+  ErrorHandler,
   type Provider,
   inject,
   provideAppInitializer,
@@ -9,6 +10,7 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAppConfig } from '@core/config/app-config';
+import { AppErrorHandler } from '@core/errors/app-error-handler';
 import { apiUrlInterceptor, authInterceptor, errorInterceptor } from '@core/http/interceptors';
 import { requestCacheInterceptor } from '@core/http/request-cache';
 import { provideAppIcons } from '@core/icons/app-icons';
@@ -21,6 +23,8 @@ import { provideDialogDefaults } from '@shared/ui/dialog-size';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Every unexpected error in the app's code: a friendly message, details in the console.
+    { provide: ErrorHandler, useExisting: AppErrorHandler },
     provideAppConfig(),
     // Order matters: errorInterceptor is outermost so it also sees URL/token failures.
     provideHttpClient(
