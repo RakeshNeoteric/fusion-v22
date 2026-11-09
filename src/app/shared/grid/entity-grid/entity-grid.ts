@@ -40,6 +40,7 @@ import { APP_GRID_THEME, EDITABLE_GRID_MODULES, PAGE_SIZE, PAGE_SIZE_OPTIONS } f
 import {
   DeleteCell,
   type EntityGridContext,
+  MarkCell,
   SaveCell,
   ToggleCell,
   ViewCell,
@@ -516,7 +517,7 @@ export class EntityGrid<T extends object> implements OnInit {
         return {
           ...base,
           editable: false,
-          cellRenderer: ToggleCell,
+          cellRenderer: column.look === 'mark' ? MarkCell : ToggleCell,
           minWidth: column.minWidth ?? 100,
         };
       case 'select': {

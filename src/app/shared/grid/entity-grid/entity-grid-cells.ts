@@ -143,6 +143,47 @@ export class ToggleCell extends EntityCell {
   }
 }
 
+/** v21's read-only yes/no: a green tick or a red cross. */
+@Component({
+  selector: 'app-mark-cell',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (params(); as p) {
+      @if (p.value === true) {
+        <svg class="mark mark-yes" viewBox="0 0 24 24" role="img" aria-label="Yes">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+      } @else {
+        <svg class="mark mark-no" viewBox="0 0 24 24" role="img" aria-label="No">
+          <path
+            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+          />
+        </svg>
+      }
+    }
+  `,
+  styles: `
+    :host {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .mark {
+      width: 22px;
+      height: 22px;
+    }
+    /* v21's tick.png and cross.png colours. */
+    .mark-yes {
+      fill: #009900;
+    }
+    .mark-no {
+      fill: #e10000;
+    }
+  `,
+})
+export class MarkCell extends EntityCell {}
+
 /** Save for one row; enabled only when the row has unsaved changes. */
 @Component({
   selector: 'app-save-cell',

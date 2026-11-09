@@ -39,8 +39,21 @@ export class ServicesPage {
         minWidth: 200,
       },
       { kind: 'text', field: 'NotePlain', header: 'Note Plain', minWidth: 200 },
-      { kind: 'toggle', field: 'EnforceMobileNumber', header: 'Enforce Mobile', minWidth: 200 },
-      { kind: 'toggle', field: 'SendRefSMSEnabled', header: 'Send Ref SMS', minWidth: 200 },
+      // v21: a green tick or a red cross; Active keeps its switch.
+      {
+        kind: 'toggle',
+        field: 'EnforceMobileNumber',
+        header: 'Enforce Mobile',
+        look: 'mark',
+        minWidth: 200,
+      },
+      {
+        kind: 'toggle',
+        field: 'SendRefSMSEnabled',
+        header: 'Send Ref SMS',
+        look: 'mark',
+        minWidth: 200,
+      },
       { kind: 'toggle', field: 'IsActive', header: 'Active', minWidth: 200 },
     ],
   };

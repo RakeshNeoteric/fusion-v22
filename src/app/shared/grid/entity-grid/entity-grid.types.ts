@@ -35,6 +35,11 @@ export interface NumberColumn<T> extends ColumnBase<T> {
 /** Yes/no switch, e.g. `IsActive`. Changing it marks the row unsaved, like any edit (v21). */
 export interface ToggleColumn<T> extends ColumnBase<T> {
   readonly kind: 'toggle';
+  /**
+   * `switch` (default) is the on/off switch. `mark` shows a green tick or a red cross and
+   * cannot be clicked: v21's look for yes/no facts changed only in the screen's form.
+   */
+  readonly look?: 'switch' | 'mark';
 }
 
 /** A value picked from a list, e.g. `BranchId` shown as the branch name. */
