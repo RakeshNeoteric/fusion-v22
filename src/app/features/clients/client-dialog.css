@@ -2,6 +2,10 @@
 .cl-panel-body {
   padding-top: 16px;
 }
+/* v21: Details keeps a tall body, so Is Active and Update sit well below the closed sections. */
+.cl-details {
+  min-height: 380px;
+}
 .cl-sections {
   --mat-expansion-container-background-color: #e7f9f9;
   --mat-expansion-container-shape: 10px;

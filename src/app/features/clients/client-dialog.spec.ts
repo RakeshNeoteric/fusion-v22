@@ -302,6 +302,25 @@ describe('ClientDialog', () => {
     expect((await result)?.ClientId).toBe(20);
   });
 
+  it('opens an existing client with every section closed (v21)', async () => {
+    const expanded = () =>
+      [...document.querySelectorAll('mat-expansion-panel-header')].map(
+        (header) => header.getAttribute('aria-expanded') === 'true',
+      );
+    await open(stored);
+    expect(document.body.textContent).toContain('Edit (Acme)');
+    expect(expanded()).toEqual([false, false, false]);
+  });
+
+  it('opens a new client on Company Information', async () => {
+    await open(null);
+    expect(
+      [...document.querySelectorAll('mat-expansion-panel-header')].map(
+        (header) => header.getAttribute('aria-expanded') === 'true',
+      ),
+    ).toEqual([true, false, false]);
+  });
+
   it('keeps fields the Details tab does not show when updating', async () => {
     await open(stored);
     expect(document.body.textContent).toContain('Edit (Acme)');

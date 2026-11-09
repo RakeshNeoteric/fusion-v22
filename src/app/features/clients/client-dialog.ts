@@ -214,8 +214,11 @@ export class ClientDialog {
   protected readonly links = signal<ClientLinks | null>(this.data.record ? null : NO_LINKS);
   protected readonly linksFailed = signal(false);
 
-  /** Company Information holds the required fields: open at first and after a failed Save. */
-  protected readonly companyOpen = signal(true);
+  /**
+   * v21 opens an existing client with every section closed. A new client starts on Company
+   * Information, which holds the required fields; it opens again after a failed Save.
+   */
+  protected readonly companyOpen = signal(this.data.record === null);
   protected readonly saving = signal(false);
 
   protected readonly clientGroups = inject(ClientGroupLookup).choices(
