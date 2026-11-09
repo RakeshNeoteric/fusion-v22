@@ -24,28 +24,47 @@
 .cl-sections .mat-expansion-panel {
   border: 1px solid #ccc;
 }
+/* v21 Company Information: name and group on the left half, the logo centred on the right. */
 .cl-company {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px 40px;
+  margin-bottom: 20px;
 }
 .cl-company-fields {
   display: flex;
-  flex: 1 1 auto;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
+/*
+ * The shared .form-field grows from a 240px basis, which suits a row of fields. In these columns
+ * that basis would be a height, so each field keeps its own height.
+ */
+.cl-company-fields > .form-field,
+.cl-phones > .form-field,
+.cl-data-fields > .form-field {
+  flex: none;
+}
+.cl-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* Then the address beside a narrower column of phones, as v21 (50% and 28%). */
 .cl-contact {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: minmax(0, 50%) minmax(0, 28%);
+  gap: 16px 40px;
+  margin-bottom: 20px;
 }
 .cl-phones {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.cl-web {
+  width: calc(78% + 40px);
 }
 .cl-grid {
   display: grid;
@@ -57,20 +76,31 @@
   margin-bottom: 14px;
 }
 /* Client Data: the switches in a column beside their fields. */
+/* v21 Client Data: each switch after its name, in a column beside the fields. */
 .cl-data {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
-  gap: 20px 32px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 20px 72px;
+  padding-top: 8px;
 }
 .cl-switches {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 24px;
+  padding-top: 20px;
+}
+.cl-switches .switch-field {
+  justify-content: space-between;
+  gap: 20px;
 }
 .cl-data-fields {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
+}
+/* The fields the system sets are greyed, as v21. */
+.cl-data-fields input[readonly] {
+  background: #ebebef;
 }
 .cl-active {
   margin-right: auto;
@@ -102,4 +132,12 @@ textarea {
   width: 100%;
   max-width: 260px;
   margin-top: 8px;
+}
+@media (max-width: 900px) {
+  .cl-web {
+    width: auto;
+  }
+  .cl-logo {
+    align-items: flex-start;
+  }
 }

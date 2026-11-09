@@ -199,10 +199,21 @@ describe('ClientDialog', () => {
     await settle();
   }
 
-  function rowsText(): string[] {
-    return [...document.querySelectorAll('app-link-table tbody tr')]
-      .filter((row) => row.closest('[hidden]') === null)
-      .map((row) => row.textContent?.replace(/\s+/g, ' ').trim() ?? '');
+  /** The shown tab's rows: a link table's, or a link grid's (its empty message when none). */
+  async function rowsText(): Promise<string[]> {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const shown = (el: Element) => el.closest('[hidden]') === null;
+    const clean = (el: Element) => el.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    const grid = [...document.querySelectorAll('app-link-grid')].find(shown);
+    if (!grid)
+      return [...document.querySelectorAll('app-link-table tbody tr')].filter(shown).map(clean);
+    const rows = [...grid.querySelectorAll('.ag-row')].sort(
+      (a, b) => Number(a.getAttribute('row-index')) - Number(b.getAttribute('row-index')),
+    );
+    if (rows.length === 0) return [clean(grid.querySelector('.ag-overlay-wrapper') ?? grid)];
+    return rows.map((row) =>
+      [...row.querySelectorAll('.ag-cell')].map(clean).filter(Boolean).join(' '),
+    );
   }
 
   beforeEach(() => {
@@ -385,7 +396,7 @@ describe('ClientDialog', () => {
     expect(api.create).toHaveBeenCalledOnce();
     expect(query('[role="tab"][aria-selected="true"]')?.textContent?.trim()).toBe('Services');
     expect(document.body.textContent).toContain('Edit (New Co)');
-    expect(rowsText()).toEqual(['No Rows To Show']);
+    expect(await rowsText()).toEqual(['No Rows To Show']);
 
     // ✖ gives back the client that was created, so the list shows it.
     element<HTMLButtonElement>('.dialog-close').click();
@@ -431,7 +442,10 @@ describe('ClientDialog', () => {
 
   it('shows the Client Data paths read-only, as v21 did', async () => {
     await open(stored);
-    for (const id of ['cl-policy-file', 'cl-lookup-path', 'cl-validation-url']) {
+    const policyFile = element('#cl-policy-file');
+    expect(policyFile.textContent?.trim()).toBe('File B');
+    expect(policyFile.getAttribute('aria-disabled')).toBe('true');
+    for (const id of ['cl-lookup-path', 'cl-validation-url']) {
       expect(element<HTMLInputElement>(`#${id}`).readOnly).toBe(true);
     }
   });
@@ -459,7 +473,7 @@ describe('ClientDialog', () => {
     await open(stored);
     expect(api.get).toHaveBeenCalledWith(7);
     await tab('Services');
-    expect(rowsText()).toEqual(['Repatriation']);
+    expect(await rowsText()).toEqual(['Repatriation']);
   });
 
   it('links a rating question with its rank, and unlinks one after confirming', async () => {
@@ -473,7 +487,7 @@ describe('ClientDialog', () => {
     );
     await open(stored);
     await tab('Rating Questions');
-    expect(rowsText()).toEqual(['How was the service? 2']);
+    expect(await rowsText()).toEqual(['How was the service? 2']);
     // Only active questions that are not linked yet.
     expect(await dropdownOptions('crq-pick')).toEqual([
       'Link New Rating Questions',
@@ -491,7 +505,7 @@ describe('ClientDialog', () => {
         IsDeleted: false,
       },
     ]);
-    expect(rowsText()).toEqual(['How was the service? 2', 'Would you recommend us? 12']);
+    expect(await rowsText()).toEqual(['How was the service? 2', 'Would you recommend us? 12']);
 
     element<HTMLButtonElement>('[aria-label="Delete: How was the service?"]').click();
     await settle();
@@ -499,7 +513,8 @@ describe('ClientDialog', () => {
     expect(links.saveRatingQuestions).toHaveBeenLastCalledWith([
       expect.objectContaining({ ClientRatingQuestionId: 5, IsDeleted: true }),
     ]);
-    expect(rowsText()).toEqual(['Would you recommend us? 12']);
+    // The grid animates the unlinked row out.
+    await vi.waitFor(async () => expect(await rowsText()).toEqual(['Would you recommend us? 12']));
   });
 
   it('links a service provider', async () => {
@@ -508,14 +523,14 @@ describe('ClientDialog', () => {
     );
     await open(stored);
     await tab('Service Provider');
-    expect(rowsText()).toEqual(['Acme Funerals']);
+    expect(await rowsText()).toEqual(['Acme Funerals']);
     await choose('csp-pick', 'Best Towing');
     await press('+ Add');
     expect(links.saveServiceProviders).toHaveBeenCalledWith([
       { ClientServiceProviderId: 0, ClientId: 7, ServiceProviderId: 22, IsDeleted: false },
     ]);
     expect(notify.success).toHaveBeenCalledWith('Best Towing linked.');
-    expect(rowsText()).toEqual(['Best Towing', 'Acme Funerals']);
+    expect(await rowsText()).toEqual(['Best Towing', 'Acme Funerals']);
   });
 
   it('read-only users see the links but cannot change them', async () => {

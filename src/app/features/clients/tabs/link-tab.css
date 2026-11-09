@@ -10,8 +10,10 @@
   gap: 12px;
   margin-bottom: 14px;
 }
-.link-bar select {
-  flex: 0 1 380px;
+/* v21: the picker takes most of the row, Add sits beside it. */
+.link-bar app-select {
+  flex: 0 1 70%;
+  min-width: 240px;
 }
 .link-add,
 .link-new {
@@ -22,18 +24,13 @@
   padding: 0 18px;
   border: none;
   border-radius: 8px;
-  background: #6c757d;
+  background: var(--app-teal);
   color: #fff;
   font: inherit;
   font-size: 15px;
   cursor: pointer;
 }
-.link-new {
-  background: var(--app-teal);
-}
-.link-add:hover:not(:disabled) {
-  background: #5c636a;
-}
+.link-add:hover:not(:disabled),
 .link-new:hover:not(:disabled) {
   background: #048a91;
 }
@@ -55,7 +52,7 @@
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  color: #6c757d;
+  color: var(--app-teal);
   font-weight: 700;
   line-height: 1;
 }
@@ -63,4 +60,9 @@
   width: 18px;
   height: 18px;
   fill: currentcolor;
+}
+/* v21 Service Provider: a compact picker. */
+.link-bar--narrow app-select {
+  flex: 0 1 250px;
+  min-width: 0;
 }

@@ -5,7 +5,7 @@ import type { Observable } from 'rxjs';
 import { type ClientRatingQuestionLink, ClientLinksApi } from '@api/clients/client-links.api';
 import { type RatingQuestion, RatingQuestionApi } from '@api/config/rating-question.api';
 import { isSelectable, statusLabel } from '@shared/reference/lookup-label';
-import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
+import { type LinkGridColumn, LinkGrid, LinkSwitchCell } from '@shared/grid/link-grid/link-grid';
 import { ClientLinkTab } from './client-link-tab';
 import { optionsOf } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
@@ -13,7 +13,7 @@ import { SelectField } from '@shared/forms/select-field/select-field';
 /** v21 client popup, Rating Questions: the questions asked on this client's cases, in rank order. */
 @Component({
   selector: 'app-client-rating-questions-tab',
-  imports: [ReactiveFormsModule, LinkTable, LinkCell, SelectField],
+  imports: [ReactiveFormsModule, LinkGrid, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
   template: `
@@ -37,29 +37,17 @@ import { SelectField } from '@shared/forms/select-field/select-field';
         </button>
       </div>
     }
-    <app-link-table
+    <app-link-grid
       caption="Linked rating questions"
       [rows]="rows()"
       [columns]="columns"
       [rowKey]="key"
       [nameOf]="name"
+      [canView]="false"
       [canRemove]="canLink()"
       [busy]="busy()"
       (remove)="unlink($event)"
-    >
-      <ng-template appLinkCell="Active" let-row>
-        <span class="switch">
-          <input
-            type="checkbox"
-            role="switch"
-            aria-label="Active"
-            disabled
-            [checked]="questionOf(row)?.IsActive === true"
-          />
-          <span class="slider"></span>
-        </span>
-      </ng-template>
-    </app-link-table>
+    />
   `,
 })
 export class ClientRatingQuestionsTab extends ClientLinkTab<ClientRatingQuestionLink> {
@@ -98,10 +86,14 @@ export class ClientRatingQuestionsTab extends ClientLinkTab<ClientRatingQuestion
     ),
   );
 
-  protected readonly columns: readonly LinkColumn<ClientRatingQuestionLink>[] = [
+  protected readonly columns: readonly LinkGridColumn<ClientRatingQuestionLink>[] = [
     { header: 'Question', text: (link) => this.name(link) },
     { header: 'Rank', text: (link) => String(link.ListRank), align: 'center' },
-    { header: 'Active', align: 'center' },
+    {
+      header: 'Active',
+      text: (link) => (this.questionOf(link)?.IsActive === true ? 'Active' : 'Inactive'),
+      cell: LinkSwitchCell,
+    },
   ];
 
   protected readonly key = (link: ClientRatingQuestionLink): number => link.RatingQuestionId;

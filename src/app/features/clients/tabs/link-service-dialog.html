@@ -19,16 +19,13 @@
         }
       </div>
       <div class="form-field">
-        <label for="ls-transfer">Transfer Number <span class="required">*</span></label>
+        <label for="ls-transfer">Transfer Number</label>
         <input
           id="ls-transfer"
           type="text"
           placeholder="Enter transfer number"
           formControlName="TransferNumber"
         />
-        @if (showError('TransferNumber')) {
-          <span class="field-error">Transfer Number is required.</span>
-        }
       </div>
     </div>
 
@@ -82,67 +79,53 @@
         </div>
         <div class="form-field">
           <label for="ls-provider">Voucher Provider</label>
-          <input id="ls-provider" type="text" readonly [value]="voucherProvider()" />
+          <!-- v21: a dropdown that cannot be changed; the provider comes from the service. -->
+          <input
+            id="ls-provider"
+            class="ls-provider"
+            type="text"
+            readonly
+            placeholder="Select provider"
+            [value]="voucherProvider()"
+          />
         </div>
       </div>
     }
 
-    <div class="ls-sms" formArrayName="Sms">
-      <div class="ls-sms-head">
-        <h3 class="ls-heading">SMS Messages</h3>
+    <!-- v21: the SMS messages grid, shown once a service is chosen (voucher or not). -->
+    @if (service()) {
+      <div class="ls-sms">
         @if (!readOnly) {
-          <button type="button" class="app-button" (click)="addSms()">+ Add SMS</button>
+          <div class="ls-sms-bar">
+            <button type="button" class="app-button" (click)="addSms()">+ Add SMS</button>
+          </div>
         }
+        <ag-grid-angular
+          class="ls-sms-grid"
+          domLayout="autoHeight"
+          overlayNoRowsTemplate="No Rows To Show"
+          aria-label="SMS messages"
+          [modules]="gridModules"
+          [theme]="gridTheme"
+          [rowData]="gridRows()"
+          [columnDefs]="smsColumns()"
+          [defaultColDef]="smsDefaultColDef"
+          [getRowId]="getSmsRowId"
+          [context]="smsContext"
+          [readOnlyEdit]="true"
+          [stopEditingWhenCellsLoseFocus]="true"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50]"
+          (cellEditRequest)="onSmsEdit($event)"
+          (rowDataUpdated)="$event.api.refreshCells({ columns: ['Rank'] })"
+        />
       </div>
-      @for (row of smsRows; track row; let index = $index) {
-        <div class="ls-sms-row" [formGroupName]="index">
-          <span class="ls-rank" [attr.aria-label]="'Rank ' + (index + 1)">{{ index + 1 }}</span>
-          <div class="form-field">
-            <label [for]="'ls-sms-' + index">SMS Message</label>
-            <textarea
-              rows="2"
-              placeholder="Enter SMS message"
-              [id]="'ls-sms-' + index"
-              formControlName="SMSMessage"
-            ></textarea>
-            @if (row.controls.SMSMessage.invalid && row.controls.SMSMessage.touched) {
-              <span class="field-error">SMS Message is required.</span>
-            }
-          </div>
-          <div class="form-field ls-type">
-            <label [for]="'ls-sms-type-' + index">SMS Type</label>
-            <app-select
-              [inputId]="'ls-sms-type-' + index"
-              formControlName="Type"
-              [options]="smsTypeOptions()"
-            />
-          </div>
-          <label class="switch-field">
-            <span class="switch">
-              <input type="checkbox" role="switch" formControlName="IsActive" />
-              <span class="slider"></span>
-            </span>
-            Active
-          </label>
-          @if (!readOnly) {
-            <button
-              type="button"
-              class="ls-remove"
-              [attr.aria-label]="'Remove SMS ' + (index + 1)"
-              (click)="removeSms(index)"
-            >
-              ✖
-            </button>
-          }
-        </div>
-      } @empty {
-        <p class="ls-empty">No SMS messages.</p>
-      }
-    </div>
+    }
 
     @if (isVoucher()) {
       <p class="ls-tags">
-        <strong>Message Tags</strong><br />
+        <strong class="ls-tags-title">Message Tags</strong><br />
         [ttval] - Total value of vouchers allowed<br />
         [value] - Value of the individual voucher (e.g., R250, R500)<br />
         [vouchercde] - The voucher unique code<br />

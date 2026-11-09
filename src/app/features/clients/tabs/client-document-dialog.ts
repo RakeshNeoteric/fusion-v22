@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatIcon } from '@angular/material/icon';
 import { QuillEditorComponent } from 'ngx-quill';
 import { type ClientDocumentLink, ClientLinksApi } from '@api/clients/client-links.api';
 import type { DocumentType } from '@api/config/document.api';
@@ -19,11 +20,17 @@ import { SelectField } from '@shared/forms/select-field/select-field';
 import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 import { type Observable, finalize } from 'rxjs';
 
-/** v21 editor toolbar, without media: the note is stored as plain text. */
+/** v21 editor toolbar. The note is still stored as plain text (v21 strips the formatting). */
 const NOTE_TOOLBAR = [
   ['bold', 'italic', 'underline', 'strike'],
   [{ list: 'ordered' }, { list: 'bullet' }],
+  [{ script: 'sub' }, { script: 'super' }],
   [{ indent: '-1' }, { indent: '+1' }],
+  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+  [{ color: [] }, { background: [] }],
+  [{ font: [] }],
+  [{ align: [] }],
+  ['link', 'image', 'video'],
   ['clean'],
 ];
 
@@ -43,6 +50,7 @@ const ACCEPTED_FILES = '.pdf,image/*';
     QuillEditorComponent,
     SelectField,
     UploadProgressBar,
+    MatIcon,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
@@ -58,7 +66,7 @@ const ACCEPTED_FILES = '.pdf,image/*';
         [busyLabel]="upload() ? 'Uploading…' : 'Saving…'"
       >
         <div class="form-row">
-          <div class="form-field">
+          <div class="form-field cd-type">
             <label for="cd-type">Document Type <span class="required">*</span></label>
             <app-select
               inputId="cd-type"
@@ -90,7 +98,7 @@ const ACCEPTED_FILES = '.pdf,image/*';
           <span class="form-label" id="cd-file-label">Upload a File</span>
           <div class="cd-file-row">
             @if (!readOnly) {
-              <button type="button" class="app-button" (click)="picker.click()">Choose File</button>
+              <button type="button" class="cd-choose" (click)="picker.click()">Choose File</button>
               <input
                 #picker
                 type="file"
@@ -101,20 +109,40 @@ const ACCEPTED_FILES = '.pdf,image/*';
               />
             }
             @if (form.controls.Content.value; as file) {
-              <span class="cd-name">{{ file.name }}</span>
+              <span class="cd-name" [title]="file.name">{{ file.name }}</span>
             } @else if (stored(); as path) {
-              <span class="cd-name">{{ fileName(path) }}</span>
-              <button type="button" class="cd-link" (click)="viewer.preview(path)">Preview</button>
-              <button type="button" class="cd-link" (click)="viewer.download(path)">
-                Download
-              </button>
-              @if (!readOnly) {
-                <button type="button" class="cd-link cd-remove" (click)="removeStored()">
-                  Remove
+              <span class="cd-name" [title]="fileName(path)">{{ fileName(path) }}</span>
+              <span class="cd-icons">
+                <button
+                  type="button"
+                  class="cd-icon cd-view"
+                  title="Preview"
+                  [attr.aria-label]="'Preview ' + fileName(path)"
+                  (click)="viewer.preview(path)"
+                >
+                  <mat-icon svgIcon="view" />
                 </button>
-              }
-            } @else {
-              <span class="cd-none">No file chosen</span>
+                <button
+                  type="button"
+                  class="cd-icon cd-download"
+                  title="Download"
+                  [attr.aria-label]="'Download ' + fileName(path)"
+                  (click)="viewer.download(path)"
+                >
+                  <mat-icon svgIcon="download" />
+                </button>
+                @if (!readOnly) {
+                  <button
+                    type="button"
+                    class="cd-icon cd-remove"
+                    title="Delete File"
+                    [attr.aria-label]="'Remove ' + fileName(path)"
+                    (click)="removeStored()"
+                  >
+                    <mat-icon svgIcon="trash" />
+                  </button>
+                }
+              </span>
             }
           </div>
           @if (upload(); as state) {

@@ -1,6 +1,8 @@
 import { ApplicationRef, Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
+import type { AgGridAngular } from 'ag-grid-angular';
 import { of } from 'rxjs';
 import {
   type ClientDocumentLink,
@@ -95,6 +97,27 @@ describe('client link popups', () => {
     await settle();
   }
 
+  /** The SMS grid of the open Link Service popup. */
+  async function smsGrid() {
+    const popup = TestBed.inject(MatDialog).openDialogs.at(-1)?.componentInstance as unknown as {
+      smsGrid: () => AgGridAngular | undefined;
+    };
+    return vi.waitFor(() => {
+      const api = popup.smsGrid()?.api;
+      if (!api || api.isDestroyed()) throw new Error('grid not ready');
+      return api;
+    });
+  }
+
+  async function editSms(rowIndex: number, field: string, value: unknown): Promise<void> {
+    (await smsGrid()).getDisplayedRowAtIndex(rowIndex)?.setDataValue(field, value);
+    await settle();
+  }
+
+  function smsCell(rowIndex: number, colId: string): HTMLElement {
+    return element(`.ls-sms-grid [row-index="${rowIndex}"] [col-id="${colId}"]`);
+  }
+
   function open<T>(
     component: Parameters<RecordDialogs['open']>[0],
     record: T | null,
@@ -158,14 +181,28 @@ describe('client link popups', () => {
     expect(document.body.textContent).toContain('Add Client Service');
     expect(await dropdownOptions('ls-service')).toEqual(['Repatriation', 'Groceries']);
 
+    // v21: no voucher fields or SMS grid until a service is chosen.
+    expect(document.querySelector('.ls-sms-grid')).toBeNull();
+    expect(document.body.textContent).not.toContain('Voucher Configuration');
+
     await press('Save');
-    expect(document.body.textContent).toContain('Transfer Number is required.');
+    expect(document.body.textContent).toContain('Service is required.');
+    expect(document.body.textContent).not.toContain('Transfer Number is required.');
     expect(links.saveServices).not.toHaveBeenCalled();
 
     await choose('ls-service', 'Repatriation');
+    // A service without vouchers: the SMS grid only.
+    expect(document.body.textContent).toContain('No Rows To Show');
+    expect(document.body.textContent).not.toContain('Voucher Configuration');
     await fill('ls-transfer', ' 0800 111 ');
     await press('+ Add SMS');
-    await fill('ls-sms-0', 'Your case is open');
+    expect(smsCell(0, 'SMSMessage').textContent?.trim()).toBe('Enter SMS message');
+    expect(smsCell(0, 'Rank').textContent?.trim()).toBe('1');
+    await press('Save');
+    expect(notify.warning).toHaveBeenCalledWith('Please fill SMS Message before saving.');
+    expect(links.saveServices).not.toHaveBeenCalled();
+
+    await editSms(0, 'SMSMessage', 'Your case is open');
     await press('Save');
 
     expect(links.saveServices).toHaveBeenCalledWith([
@@ -197,7 +234,10 @@ describe('client link popups', () => {
     await settle();
     await choose('ls-service', 'Groceries');
     expect(element<HTMLInputElement>('#ls-provider').value).toBe('Grocery_Shoprite');
-    await fill('ls-transfer', '0800');
+    // A voucher service: Voucher Configuration, then the SMS grid.
+    expect(document.body.textContent).toContain('Voucher Configuration');
+    expect(document.querySelector('.ls-sms-grid')).not.toBeNull();
+    // Transfer Number is optional (v21).
     await press('Save');
     expect(links.saveServices).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Enter an amount from 0.01 to 9999.99.');
@@ -205,11 +245,12 @@ describe('client link popups', () => {
     await fill('ls-amount', '500');
     await fill('ls-count', '2');
     await press('+ Add SMS');
-    await choose('ls-sms-type-0', 'VoucherRedeemSMS');
-    await fill('ls-sms-0', 'Code [vouchercde]');
+    await editSms(0, 'Type', 'VoucherRedeemSMS');
+    await editSms(0, 'SMSMessage', 'Code [vouchercde]');
     await press('Save');
     expect(links.saveServices).toHaveBeenCalledWith([
       expect.objectContaining({
+        TransferNumber: '',
         VoucherProvider: 'Grocery_Shoprite',
         VoucherAmount: 500,
         NoOfVouchers: 2,
@@ -242,6 +283,45 @@ describe('client link popups', () => {
     await press('Update');
     expect(links.saveServices).toHaveBeenCalledWith([
       expect.objectContaining({ VoucherProvider: 'Grocery_Checkers', VoucherAmount: 600 }),
+    ]);
+  });
+
+  it("shows an existing link's SMS messages in rank order; Delete removes one", async () => {
+    const linked: ClientServiceLink = {
+      ClientServiceId: 31,
+      ClientId: 7,
+      ServiceId: 1,
+      Note: 'Repatriation note',
+      TransferNumber: '',
+      VoucherProvider: null,
+      VoucherAmount: null,
+      NoOfVouchers: null,
+      VoucherSMSDetails: [
+        { Id: 5, Type: 'CaseCreation', SMSMessage: 'Second', IsActive: false, Rank: 2 },
+        { Id: 4, Type: 'CaseCreation', SMSMessage: 'First', IsActive: true, Rank: 1 },
+      ],
+      IsDeleted: false,
+    };
+    void open<ClientServiceLink>(LinkServiceDialog, linked, {
+      clientId: 7,
+      choices: SERVICES,
+      linked: new Set([1]),
+    });
+    await settle();
+    await smsGrid();
+    await settle();
+    expect(smsCell(0, 'SMSMessage').textContent?.trim()).toBe('First');
+    expect(smsCell(1, 'SMSMessage').textContent?.trim()).toBe('Second');
+
+    element<HTMLButtonElement>('.ls-sms-grid [row-index="0"] [col-id="delete"] button').click();
+    await settle();
+    await press('Update');
+    expect(links.saveServices).toHaveBeenCalledWith([
+      expect.objectContaining({
+        VoucherSMSDetails: [
+          { Id: 5, Type: 'CaseCreation', SMSMessage: 'Second', IsActive: false, Rank: 1 },
+        ],
+      }),
     ]);
   });
 
@@ -298,7 +378,12 @@ describe('client link popups', () => {
     expect(document.body.textContent).toContain('old.pdf');
     expect(dropdownDisabled('cd-type')).toBe(true);
 
-    await press('Remove');
+    // v21: the stored file shows a green eye, a download and a red bin.
+    expect(document.querySelector('[aria-label="Preview old.pdf"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="Download old.pdf"]')).not.toBeNull();
+    element<HTMLButtonElement>('[aria-label="Remove old.pdf"]').click();
+    await settle();
+    expect(document.body.textContent).not.toContain('old.pdf');
     expect(files.delete).not.toHaveBeenCalled();
     await press('Update');
     expect(links.saveDocument).toHaveBeenCalledWith(

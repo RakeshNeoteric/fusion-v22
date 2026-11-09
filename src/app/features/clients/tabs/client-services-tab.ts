@@ -12,7 +12,7 @@ import { type ClientServiceLink, ClientLinksApi } from '@api/clients/client-link
 import { type Service, ServiceApi } from '@api/config/service.api';
 import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { statusLabel } from '@shared/reference/lookup-label';
-import { type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';
+import { type LinkGridColumn, LinkGrid } from '@shared/grid/link-grid/link-grid';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { ClientLinkTab } from './client-link-tab';
 import { LinkServiceDialog } from './link-service-dialog';
@@ -22,7 +22,7 @@ const PERMISSION = 'CLIENT';
 /** v21 client popup, Services: what the client offers; each opens in its own popup. */
 @Component({
   selector: 'app-client-services-tab',
-  imports: [LinkTable],
+  imports: [LinkGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
   template: `
@@ -39,9 +39,8 @@ const PERMISSION = 'CLIENT';
         </button>
       </div>
     }
-    <app-link-table
+    <app-link-grid
       caption="Linked services"
-      viewLabel="View"
       [rows]="links()"
       [columns]="columns"
       [rowKey]="key"
@@ -65,7 +64,7 @@ export class ClientServicesTab extends ClientLinkTab<ClientServiceLink> {
     () => new Map(this.services().map((service) => [service.ServiceId, service])),
   );
 
-  protected readonly columns: readonly LinkColumn<ClientServiceLink>[] = [
+  protected readonly columns: readonly LinkGridColumn<ClientServiceLink>[] = [
     { header: 'Service', text: (link) => this.name(link) },
   ];
 

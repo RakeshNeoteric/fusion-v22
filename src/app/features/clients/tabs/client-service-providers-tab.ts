@@ -5,7 +5,7 @@ import type { Observable } from 'rxjs';
 import { type ClientServiceProviderLink, ClientLinksApi } from '@api/clients/client-links.api';
 import { type ServiceProvider, ServiceProviderApi } from '@api/services/service-provider.api';
 import { isSelectable, statusLabel } from '@shared/reference/lookup-label';
-import { type LinkColumn, LinkTable } from '@shared/ui/link-table/link-table';
+import { type LinkGridColumn, LinkGrid } from '@shared/grid/link-grid/link-grid';
 import { ClientLinkTab } from './client-link-tab';
 import { optionsOf } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
@@ -13,12 +13,12 @@ import { SelectField } from '@shared/forms/select-field/select-field';
 /** v21 client popup, Service Provider: the providers that work for this client. */
 @Component({
   selector: 'app-client-service-providers-tab',
-  imports: [ReactiveFormsModule, LinkTable, SelectField],
+  imports: [ReactiveFormsModule, LinkGrid, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
   template: `
     @if (canLink()) {
-      <div class="link-bar">
+      <div class="link-bar link-bar--narrow">
         <app-select
           inputId="csp-pick"
           [formControl]="picked"
@@ -37,12 +37,13 @@ import { SelectField } from '@shared/forms/select-field/select-field';
         </button>
       </div>
     }
-    <app-link-table
+    <app-link-grid
       caption="Linked service providers"
       [rows]="links()"
       [columns]="columns"
       [rowKey]="key"
       [nameOf]="name"
+      [canView]="false"
       [canRemove]="canLink()"
       [busy]="busy()"
       (remove)="unlink($event)"
@@ -78,7 +79,7 @@ export class ClientServiceProvidersTab extends ClientLinkTab<ClientServiceProvid
     ),
   );
 
-  protected readonly columns: readonly LinkColumn<ClientServiceProviderLink>[] = [
+  protected readonly columns: readonly LinkGridColumn<ClientServiceProviderLink>[] = [
     { header: 'Service Provider', text: (link) => this.name(link) },
   ];
 

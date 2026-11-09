@@ -31,6 +31,7 @@ import { ClientRatingQuestionsTab } from './tabs/client-rating-questions-tab';
 import { ClientServiceProvidersTab } from './tabs/client-service-providers-tab';
 import { ClientServicesTab } from './tabs/client-services-tab';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { textOptions } from '@shared/forms/select-field/select-option';
 import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
 import { UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
 
@@ -223,6 +224,10 @@ export class ClientDialog {
 
   protected readonly clientGroups = inject(ClientGroupLookup).choices(
     this.data.record?.ClientGroupId || null,
+  );
+  /** The one Policy File the locked dropdown can show: the client's own. */
+  protected readonly policyFiles = textOptions(
+    this.data.record?.PolicyFile ? [this.data.record.PolicyFile] : [],
   );
   protected readonly showAddress = this.permissions.canView(ADDRESS_FIELD);
   protected readonly showWebUrl = this.permissions.canView(WEB_URL_FIELD);
@@ -435,7 +440,11 @@ export class ClientDialog {
       ValidationOther: flag(record?.ValidationOther),
       DoTextExport: flag(record?.DoTextExport),
       WebValidationOTH: flag(record?.WebValidationOTH),
-      PolicyFile: new FormControl<string | null>(record?.PolicyFile || null),
+      // Set by the system: shown in a locked dropdown, as v21 did, and saved unchanged.
+      PolicyFile: new FormControl<string | null>({
+        value: record?.PolicyFile || null,
+        disabled: true,
+      }),
       PolicyLookupPath: text(record?.PolicyLookupPath),
       WebValidationURL: text(record?.WebValidationURL),
       OtherValidationNotes: text(record?.OtherValidationNotes),

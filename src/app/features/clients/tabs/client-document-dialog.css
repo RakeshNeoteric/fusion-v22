@@ -15,40 +15,92 @@ app-client-document-dialog .cd-file {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 10px;
 }
+/* v21: Choose File, the file's name and its icons in one bordered box. */
 app-client-document-dialog .cd-file-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+}
+app-client-document-dialog .cd-choose {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  background: #eee;
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+}
+app-client-document-dialog .cd-choose:hover {
+  background: #dcdcdc;
+}
+app-client-document-dialog .cd-choose:focus-visible {
+  outline: 2px solid var(--app-teal);
+  outline-offset: 2px;
 }
 app-client-document-dialog .cd-hidden {
   display: none;
 }
 app-client-document-dialog .cd-name {
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  flex: 0 1 auto;
+  max-width: 250px;
+  overflow: hidden;
+  color: #333;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-app-client-document-dialog .cd-none {
-  color: #5f6b6b;
+app-client-document-dialog .cd-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 12px;
 }
-app-client-document-dialog .cd-link {
-  padding: 2px 4px;
+app-client-document-dialog .cd-icon {
+  display: flex;
+  padding: 4px;
   border: none;
+  border-radius: 4px;
   background: none;
-  color: var(--app-teal);
-  font: inherit;
-  text-decoration: underline;
   cursor: pointer;
 }
-app-client-document-dialog .cd-remove {
-  color: var(--app-danger);
+app-client-document-dialog .cd-icon mat-icon {
+  width: 20px;
+  height: 20px;
 }
-app-client-document-dialog .cd-link:focus-visible {
+app-client-document-dialog .cd-icon:focus-visible {
   outline: 2px solid var(--app-teal);
+}
+app-client-document-dialog .cd-view {
+  color: green;
+}
+app-client-document-dialog .cd-download {
+  color: #0caeff;
+}
+app-client-document-dialog .cd-remove {
+  color: red;
 }
 
 app-client-document-dialog .cd-progress {
   max-width: 360px;
   margin-top: 10px;
+}
+
+/* v21: Document Type takes half the row. */
+app-client-document-dialog .cd-type {
+  flex: 0 1 48%;
+  max-width: 48%;
+}
+@media (max-width: 700px) {
+  app-client-document-dialog .cd-type {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
 }

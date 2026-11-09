@@ -1,13 +1,25 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   ViewEncapsulation,
   computed,
   effect,
   inject,
+  signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+  type CellEditRequestEvent,
+  type ColDef,
+  type GetRowIdFunc,
+  LargeTextEditorModule,
+  RenderApiModule,
+} from 'ag-grid-community';
 import { QuillEditorComponent } from 'ngx-quill';
 import { type Observable, map } from 'rxjs';
 import {
@@ -20,10 +32,17 @@ import {
 import type { Service } from '@api/config/service.api';
 import { useLazyStylesheet } from '@shared/forms/lazy-stylesheet';
 import { RecordDialog, RecordDialogFrame } from '@shared/forms/record-dialog/record-dialog';
-import { requiredText } from '@shared/forms/validators';
+import { NotificationService } from '@core/notifications/notification.service';
+import {
+  type EntityGridContext,
+  DeleteCell,
+  SaveCell,
+  ToggleCell,
+} from '@shared/grid/entity-grid/entity-grid-cells';
+import { type GridRow, draftRow, savedRow } from '@shared/grid/entity-grid/entity-rows';
+import { APP_GRID_THEME, EDITABLE_GRID_MODULES } from '@shared/grid/grid-setup';
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
-import { textOptions } from '@shared/forms/select-field/select-option';
 import { SelectField } from '@shared/forms/select-field/select-field';
 
 /** v21 editor toolbar. */
@@ -54,30 +73,47 @@ export function isVoucherService(service: Service | undefined): boolean {
   );
 }
 
-function smsForm(sms: VoucherSms | null, id: number) {
-  return new FormGroup({
-    Id: new FormControl(sms?.Id ?? id, { nonNullable: true }),
-    Type: new FormControl<SmsType>(sms?.Type ?? 'CaseCreation', { nonNullable: true }),
-    SMSMessage: new FormControl(sms?.SMSMessage ?? '', {
-      nonNullable: true,
-      validators: requiredText,
-    }),
-    IsActive: new FormControl(sms?.IsActive ?? true, { nonNullable: true }),
-  });
+/** One SMS message of the link as edited in the grid. */
+type SmsDraft = Omit<VoucherSms, 'Rank'>;
+type SmsRow = GridRow<SmsDraft>;
+
+const SMS_FIELDS = ['Type', 'SMSMessage', 'IsActive'] as const;
+
+/** Columns the action cells sit in (v21: Save pinned right). */
+const ACTION_COLUMN = {
+  pinned: 'right',
+  width: 110,
+  sortable: false,
+  resizable: false,
+  suppressMovable: true,
+} as const satisfies ColDef;
+
+function hasMessage(row: SmsRow): boolean {
+  return row.entity.SMSMessage.trim() !== '';
 }
 
-type SmsForm = ReturnType<typeof smsForm>;
+/** New rows are always unsaved; saved rows when a cell differs from what was last saved. */
+function isSmsDirty(row: SmsRow): boolean {
+  const { original } = row;
+  return original === null || SMS_FIELDS.some((field) => row.entity[field] !== original[field]);
+}
 
 /**
- * v21 "Add Client Service" popup: the service, its transfer number and note, and the SMS
+ * v21 "Add Client Service" popup: the service, its transfer number and note, and the grid of SMS
  * messages sent for it. Voucher services also set the voucher value and count; their SMS
  * messages may be any SMS type, other services' only CaseCreation. Saves the link itself.
  */
 @Component({
   selector: 'app-link-service-dialog',
-  imports: [ReactiveFormsModule, RecordDialogFrame, QuillEditorComponent, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    RecordDialogFrame,
+    QuillEditorComponent,
+    SelectField,
+    AgGridAngular,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Quill builds its toolbar and editor itself, so its styles cannot be encapsulated.
+  // Quill and AG Grid build their own markup, so their styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
   templateUrl: './link-service-dialog.html',
   styleUrl: './link-service-dialog.css',
@@ -85,6 +121,8 @@ type SmsForm = ReturnType<typeof smsForm>;
 export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
   private readonly api = inject(ClientLinksApi);
   private readonly context = inject(CLIENT_LINK_CONTEXT) as ClientLinkContext<Service>;
+  private readonly alerts = inject(NotificationService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly entityName = 'Client service';
   protected readonly editorModules = { toolbar: NOTE_TOOLBAR };
@@ -113,23 +151,19 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
       { value: this.record?.ServiceId ?? null, disabled: !this.isNew },
       Validators.required,
     ),
-    TransferNumber: new FormControl(this.record?.TransferNumber ?? '', {
-      nonNullable: true,
-      validators: requiredText,
-    }),
+    // v21: optional.
+    TransferNumber: new FormControl(this.record?.TransferNumber ?? '', { nonNullable: true }),
     Note: new FormControl<string | null>(this.record?.Note || null, Validators.required),
     VoucherAmount: new FormControl<number | null>(this.record?.VoucherAmount || null),
     NoOfVouchers: new FormControl<number | null>(this.record?.NoOfVouchers || null),
-    Sms: new FormArray<SmsForm>(
-      [...(this.record?.VoucherSMSDetails ?? [])]
-        .sort((a, b) => a.Rank - b.Rank)
-        .map((sms) => smsForm(sms, sms.Id)),
-    ),
   });
 
   private readonly serviceId = toSignal(this.form.controls.ServiceId.valueChanges, {
     initialValue: this.form.controls.ServiceId.value,
   });
+  protected readonly service = computed(() =>
+    this.context.choices.find((service) => service.ServiceId === this.serviceId()),
+  );
   /**
    * The link's own voucher provider when it has one (v21; the case Voucher/SMS tab uses it),
    * otherwise the service's.
@@ -137,14 +171,97 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
   protected readonly voucherProvider = computed(
     () => this.record?.VoucherProvider || this.service()?.VoucherProvider || '',
   );
-  protected readonly service = computed(() =>
-    this.context.choices.find((service) => service.ServiceId === this.serviceId()),
-  );
   protected readonly isVoucher = computed(() => isVoucherService(this.service()));
   protected readonly smsTypes = computed<readonly SmsType[]>(() =>
     this.isVoucher() ? SMS_TYPES : ['CaseCreation'],
   );
-  protected readonly smsTypeOptions = computed(() => textOptions(this.smsTypes()));
+
+  // ---------------- SMS grid (v21) ----------------
+
+  protected readonly gridModules = [
+    ...EDITABLE_GRID_MODULES,
+    LargeTextEditorModule,
+    RenderApiModule,
+  ];
+  protected readonly gridTheme = APP_GRID_THEME;
+  protected readonly smsGrid = viewChild(AgGridAngular);
+
+  /** The SMS messages in rank order; each change makes a new row object. */
+  protected readonly smsRows = signal<readonly SmsRow[]>(
+    [...(this.record?.VoucherSMSDetails ?? [])]
+      .sort((a, b) => a.Rank - b.Rank)
+      .map(({ Rank: _rank, ...sms }) => savedRow<SmsDraft>(sms, sms.Id)),
+  );
+  /** Rows whose empty message blocked saving: outlined in red until filled. */
+  private readonly flagged = signal<ReadonlySet<string>>(new Set());
+  protected readonly gridRows = computed(() => [...this.smsRows()]);
+
+  protected readonly smsColumns = computed<ColDef<SmsRow>[]>(() => [
+    {
+      headerName: 'SMS Message',
+      colId: 'SMSMessage',
+      flex: 3,
+      minWidth: 300,
+      editable: () => !this.readOnly,
+      valueGetter: ({ data }) => data?.entity.SMSMessage ?? '',
+      // v21: an empty message shows its hint.
+      valueFormatter: ({ value }) => (value ? String(value) : 'Enter SMS message'),
+      cellEditor: 'agLargeTextCellEditor',
+      cellEditorPopup: true,
+      cellEditorParams: { maxLength: 1000, rows: 5, cols: 47 },
+      cellClassRules: {
+        'ls-hint': ({ data }) => !!data && !hasMessage(data),
+        'cell-required': ({ data }) => !!data && this.flagged().has(data.key) && !hasMessage(data),
+      },
+    },
+    {
+      headerName: 'SMS Type',
+      colId: 'Type',
+      minWidth: 200,
+      flex: 1,
+      editable: () => !this.readOnly,
+      valueGetter: ({ data }) => data?.entity.Type,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: { values: [...this.smsTypes()] },
+    },
+    {
+      headerName: 'Rank',
+      colId: 'Rank',
+      width: 110,
+      minWidth: 90,
+      valueGetter: ({ node }) => (node?.rowIndex ?? 0) + 1,
+      cellClass: 'cell-center',
+    },
+    {
+      headerName: 'Active',
+      colId: 'IsActive',
+      minWidth: 130,
+      flex: 1,
+      valueGetter: ({ data }) => data?.entity.IsActive,
+      cellRenderer: ToggleCell,
+    },
+    ...(this.readOnly
+      ? []
+      : [
+          { ...ACTION_COLUMN, headerName: 'Save', colId: 'save', cellRenderer: SaveCell },
+          { ...ACTION_COLUMN, headerName: 'Delete', colId: 'delete', cellRenderer: DeleteCell },
+        ]),
+  ]);
+
+  protected readonly smsDefaultColDef: ColDef<SmsRow> = { resizable: true, sortable: false };
+  protected readonly getSmsRowId: GetRowIdFunc<SmsRow> = ({ data }) => data.key;
+
+  /** What the reused grid cells (Active switch, Save, Delete) ask of this popup. */
+  protected readonly smsContext: EntityGridContext = {
+    canEdit: () => !this.readOnly,
+    canDelete: () => !this.readOnly,
+    isDirty: (key) => this.smsRows().some((row) => row.key === key && isSmsDirty(row)),
+    setValue: (key, field, value) => this.setSms(key, field, value),
+    save: (key) => this.saveSms(key),
+    remove: (key) => this.removeSms(key),
+    open: () => undefined,
+    follow: () => undefined,
+  };
 
   constructor() {
     super();
@@ -155,23 +272,92 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
       const service = this.context.choices.find((candidate) => candidate.ServiceId === id);
       if (service) this.form.controls.Note.setValue(service.Note || null);
     });
-    effect(() => this.applyVoucherRules(this.isVoucher()));
+    effect(() => {
+      const voucher = this.isVoucher();
+      untracked(() => this.applyVoucherRules(voucher));
+    });
   }
 
-  protected get smsRows(): readonly SmsForm[] {
-    return this.form.controls.Sms.controls;
-  }
-
+  /** v21 "Add SMS": a new row at the top, its message open for typing. */
   protected addSms(): void {
-    const ids = this.smsRows.map((row) => row.controls.Id.value);
-    // Unique within the link; the backend stores the list as JSON and keeps the ids.
-    this.form.controls.Sms.push(smsForm(null, Math.max(0, ...ids) + 1));
+    const ids = this.smsRows().map((row) => row.entity.Id);
+    const row = draftRow<SmsDraft>({
+      // Unique within the link; the backend stores the list as JSON and keeps the ids.
+      Id: Math.max(0, ...ids) + 1,
+      Type: 'CaseCreation',
+      SMSMessage: '',
+      IsActive: true,
+    });
+    this.smsRows.update((rows) => [row, ...rows]);
+    this.form.markAsDirty();
+    setTimeout(() => {
+      const api = this.smsGrid()?.api;
+      // The message editor is a popup, placed by layout: only once the grid is on screen.
+      if (api && !api.isDestroyed() && this.host.nativeElement.offsetParent) {
+        api.startEditingCell({ rowIndex: 0, colKey: 'SMSMessage' });
+      }
+    });
+  }
+
+  protected onSmsEdit(event: CellEditRequestEvent<SmsRow>): void {
+    const { data, colDef } = event;
+    if (data && colDef.colId) this.setSms(data.key, colDef.colId, event.newValue);
+  }
+
+  private setSms(key: string, field: string, value: unknown): void {
+    if (this.readOnly) return;
+    const entity: Partial<SmsDraft> =
+      field === 'SMSMessage'
+        ? { SMSMessage: String(value ?? '') }
+        : field === 'Type'
+          ? { Type: value as SmsType }
+          : field === 'IsActive'
+            ? { IsActive: value === true }
+            : {};
+    this.smsRows.update((rows) =>
+      rows.map((row) => (row.key === key ? { ...row, entity: { ...row.entity, ...entity } } : row)),
+    );
     this.form.markAsDirty();
   }
 
-  protected removeSms(index: number): void {
-    this.form.controls.Sms.removeAt(index);
+  /** v21 row Save: keeps the row's changes; the popup's Save / Update sends them. */
+  private saveSms(key: string): void {
+    const row = this.smsRows().find((candidate) => candidate.key === key);
+    if (!row) return;
+    if (!hasMessage(row)) {
+      this.flag([row]);
+      this.alerts.warning('Please fill SMS Message before saving.');
+      return;
+    }
+    const entity = { ...row.entity, SMSMessage: row.entity.SMSMessage.trim() };
+    this.smsRows.update((rows) =>
+      rows.map((candidate) =>
+        candidate.key === key ? { ...candidate, entity, original: entity } : candidate,
+      ),
+    );
+  }
+
+  private removeSms(key: string): void {
+    this.smsRows.update((rows) => rows.filter((row) => row.key !== key));
     this.form.markAsDirty();
+  }
+
+  private flag(rows: readonly SmsRow[]): void {
+    this.flagged.set(new Set(rows.map((row) => row.key)));
+    this.smsGrid()?.api?.refreshCells({ force: true });
+  }
+
+  /** v21: every SMS row needs its message before the link is saved. */
+  protected override async save(): Promise<void> {
+    if (this.readOnly || this.saving()) return;
+    const empty = this.smsRows().filter((row) => !hasMessage(row));
+    if (empty.length > 0) {
+      this.flag(empty);
+      this.form.markAllAsTouched();
+      this.alerts.warning('Please fill SMS Message before saving.');
+      return;
+    }
+    await super.save();
   }
 
   protected toRecord(): ClientServiceLink {
@@ -187,11 +373,11 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
       VoucherProvider: voucher ? this.voucherProvider() || null : null,
       VoucherAmount: voucher ? Number(value.VoucherAmount) : null,
       NoOfVouchers: voucher ? Number(value.NoOfVouchers) : null,
-      VoucherSMSDetails: value.Sms.map((sms, index) => ({
-        Id: sms.Id,
-        Type: voucher ? sms.Type : 'CaseCreation',
-        SMSMessage: sms.SMSMessage.trim(),
-        IsActive: sms.IsActive,
+      VoucherSMSDetails: this.smsRows().map(({ entity }, index) => ({
+        Id: entity.Id,
+        Type: voucher ? entity.Type : 'CaseCreation',
+        SMSMessage: entity.SMSMessage.trim(),
+        IsActive: entity.IsActive,
         Rank: index + 1,
       })),
       IsDeleted: false,
@@ -211,8 +397,11 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
     );
     amount.updateValueAndValidity({ emitEvent: false });
     count.updateValueAndValidity({ emitEvent: false });
-    if (!voucher) {
-      for (const row of this.smsRows) row.controls.Type.setValue('CaseCreation');
+    // v21: other services' messages are all CaseCreation.
+    if (!voucher && this.smsRows().some((row) => row.entity.Type !== 'CaseCreation')) {
+      this.smsRows.update((rows) =>
+        rows.map((row) => ({ ...row, entity: { ...row.entity, Type: 'CaseCreation' } })),
+      );
     }
   }
 

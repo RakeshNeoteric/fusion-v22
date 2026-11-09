@@ -6,46 +6,117 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import type { ICellRendererAngularComp } from 'ag-grid-angular';
+import type { ICellRendererParams } from 'ag-grid-community';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatIcon } from '@angular/material/icon';
 import { type Observable, map } from 'rxjs';
 import { type ClientDocumentLink, ClientLinksApi } from '@api/clients/client-links.api';
 import { type DocumentType, DocumentTypeApi } from '@api/config/document.api';
 import { FileViewer, storedFileName } from '@shared/files/file-viewer';
 import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { statusLabel } from '@shared/reference/lookup-label';
-import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
+import { type LinkGridColumn, LinkGrid } from '@shared/grid/link-grid/link-grid';
 import { ClientDocumentDialog } from './client-document-dialog';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { ClientLinkTab } from './client-link-tab';
 
 const PERMISSION = 'CLIENT';
 
+/** v21: the stored file's name, cut short, then a green eye (preview) and a teal download. */
+@Component({
+  selector: 'app-client-document-file-cell',
+  imports: [MatIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (path(); as path) {
+      <span class="doc-name" [title]="fileName(path)">{{ fileName(path) }}</span>
+      <button
+        type="button"
+        class="doc-icon doc-view"
+        title="View"
+        [attr.aria-label]="'Preview ' + fileName(path)"
+        (click)="viewer.preview(path)"
+      >
+        <mat-icon svgIcon="view" />
+      </button>
+      <button
+        type="button"
+        class="doc-icon doc-download"
+        title="Download"
+        [attr.aria-label]="'Download ' + fileName(path)"
+        (click)="viewer.download(path)"
+      >
+        <mat-icon svgIcon="download" />
+      </button>
+    } @else {
+      —
+    }
+  `,
+  styles: `
+    :host {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+      min-width: 0;
+    }
+    .doc-name {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .doc-icon {
+      display: flex;
+      padding: 4px;
+      border: none;
+      border-radius: 4px;
+      background: none;
+      cursor: pointer;
+    }
+    .doc-icon mat-icon {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.2s ease;
+    }
+    .doc-icon:hover mat-icon {
+      transform: scale(1.1);
+    }
+    .doc-icon:focus-visible {
+      outline: 2px solid var(--app-teal);
+    }
+    .doc-view {
+      margin-left: 10px;
+      color: green;
+    }
+    .doc-download {
+      margin-left: 15px;
+      color: #05b9bc;
+    }
+  `,
+})
+export class ClientDocumentFileCell implements ICellRendererAngularComp {
+  protected readonly viewer = inject(FileViewer);
+  protected readonly fileName = storedFileName;
+  protected readonly path = signal<string | null>(null);
+
+  agInit(params: ICellRendererParams<ClientDocumentLink>): void {
+    this.refresh(params);
+  }
+
+  refresh(params: ICellRendererParams<ClientDocumentLink>): boolean {
+    this.path.set(params.data?.DocumentStoragePath || null);
+    return true;
+  }
+}
+
 /** v21 client popup, Documents: the client's documents by type, newest first. */
 @Component({
   selector: 'app-client-documents-tab',
-  imports: [LinkTable, LinkCell],
+  imports: [LinkGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link-tab.css',
-  styles: `
-    .doc-file {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-    .doc-action {
-      padding: 2px 4px;
-      border: none;
-      background: none;
-      color: var(--app-teal);
-      font: inherit;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .doc-action:focus-visible {
-      outline: 2px solid var(--app-teal);
-    }
-  `,
   template: `
     @if (canLink()) {
       <div class="link-bar">
@@ -60,9 +131,8 @@ const PERMISSION = 'CLIENT';
         </button>
       </div>
     }
-    <app-link-table
+    <app-link-grid
       caption="Linked documents"
-      viewLabel="View"
       [rows]="rows()"
       [columns]="columns"
       [rowKey]="key"
@@ -71,42 +141,14 @@ const PERMISSION = 'CLIENT';
       [busy]="busy()"
       (view)="open($event)"
       (remove)="unlink($event)"
-    >
-      <ng-template appLinkCell="File" let-row>
-        @if (row.DocumentStoragePath; as path) {
-          <span class="doc-file">
-            {{ fileName(path) }}
-            <button
-              type="button"
-              class="doc-action"
-              [attr.aria-label]="'Preview ' + fileName(path)"
-              (click)="viewer.preview(path)"
-            >
-              Preview
-            </button>
-            <button
-              type="button"
-              class="doc-action"
-              [attr.aria-label]="'Download ' + fileName(path)"
-              (click)="viewer.download(path)"
-            >
-              Download
-            </button>
-          </span>
-        } @else {
-          -
-        }
-      </ng-template>
-    </app-link-table>
+    />
   `,
 })
 export class ClientDocumentsTab extends ClientLinkTab<ClientDocumentLink> {
   private readonly api = inject(ClientLinksApi);
   private readonly dialogs = inject(RecordDialogs);
   private readonly injector = inject(Injector);
-  protected readonly viewer = inject(FileViewer);
   protected readonly linkName = 'Document';
-  protected readonly fileName = storedFileName;
 
   /** Every document type, deleted ones included, to name old links. */
   private readonly types = signal<readonly DocumentType[]>([]);
@@ -119,9 +161,13 @@ export class ClientDocumentsTab extends ClientLinkTab<ClientDocumentLink> {
     [...this.links()].sort((a, b) => b.ClientDocumentId - a.ClientDocumentId),
   );
 
-  protected readonly columns: readonly LinkColumn<ClientDocumentLink>[] = [
+  protected readonly columns: readonly LinkGridColumn<ClientDocumentLink>[] = [
     { header: 'Document', text: (link) => this.name(link) },
-    { header: 'File' },
+    {
+      header: 'File',
+      text: (link) => (link.DocumentStoragePath ? storedFileName(link.DocumentStoragePath) : ''),
+      cell: ClientDocumentFileCell,
+    },
   ];
 
   protected readonly key = (link: ClientDocumentLink): number => link.ClientDocumentId;
