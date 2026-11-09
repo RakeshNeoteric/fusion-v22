@@ -14,10 +14,10 @@
       </div>
       <div class="form-field">
         <label for="cr-contact-phone">Contact Phone</label>
-        <app-phone-field
+        <app-phone-display
           inputId="cr-contact-phone"
           label="Contact Phone"
-          [formControl]="contactPhone"
+          [value]="caller()?.ContactNumber"
         />
       </div>
     </div>

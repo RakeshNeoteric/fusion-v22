@@ -16,7 +16,7 @@
           }
         </h3>
         <div class="pc-grid">
-          <div class="form-field">
+          <div class="form-field pc-row">
             <label [for]="'pc-' + card.number + '-contact'">Contact</label>
             <input
               [id]="'pc-' + card.number + '-contact'"
@@ -29,26 +29,24 @@
             <label [for]="'pc-' + card.number + '-via'">Via</label>
             <input [id]="'pc-' + card.number + '-via'" type="text" readonly [value]="via()" />
           </div>
-          <div class="form-field">
+          <div class="form-field pc-row">
             <label [for]="'pc-' + card.number + '-telephone'">Telephone Number</label>
-            <input
-              [id]="'pc-' + card.number + '-telephone'"
-              type="text"
-              readonly
-              [value]="phone(saved(card)?.CollectTelephone)"
+            <app-phone-display
+              [inputId]="'pc-' + card.number + '-telephone'"
+              label="Telephone Number"
+              [value]="saved(card)?.CollectTelephone"
             />
           </div>
           <div class="form-field">
             <label [for]="'pc-' + card.number + '-fax'">Fax Number</label>
-            <input
-              [id]="'pc-' + card.number + '-fax'"
-              type="text"
-              readonly
-              [value]="phone(saved(card)?.CollectFaxNumber)"
+            <app-phone-display
+              [inputId]="'pc-' + card.number + '-fax'"
+              label="Fax Number"
+              [value]="saved(card)?.CollectFaxNumber"
             />
           </div>
 
-          <div class="form-field">
+          <div class="form-field pc-row">
             <label [for]="'pc-' + card.number + '-fixed'">Fixed Cost</label>
             <input
               [id]="'pc-' + card.number + '-fixed'"
@@ -59,29 +57,31 @@
               [title]="internal(card) ? '' : 'Costed by rate per km'"
             />
           </div>
-          <div class="form-field">
-            <label [for]="'pc-' + card.number + '-rate'">Rate per km</label>
-            <input
-              [id]="'pc-' + card.number + '-rate'"
-              type="number"
-              min="0"
-              step="0.01"
-              formControlName="ratePerKm"
-              [title]="internal(card) ? 'Internal provider: Rate/km is read-only' : ''"
-            />
+          <div class="pc-split">
+            <div class="form-field">
+              <label [for]="'pc-' + card.number + '-rate'">Rate per km</label>
+              <input
+                [id]="'pc-' + card.number + '-rate'"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="ratePerKm"
+                [title]="internal(card) ? 'Internal provider: Rate/km is read-only' : ''"
+              />
+            </div>
+            <div class="form-field">
+              <label [for]="'pc-' + card.number + '-km'">Total km</label>
+              <input
+                [id]="'pc-' + card.number + '-km'"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="totalKm"
+                [title]="internal(card) ? 'Internal provider: Total km comes from Transport' : ''"
+              />
+            </div>
           </div>
-          <div class="form-field">
-            <label [for]="'pc-' + card.number + '-km'">Total km</label>
-            <input
-              [id]="'pc-' + card.number + '-km'"
-              type="number"
-              min="0"
-              step="0.01"
-              formControlName="totalKm"
-              [title]="internal(card) ? 'Internal provider: Total km comes from Transport' : ''"
-            />
-          </div>
-          <div class="form-field">
+          <div class="form-field pc-row">
             <label [for]="'pc-' + card.number + '-additional'">Additional Cost</label>
             <input
               [id]="'pc-' + card.number + '-additional'"
@@ -91,13 +91,8 @@
               formControlName="additionalCost"
             />
           </div>
-          @if (card.form.invalid && card.form.touched) {
-            <p class="field-error pc-wide">
-              Costs cannot be negative or more than the database allows (rate and km up to 9999.99).
-            </p>
-          }
 
-          <div class="form-field pc-wide">
+          <div class="form-field">
             <label [for]="'pc-' + card.number + '-notes'">Notes</label>
             <textarea
               [id]="'pc-' + card.number + '-notes'"
@@ -114,15 +109,18 @@
               [value]="total(card)"
             />
           </div>
-
+          @if (card.form.invalid && card.form.touched) {
+            <p class="field-error pc-wide">
+              Costs cannot be negative or more than the database allows (rate and km up to 9999.99).
+            </p>
+          }
+        </div>
+        <div class="pc-grid pc-auth">
           <div class="form-field">
             <label [for]="'pc-' + card.number + '-date'">Authorised Date</label>
-            <input
-              [id]="'pc-' + card.number + '-date'"
-              type="text"
-              readonly
-              placeholder="Set when authorised"
-              [value]="authorisedDate(card)"
+            <app-date-field
+              [inputId]="'pc-' + card.number + '-date'"
+              [formControl]="card.authorisedDate"
             />
           </div>
           <div class="form-field">
@@ -152,17 +150,17 @@
               <span class="field-error">Authorised Number is required.</span>
             }
           </div>
-        </div>
-        <div class="pc-actions">
           <button
             type="button"
-            class="app-button"
+            class="app-button pc-authorise"
             [disabled]="readOnly() || authorised(card) || busy()"
             [matTooltip]="authorised(card) ? 'Already authorised' : ''"
             (click)="authorise(card)"
           >
             Authorise
           </button>
+        </div>
+        <div class="pc-actions">
           @if (internal(card)) {
             <button
               type="button"

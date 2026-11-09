@@ -95,7 +95,12 @@ describe('Final Funeral tab', () => {
     await openTab('Final Funeral');
     await choose('ff-parlour', 'Zulu');
     expect(value('ff-manager')).toBe('Manager 2');
-    expect(value('ff-telephone')).toBe('+27 82 123 4567');
+    // Shown with its flag and dial code, like v21, and only copied (not typed) here.
+    expect(value('ff-telephone')).toBe('082 123 4567');
+    expect((document.getElementById('ff-telephone') as HTMLInputElement).disabled).toBe(true);
+    expect(
+      document.querySelector('#ff-telephone')?.closest('app-phone-field')?.textContent,
+    ).toContain('+27');
     await type('ff-priority', 'Urgent');
     await openTab('Caller');
     expect(saved()).toEqual({

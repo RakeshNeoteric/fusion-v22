@@ -15,7 +15,6 @@ import { firstValueFrom } from 'rxjs';
 import type { CasePhaseRecord } from '@api/cases/case.api';
 import { type TransportOperator, TransportOperatorApi } from '@api/config/transport-operator.api';
 import { type Vehicle, VehicleApi } from '@api/config/vehicle.api';
-import { displayDate } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
 import { UserDirectoryService } from '@core/session/user-directory.service';
@@ -23,14 +22,15 @@ import { letterhead } from '@shared/pdf/letterhead';
 import { PDF_FONT, PdfRenderer } from '@shared/pdf/pdf-renderer';
 import { DialogHeader } from '@shared/ui/dialog-header/dialog-header';
 import { money } from '@shared/reference/money';
-import { displayStoredPhone } from '@shared/reference/phone';
+import { PhoneDisplay } from '@shared/forms/phone-field/phone-display';
 import type { ClientProvider } from '../client-providers';
 import { CaseWorkspace } from '../case-workspace';
 import { activePhases, caseTotals, isAuthorised, phaseTotal } from './costing-rules';
 import { removalDocument, removalOrder } from './removal-order';
 import { removalOrderPdf } from './removal-order-pdf';
 import { openTransport } from './transport-dialog';
-import { todayIsoDate } from '@shared/forms/dates/app-dates';
+import { fromIsoDate, toIsoDate, todayIsoDate } from '@shared/forms/dates/app-dates';
+import { DateField } from '@shared/forms/date-field/date-field';
 import { SelectField } from '@shared/forms/select-field/select-field';
 
 function costForm() {
@@ -56,6 +56,11 @@ interface PhaseCard {
   /** 1 … 4 */
   readonly number: number;
   readonly form: CostForm;
+  /**
+   * v21's Authorised Date: the calendar field, never typed in. The day it was authorised, or
+   * today until then (Authorise saves today). Kept out of the form so it is never saved from here.
+   */
+  readonly authorisedDate: FormControl<string>;
   baseline: string;
 }
 
@@ -67,7 +72,15 @@ interface PhaseCard {
  */
 @Component({
   selector: 'app-phase-costing-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatTooltip, DialogHeader, SelectField],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatTooltip,
+    DialogHeader,
+    SelectField,
+    PhoneDisplay,
+    DateField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './phase-costing-dialog.html',
   styleUrl: './phase-costing-dialog.css',
@@ -175,14 +188,6 @@ export class PhaseCostingDialog {
         additionalCost: value.additionalCost,
       }),
     );
-  }
-
-  protected phone(stored: string | null | undefined): string {
-    return displayStoredPhone(stored);
-  }
-
-  protected authorisedDate(card: PhaseCard): string {
-    return displayDate(this.saved(card)?.AuthorisedDate);
   }
 
   protected userOptions(card: PhaseCard) {
@@ -359,6 +364,7 @@ export class PhaseCostingDialog {
         id: phase.CasePhaseDetailsId,
         number: Number(phase.PhaseName.slice(-1)),
         form,
+        authorisedDate: new FormControl({ value: '', disabled: true }, { nonNullable: true }),
         baseline: '',
       };
     });
@@ -392,6 +398,8 @@ export class PhaseCostingDialog {
       },
       { emitEvent: false },
     );
+    const day = fromIsoDate(saved.AuthorisedDate);
+    card.authorisedDate.setValue(day ? toIsoDate(day) : todayIsoDate());
     const { fixedCost, ratePerKm, totalKm } = card.form.controls;
     if (this.readOnly() || authorised) card.form.disable({ emitEvent: false });
     else {

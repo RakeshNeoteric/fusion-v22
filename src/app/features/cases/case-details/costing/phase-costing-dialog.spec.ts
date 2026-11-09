@@ -177,7 +177,7 @@ describe('Phase Costing', () => {
     await open();
     expect(disabled('pc-1-km')).toBe(true);
     expect(disabled('pc-1-number')).toBe(true);
-    expect(element<HTMLButtonElement>('.pc-actions button').disabled).toBe(true);
+    expect(element<HTMLButtonElement>('.pc-authorise').disabled).toBe(true);
     await press('Close');
     expect(api.savePhase).not.toHaveBeenCalled();
   });
@@ -194,6 +194,27 @@ describe('Phase Costing', () => {
       expect.arrayContaining(['Removal Instruction', 'Phase 1', 'AVBOB - 1 Main Road', 'Carl Ng']),
     );
     expect(texts).not.toContain('BILLING DETAILS');
+  });
+
+  it('shows Authorised Date in the calendar field: today until authorised, then the day', async () => {
+    const field = () => document.getElementById('pc-1-date') as HTMLInputElement;
+    await show(avs());
+    await open();
+    const now = new Date();
+    const two = (n: number) => String(n).padStart(2, '0');
+    expect(field().value).toBe(
+      `${two(now.getDate())}/${two(now.getMonth() + 1)}/${now.getFullYear()}`,
+    );
+    expect(field().disabled).toBe(true);
+    expect(
+      field().closest('app-date-field')?.querySelector('mat-datepicker-toggle'),
+    ).not.toBeNull();
+    await press('Close');
+
+    await show(avs({ AuthorisedDate: '2026-11-05T00:00:00', AuthorisedByUserId: 7 }));
+    await open();
+    expect(field().value).toBe('05/11/2026');
+    expect(field().disabled).toBe(true);
   });
 
   it("prints an authorised phase's removal order with what it costs", async () => {

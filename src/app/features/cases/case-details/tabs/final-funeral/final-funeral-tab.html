@@ -38,11 +38,15 @@
   <div class="tab-grid tab-grid-4">
     <div class="form-field">
       <label for="ff-telephone">Telephone Number</label>
-      <input id="ff-telephone" type="text" readonly [value]="copied().telephone" />
+      <app-phone-display
+        inputId="ff-telephone"
+        label="Telephone Number"
+        [value]="copied().telephone"
+      />
     </div>
     <div class="form-field">
       <label for="ff-fax">Fax Number</label>
-      <input id="ff-fax" type="text" readonly [value]="copied().fax" />
+      <app-phone-display inputId="ff-fax" label="Fax Number" [value]="copied().fax" />
     </div>
     <div class="form-field">
       <label for="ff-mobile">Mobile Number</label>

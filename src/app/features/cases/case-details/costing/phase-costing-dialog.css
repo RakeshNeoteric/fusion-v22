@@ -27,13 +27,36 @@
   color: #fff;
   font-size: 12px;
 }
+/* v21: three columns; each group of fields starts a new row. */
 .pc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px 20px;
+}
+.pc-row {
+  grid-column: 1;
+}
+/* Rate per km and Total km share one column. */
+.pc-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+/* Authorised Date, By and Number, with Authorise at the end of the row. */
+.pc-auth {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: start;
+}
+/* Level with the boxes (below their labels), even when a field shows an error. */
+.pc-authorise {
+  min-height: 40px;
+  margin-top: 22px;
 }
 .pc-wide {
   grid-column: 1 / -1;
+}
+.pc-grid textarea {
+  resize: vertical;
 }
 .pc-actions {
   display: flex;
@@ -61,6 +84,10 @@
   font-size: 13px;
 }
 @media (width <= 700px) {
+  .pc-grid,
+  .pc-auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .pc-summary {
     grid-template-columns: 1fr;
   }

@@ -14,6 +14,7 @@ import { dateOnly } from '@shared/reference/date-time';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PhoneField } from '@shared/forms/phone-field/phone-field';
 import { displayStoredPhone, storedToE164 } from '@shared/reference/phone';
+import { PhoneDisplay } from '@shared/forms/phone-field/phone-display';
 import { type ClientProvider, findProviderByName } from '../../client-providers';
 import { CaseWorkspace } from '../../case-workspace';
 import { CaseTabForm } from '../case-tab-form';
@@ -61,7 +62,7 @@ function savedDetails(record: CaseFinalFuneralRecord): ParlourDetails {
  */
 @Component({
   selector: 'app-final-funeral-tab',
-  imports: [ReactiveFormsModule, PhoneField, DateField, SelectField],
+  imports: [ReactiveFormsModule, PhoneField, PhoneDisplay, DateField, SelectField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: CaseTabForm, useExisting: forwardRef(() => FinalFuneralTab) }],
   templateUrl: './final-funeral-tab.html',
