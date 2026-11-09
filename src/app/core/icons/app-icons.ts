@@ -5,6 +5,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 interface IconShape {
   /** Font Awesome icons are 512 high and vary in width. */
   readonly width: number;
+  /** Default 512 (Font Awesome); 24 for the Material icons. */
+  readonly height?: number;
   readonly path: string;
 }
 
@@ -113,6 +115,43 @@ const ICONS = {
     width: 512,
     path: 'M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z',
   },
+  // Grid column menu (v21's AG Grid menu): Material Icons (Apache 2.0), 24×24.
+  'more-vert': {
+    width: 24,
+    height: 24,
+    path: 'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+  },
+  'arrow-up': {
+    width: 24,
+    height: 24,
+    path: 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z',
+  },
+  'arrow-down': {
+    width: 24,
+    height: 24,
+    path: 'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z',
+  },
+  'push-pin': {
+    width: 24,
+    height: 24,
+    path: 'M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z',
+  },
+  'view-column': {
+    width: 24,
+    height: 24,
+    path: 'M14.67 5v14H9.33V5h5.34zm1 14H21V5h-5.33v14zm-7.34 0V5H3v14h5.33z',
+  },
+  // Grid right-click menu: Save Row.
+  save: {
+    width: 24,
+    height: 24,
+    path: 'M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z',
+  },
+  check: {
+    width: 24,
+    height: 24,
+    path: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+  },
 } as const satisfies Record<string, IconShape>;
 
 export type AppIconName = keyof typeof ICONS;
@@ -121,9 +160,11 @@ export function provideAppIcons(): EnvironmentProviders {
   return provideEnvironmentInitializer(() => {
     const registry = inject(MatIconRegistry);
     const sanitizer = inject(DomSanitizer);
-    for (const [name, { width, path }] of Object.entries(ICONS)) {
+    for (const [name, shape] of Object.entries(ICONS)) {
+      const { width, path } = shape;
+      const height = 'height' in shape ? shape.height : 512;
       // Safe: compile-time constants from this file, never user input.
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 512" fill="currentColor"><path d="${path}"/></svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" fill="currentColor"><path d="${path}"/></svg>`;
       registry.addSvgIconLiteral(name, sanitizer.bypassSecurityTrustHtml(svg));
     }
   });

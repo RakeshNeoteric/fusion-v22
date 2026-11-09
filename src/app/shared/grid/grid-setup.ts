@@ -1,8 +1,11 @@
 import { isDevMode } from '@angular/core';
 import {
+  CellApiModule,
   CellStyleModule,
   ClientSideRowModelModule,
+  ColumnApiModule,
   ColumnAutoSizeModule,
+  CsvExportModule,
   type Module,
   NumberEditorModule,
   NumberFilterModule,
@@ -38,6 +41,11 @@ export const EDITABLE_GRID_MODULES: Module[] = [
   RowStyleModule,
   CellStyleModule,
   ColumnAutoSizeModule,
+  // The ⋮ column menu: pin, show / hide and reset columns.
+  ColumnApiModule,
+  // Copy (a cell's shown text) and Export (CSV, in AG Grid Community) in the right-click menu.
+  CellApiModule,
+  CsvExportModule,
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 
@@ -51,6 +59,8 @@ export const LIST_GRID_MODULES: Module[] = [
   RowStyleModule,
   CellStyleModule,
   ColumnAutoSizeModule,
+  // The ⋮ column menu: pin, show / hide and reset columns.
+  ColumnApiModule,
   ...(isDevMode() ? [ValidationModule] : []),
 ];
 

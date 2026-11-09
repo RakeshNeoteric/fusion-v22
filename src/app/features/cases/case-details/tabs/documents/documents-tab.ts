@@ -34,6 +34,7 @@ import {
   DocumentTemplateCell,
   DocumentUploadCell,
 } from './document-cells';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 /**
  * v21 Documents tab: one row per document the client asks for, with the client's template and
@@ -155,6 +156,7 @@ export class DocumentsTab {
   protected readonly gridModules = [...LIST_GRID_MODULES, TextFilterModule];
   protected readonly gridTheme = APP_GRID_THEME;
   protected readonly defaultColDef: ColDef<DocumentRow> = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     minWidth: 180,
     sortable: true,

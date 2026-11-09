@@ -104,7 +104,18 @@ export interface EntityGridConfig<T> {
    * "Clone (Copy) a Client".
    */
   readonly titleActions?: readonly TitleAction[];
+  /**
+   * v21's right-click menu on the grid, for screens edited in the grid (ignored with `editor`,
+   * whose screens keep "+ New"). With `addRow`, Add Row replaces the "+ New" button; Save Row and
+   * Delete Row act on the row right-clicked. Each still needs its permission. Copy puts the
+   * clicked cell's text on the clipboard; Export downloads the rows shown as a CSV file.
+   * Off by default.
+   */
+  readonly contextMenu?: readonly ContextMenuAction[];
 }
+
+/** Items of the grid's right-click menu. */
+export type ContextMenuAction = 'addRow' | 'saveRow' | 'deleteRow' | 'copy' | 'export';
 
 export interface TitleAction {
   readonly label: string;

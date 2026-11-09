@@ -23,6 +23,7 @@ import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { type ApprovalGridContext, ApproveCell, RejectCell } from './approval-cells';
 import { type ApprovalRow, approvalRows } from './approval-rows';
 import { askRejectReason } from './reject-dialog';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 export const VOUCHER_APPROVAL_PERMISSION: MenuCode = 'VchApprvl';
 
@@ -111,6 +112,7 @@ export class VoucherApprovalPage {
   ];
 
   protected readonly defaultColDef: ColDef<ApprovalRow> = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     sortable: true,
     resizable: true,

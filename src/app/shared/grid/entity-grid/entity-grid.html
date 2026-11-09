@@ -12,17 +12,19 @@
         <span>{{ action.label }}</span>
       </button>
     }
-    <button
-      type="button"
-      class="entity-grid-new"
-      [attr.aria-label]="'New ' + config().entityName"
-      (click)="add()"
-    >
-      <span class="entity-grid-new-icon" aria-hidden="true">
-        <mat-icon svgIcon="add" />
-      </span>
-      <span>New</span>
-    </button>
+    @if (showNewButton()) {
+      <button
+        type="button"
+        class="entity-grid-new"
+        [attr.aria-label]="'New ' + config().entityName"
+        (click)="add()"
+      >
+        <span class="entity-grid-new-icon" aria-hidden="true">
+          <mat-icon svgIcon="add" />
+        </span>
+        <span>New</span>
+      </button>
+    }
   }
 </ng-template>
 
@@ -54,3 +56,7 @@
   (gridReady)="onGridReady($event)"
   (cellEditRequest)="onCellEditRequest($event)"
 />
+<!-- v21's right-click menu (contextMenu in the config): rows and empty space, not headers. -->
+@if (hasContextMenu()) {
+  <app-grid-context-menu />
+}

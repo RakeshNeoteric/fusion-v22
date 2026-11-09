@@ -39,6 +39,7 @@ import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
 import { BusyButton } from '@shared/ui/busy/busy-button';
 import { type SentSmsRow, sentSmsRows } from './sent-sms-rows';
 import { type VoucherGridContext, VoucherAllocatedCell } from './voucher-cells';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 const NO_SETTINGS: VoucherSettings = { provider: null, maxAmount: null, maxCount: null };
 /** Never shown: every value in stock has a field. Keeps the template's binding typed. */
@@ -123,6 +124,7 @@ export class VoucherTab {
   protected readonly gridModules = [...LIST_GRID_MODULES, TextFilterModule, NumberFilterModule];
   protected readonly gridTheme = APP_GRID_THEME;
   protected readonly defaultColDef: ColDef = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     minWidth: 130,
     sortable: true,

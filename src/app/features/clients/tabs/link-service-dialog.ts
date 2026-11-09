@@ -44,6 +44,7 @@ import { APP_GRID_THEME, EDITABLE_GRID_MODULES } from '@shared/grid/grid-setup';
 import { pickerOptions } from '@shared/reference/lookup-label';
 import { CLIENT_LINK_CONTEXT, type ClientLinkContext } from './client-link-context';
 import { SelectField } from '@shared/forms/select-field/select-field';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 /** v21 editor toolbar. */
 const NOTE_TOOLBAR = [
@@ -82,6 +83,8 @@ const SMS_FIELDS = ['Type', 'SMSMessage', 'IsActive'] as const;
 /** Columns the action cells sit in (v21: Save pinned right). */
 const ACTION_COLUMN = {
   pinned: 'right',
+  // Icons only: no ⋮ column menu.
+  suppressHeaderMenuButton: true,
   width: 110,
   sortable: false,
   resizable: false,
@@ -248,7 +251,11 @@ export class LinkServiceDialog extends RecordDialog<ClientServiceLink> {
         ]),
   ]);
 
-  protected readonly smsDefaultColDef: ColDef<SmsRow> = { resizable: true, sortable: false };
+  protected readonly smsDefaultColDef: ColDef<SmsRow> = {
+    ...WITH_COLUMN_MENU,
+    resizable: true,
+    sortable: false,
+  };
   protected readonly getSmsRowId: GetRowIdFunc<SmsRow> = ({ data }) => data.key;
 
   /** What the reused grid cells (Active switch, Save, Delete) ask of this popup. */

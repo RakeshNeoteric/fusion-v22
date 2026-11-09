@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { AgGridAngular } from 'ag-grid-angular';
 import type { ColDef, ValueGetterParams } from 'ag-grid-community';
 import { APP_GRID_THEME, PAGE_SIZE_OPTIONS, REPORT_GRID_MODULES } from '@shared/grid/grid-setup';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 /** One column of a report: its text, and how it sorts when not by that text (dates, amounts). */
 export interface TableColumn<T> {
@@ -50,6 +51,7 @@ export class ReportTable<T> {
   /** AG Grid takes a mutable array. */
   protected readonly rowData = computed(() => [...this.rows()]);
   protected readonly defaultColDef: ColDef<T> = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     minWidth: 180,
     sortable: true,

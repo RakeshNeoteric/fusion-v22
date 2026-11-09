@@ -36,6 +36,7 @@ import { CaseWorkspace } from '../case-workspace';
 import { type AdditionalCostOrder, additionalCostPo } from './additional-cost-po';
 import { type AdditionalCostGridContext, AdditionalCostDeleteCell } from './additional-cost-cells';
 import { BusyButton } from '@shared/ui/busy/busy-button';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 /** v21 tidied addresses: lines trimmed, blank lines dropped. */
 function tidyAddress(address: string): string {
@@ -88,6 +89,7 @@ export class AdditionalCostingDialog {
   protected readonly gridTheme = APP_GRID_THEME;
   protected readonly pageSizes = [10, 20, 50];
   protected readonly defaultColDef: ColDef<CaseAdditionalCostRecord> = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     minWidth: 120,
     sortable: true,
@@ -133,6 +135,7 @@ export class AdditionalCostingDialog {
             filter: false,
             resizable: false,
             pinned: 'right' as const,
+            suppressHeaderMenuButton: true,
             cellRenderer: AdditionalCostDeleteCell,
           },
         ]),

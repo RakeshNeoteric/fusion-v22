@@ -30,6 +30,12 @@ import { PageActions } from '@core/layout/page-actions';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
+import {
+  GridContextMenu,
+  type GridMenuItem,
+  type MenuPoint,
+  isContextMenuKey,
+} from '../context-menu/grid-context-menu';
 import { APP_GRID_THEME, EDITABLE_GRID_MODULES, PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../grid-setup';
 import {
   DeleteCell,
@@ -58,11 +64,17 @@ import {
   toPayload,
   validateRow,
 } from './entity-rows';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
+/** The icon columns (Link, View, Save, Delete): no text to copy, left out of a CSV export. */
+const ACTION_COLUMN_IDS: ReadonlySet<string> = new Set(['link', 'view', 'save', 'delete']);
+
 const ACTION_COLUMN = {
   headerName: '',
+  // Icons only: no ⋮ column menu.
+  suppressHeaderMenuButton: true,
   pinned: 'right',
   width: 110,
   sortable: false,
@@ -77,13 +89,18 @@ const ACTION_COLUMN = {
  */
 @Component({
   selector: 'app-entity-grid',
-  imports: [AgGridAngular, CdkPortal, MatButtonModule, MatIconModule],
+  imports: [AgGridAngular, CdkPortal, MatButtonModule, MatIconModule, GridContextMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Row and cell classes are added inside AG Grid's own DOM, so styles cannot be encapsulated.
   encapsulation: ViewEncapsulation.None,
   templateUrl: './entity-grid.html',
   styleUrl: './entity-grid.css',
-  host: { '(window:beforeunload)': 'warnBeforeUnload($event)' },
+  host: {
+    '(window:beforeunload)': 'warnBeforeUnload($event)',
+    // Right-clicks and the Menu key reach here from the grid's own (focusable) cells.
+    '(contextmenu)': 'onContextMenu($event)',
+    '(keydown)': 'onKeydown($event)',
+  },
 })
 export class EntityGrid<T extends object> implements OnInit {
   readonly config = input.required<EntityGridConfig<T>>();
@@ -109,6 +126,18 @@ export class EntityGrid<T extends object> implements OnInit {
     this.permissions.canDelete(this.config().permission),
   );
 
+  /** v21's right-click menu: its items, for screens edited in the grid only. */
+  private readonly menuActions = computed(() =>
+    this.usesEditor() ? [] : (this.config().contextMenu ?? []),
+  );
+  /** True when the grid has a right-click menu at all. */
+  protected readonly hasContextMenu = computed(() => this.menuActions().length > 0);
+  /** "+ New" shows unless Add Row in the right-click menu replaces it. */
+  protected readonly showNewButton = computed(
+    () => this.canCreate() && !this.menuActions().includes('addRow'),
+  );
+  private readonly contextMenu = viewChild(GridContextMenu);
+
   /** The columns bound to a field: what is edited, compared, checked and trimmed. */
   private readonly fields = computed(() => this.config().columns.filter(isEditableColumn));
 
@@ -124,6 +153,7 @@ export class EntityGrid<T extends object> implements OnInit {
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly getRowId: GetRowIdFunc<GridRow<T>> = ({ data }) => data.key;
   protected readonly defaultColDef: ColDef<GridRow<T>> = {
+    ...WITH_COLUMN_MENU,
     sortable: true,
     resizable: true,
     cellDataType: false,
@@ -315,6 +345,106 @@ export class EntityGrid<T extends object> implements OnInit {
     } else {
       this.rows.update((rows) => [updated, ...rows]);
     }
+  }
+
+  /** Right-click in the grid's rows or empty space: v21's menu instead of the browser's. */
+  protected onContextMenu(event: MouseEvent): void {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!this.hasContextMenu() || target?.closest('.ag-header')) return;
+    if (this.openContextMenu({ x: event.clientX, y: event.clientY }, target)) {
+      event.preventDefault();
+    }
+  }
+
+  /** The Menu key or Shift+F10 on a grid cell opens the same menu beside it. */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (!this.hasContextMenu() || !isContextMenuKey(event)) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target || target.closest('.ag-header')) return;
+    const box = target.getBoundingClientRect();
+    if (this.openContextMenu({ x: box.left + 8, y: box.bottom }, target)) {
+      event.preventDefault();
+    }
+  }
+
+  /** Opens the menu for the row and cell under `target` (none for empty space); false when empty. */
+  private openContextMenu(at: MenuPoint, target: Element | null): boolean {
+    const key = target?.closest('.ag-row')?.getAttribute('row-id') ?? null;
+    const row = key === null ? undefined : this.find(key);
+    const colId = target?.closest('.ag-cell')?.getAttribute('col-id') ?? null;
+    const cellText =
+      key === null || colId === null || !this.menuActions().includes('copy')
+        ? null
+        : this.cellText(key, colId);
+    return this.contextMenu()?.open(at, this.menuItems(row, cellText)) ?? false;
+  }
+
+  /** The text a cell shows (select labels, not ids); null for icon cells and unknown cells. */
+  private cellText(key: string, colId: string): string | null {
+    const api = this.gridApi;
+    const rowNode = api?.getRowNode(key);
+    if (!api || !rowNode || ACTION_COLUMN_IDS.has(colId)) return null;
+    const value: unknown = api.getCellValue({ rowNode, colKey: colId, useFormatter: true });
+    return value === null || value === undefined ? '' : String(value);
+  }
+
+  private async copy(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.notifications.success('Copied.');
+    } catch {
+      this.notifications.warning('Could not copy. Please copy the text by hand.');
+    }
+  }
+
+  /** Downloads the rows as filtered and sorted on screen, without the icon columns. */
+  private exportCsv(): void {
+    const api = this.gridApi;
+    if (!api) return;
+    const columnKeys = api
+      .getAllDisplayedColumns()
+      .map((column) => column.getColId())
+      .filter((colId) => !ACTION_COLUMN_IDS.has(colId));
+    api.exportDataAsCsv({ fileName: `${this.config().entityName}.csv`, columnKeys });
+  }
+
+  /** The menu for a row (or none): each item only with its permission, as the buttons are. */
+  private menuItems(row: GridRow<T> | undefined, cellText: string | null): GridMenuItem[] {
+    const actions = this.menuActions();
+    const items: GridMenuItem[] = [];
+    if (actions.includes('addRow') && this.canCreate() && this.config().newEntity) {
+      items.push({ label: 'Add Row', icon: 'add', run: () => this.add() });
+    }
+    if (row && actions.includes('saveRow') && (isNew(row) || this.canEditCells())) {
+      items.push({
+        label: 'Save Row',
+        icon: 'save',
+        disabled: row.saving || !isDirty(row, this.fields()),
+        run: () => void this.save(row.key),
+      });
+    }
+    if (row && actions.includes('deleteRow') && this.canDelete()) {
+      items.push({
+        label: 'Delete Row',
+        icon: 'trash',
+        disabled: row.saving,
+        run: () => void this.remove(row.key),
+      });
+    }
+    if (actions.includes('copy')) {
+      items.push({
+        label: 'Copy',
+        icon: 'content-copy',
+        disabled: cellText === null,
+        run: () => {
+          if (cellText !== null) void this.copy(cellText);
+        },
+      });
+    }
+    if (actions.includes('export')) {
+      items.push({ label: 'Export', icon: 'download', run: () => this.exportCsv() });
+    }
+    return items;
   }
 
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {

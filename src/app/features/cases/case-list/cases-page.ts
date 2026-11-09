@@ -49,6 +49,7 @@ import {
 } from './case-grouping';
 import { CASES_PERMISSION, CaseDirectory, callerName, deceasedName } from '../case-setup';
 import { openNewCase } from './new-case-dialog';
+import { WITH_COLUMN_MENU } from '@shared/grid/column-menu/column-menu-header';
 
 type LoadStatus = 'loading' | 'ready' | 'failed';
 
@@ -163,6 +164,7 @@ export class CasesPage {
   ]);
 
   protected readonly defaultColDef: ColDef<CaseListRow> = {
+    ...WITH_COLUMN_MENU,
     flex: 1,
     sortable: true,
     resizable: true,
