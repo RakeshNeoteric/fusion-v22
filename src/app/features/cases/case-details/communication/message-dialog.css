@@ -9,6 +9,15 @@
   gap: 6px;
   cursor: pointer;
 }
+/* A phone number's width, like the other phone fields (not the whole row). */
+.ms-half {
+  flex: 0 1 340px;
+}
+@media (width <= 600px) {
+  .ms-half {
+    flex-basis: 100%;
+  }
+}
 .ms-note {
   margin: 0 0 12px;
   color: #5f6b6b;

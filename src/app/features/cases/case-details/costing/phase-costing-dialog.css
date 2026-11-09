@@ -27,10 +27,10 @@
   color: #fff;
   font-size: 12px;
 }
-/* v21: three columns; each group of fields starts a new row. */
+/* v21: three columns, at most 280px each; each group of fields starts a new row. */
 .pc-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 280px));
   gap: 14px 20px;
 }
 .pc-row {
@@ -44,7 +44,7 @@
 }
 /* Authorised Date, By and Number, with Authorise at the end of the row. */
 .pc-auth {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 280px)) auto;
   align-items: start;
 }
 /* Level with the boxes (below their labels), even when a field shows an error. */
