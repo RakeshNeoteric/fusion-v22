@@ -5,6 +5,7 @@ import { silentErrors } from '@core/http/http-context';
 import type { ProfileEditor } from '@core/layout/header/profile-editor';
 import { PermissionService } from '@core/permissions/permission.service';
 import { type SessionUser, SessionService } from '@core/session/session.service';
+import { UserPhotoService } from '@core/session/user-photo.service';
 import { RecordDialogs } from '@shared/forms/record-dialog/record-dialog';
 import { UserDialog, type UserDialogData } from './user-dialog';
 
@@ -25,6 +26,7 @@ export class MyProfile implements ProfileEditor {
   private readonly session = inject(SessionService);
   private readonly permissions = inject(PermissionService);
   private readonly dialogs = inject(RecordDialogs);
+  private readonly photo = inject(UserPhotoService);
   private opening = false;
 
   async open(): Promise<void> {
@@ -39,7 +41,11 @@ export class MyProfile implements ProfileEditor {
         profile: true,
       };
       const saved = await this.dialogs.show<AppUser>(UserDialog, data);
-      if (saved) this.session.renamed(saved.Firstname, saved.Lastname);
+      if (saved) {
+        this.session.renamed(saved.Firstname, saved.Lastname);
+        // The header shows the new photo at once.
+        void this.photo.show(saved.ProfileImage);
+      }
     } finally {
       this.opening = false;
     }

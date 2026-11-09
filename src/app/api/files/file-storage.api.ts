@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, type HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import { type UploadProgress, trackUpload } from './upload-progress';
@@ -37,10 +37,11 @@ export class FileStorageApi {
   }
 
   /** The file's content, for showing it (e.g. a logo). */
-  preview(path: string): Observable<Blob> {
+  preview(path: string, context?: HttpContext): Observable<Blob> {
     return this.http.get('File/Preview', {
       params: { fileName: storagePath(path) },
       responseType: 'blob',
+      ...(context ? { context } : {}),
     });
   }
 

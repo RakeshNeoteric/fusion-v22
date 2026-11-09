@@ -32,7 +32,12 @@
         </div>
       }
       <ng-template #chip>
-        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <!-- v21: the user's photo; their initials when they have none. -->
+        @if (photo(); as src) {
+          <img class="avatar avatar-photo" alt="" [src]="src" />
+        } @else {
+          <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        }
         <span class="welcome">Welcome</span>
         <strong class="user-name">{{ displayName() }}</strong>
       </ng-template>

@@ -7,6 +7,7 @@ import { type AppUser, UserApi } from '@api/security/user.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { PermissionService } from '@core/permissions/permission.service';
 import { type SessionUser, SessionService } from '@core/session/session.service';
+import { UserPhotoService } from '@core/session/user-photo.service';
 import { permission, role } from '../../../../testing/app-init.fixtures';
 import { MyProfile } from './my-profile';
 
@@ -41,11 +42,17 @@ const stored: AppUser = {
 describe('MyProfile', () => {
   const api = { byEmail: vi.fn(), update: vi.fn(), create: vi.fn() };
   const session = { user: signal<SessionUser | null>(me), renamed: vi.fn() };
+  const photo = { show: vi.fn() };
   const notify = { success: vi.fn(), info: vi.fn(), warning: vi.fn(), error: vi.fn() };
   let opened: Promise<void>;
 
   beforeEach(() => {
-    for (const fn of [...Object.values(api), session.renamed, ...Object.values(notify)]) {
+    for (const fn of [
+      ...Object.values(api),
+      session.renamed,
+      photo.show,
+      ...Object.values(notify),
+    ]) {
       fn.mockReset();
     }
     TestBed.configureTestingModule({
@@ -53,6 +60,7 @@ describe('MyProfile', () => {
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
         { provide: UserApi, useValue: api },
         { provide: SessionService, useValue: session },
+        { provide: UserPhotoService, useValue: photo },
         { provide: NotificationService, useValue: notify },
         {
           provide: FileStorageApi,
@@ -122,6 +130,8 @@ describe('MyProfile', () => {
     );
     expect(notify.success).toHaveBeenCalledWith('Profile saved.');
     expect(session.renamed).toHaveBeenCalledWith('Janet', 'Doe');
+    // The header picks up the saved photo at once.
+    expect(photo.show).toHaveBeenCalledWith(stored.ProfileImage);
   });
 
   it('is read-only without create access, since the backend would refuse the save', async () => {

@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SessionService } from '@core/session/session.service';
+import { UserPhotoService } from '@core/session/user-photo.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { PROFILE_EDITOR } from './profile-editor';
 
@@ -24,6 +25,7 @@ export class Header {
   protected readonly user = this.session.user;
   protected readonly displayName = computed(() => this.user()?.displayName ?? '');
   protected readonly initials = computed(() => initialsOf(this.displayName()));
+  protected readonly photo = inject(UserPhotoService).src;
 
   protected openProfile(): void {
     void this.profile?.open();

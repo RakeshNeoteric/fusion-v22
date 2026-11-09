@@ -71,6 +71,11 @@ button.user-chip:hover {
   font-weight: 600;
 }
 
+.avatar-photo {
+  background-color: #fff;
+  object-fit: cover;
+}
+
 .welcome {
   color: var(--app-teal);
 }

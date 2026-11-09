@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideAppIcons } from '@core/icons/app-icons';
 import { type SessionUser, SessionService } from '@core/session/session.service';
+import { UserPhotoService } from '@core/session/user-photo.service';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { Header, initialsOf } from './header';
 import { PROFILE_EDITOR } from './profile-editor';
@@ -31,15 +32,18 @@ describe('Header', () => {
   const ask = vi.fn<() => Promise<boolean>>();
 
   const openProfile = vi.fn<() => Promise<void>>();
+  const photo = signal<string | null>(null);
 
   async function render(withProfile = true) {
     signOut.mockReset().mockResolvedValue();
     openProfile.mockReset().mockResolvedValue();
+    photo.set(null);
     TestBed.configureTestingModule({
       providers: [
         provideAppIcons(),
         { provide: SessionService, useValue: { user: signal(user), signOut } },
         { provide: ConfirmService, useValue: { ask } },
+        { provide: UserPhotoService, useValue: { src: photo } },
         ...(withProfile ? [{ provide: PROFILE_EDITOR, useValue: { open: openProfile } }] : []),
       ],
     });
@@ -58,6 +62,16 @@ describe('Header', () => {
     const { host } = await render();
     expect(host.querySelector('.user-chip')?.textContent).toContain('Jane Doe');
     expect(host.querySelector('.avatar')?.textContent?.trim()).toBe('JD');
+  });
+
+  it("shows the user's photo instead of the initials when they have one (v21)", async () => {
+    const { fixture, host } = await render();
+    photo.set('blob:photo');
+    await fixture.whenStable();
+    const avatar = host.querySelector<HTMLImageElement>('img.avatar');
+    expect(avatar?.getAttribute('src')).toBe('blob:photo');
+    expect(avatar?.alt).toBe('');
+    expect(host.querySelector('.user-chip')?.textContent).not.toContain('JD');
   });
 
   it('signs out after confirmation', async () => {
