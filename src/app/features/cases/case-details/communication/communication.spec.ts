@@ -280,7 +280,8 @@ describe('Contact History and SMS / Email', () => {
       // Service 8 has no tab rule: v21's default tabs (Caller, Complaints, Documents).
       await show(withEmail({ CaseClientServiceId: 8 }));
       await h.openTab('Documents');
-      await pressIn('app-documents-tab', 'Email');
+      element<HTMLButtonElement>('app-documents-tab button[aria-label="Email"]').click();
+      await h.settle();
 
       expect(element<HTMLInputElement>('input[value="email"]').checked).toBe(true);
       expect(value('ms-subject')).toBe(`Case documents – ${held().CaseReferenceNumber}`);

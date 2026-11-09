@@ -52,13 +52,25 @@ describe('Documents tab', () => {
     );
   });
 
-  const rowTexts = () =>
-    [...document.querySelectorAll('app-documents-tab tbody tr')].map((row) =>
-      [...row.querySelectorAll('td')].map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim()),
-    );
+  /** Each grid row's cells, in the shown order. */
+  async function rowTexts(): Promise<(string | undefined)[][]> {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const index = (el: Element, attr: string) => Number(el.getAttribute(attr));
+    return [...document.querySelectorAll('app-documents-tab .doc-grid .ag-row')]
+      .sort((a, b) => index(a, 'row-index') - index(b, 'row-index'))
+      .map((row) =>
+        [...row.querySelectorAll('.ag-cell')]
+          .sort((a, b) => index(a, 'aria-colindex') - index(b, 'aria-colindex'))
+          .map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim()),
+      );
+  }
+
+  /** A control in the grid, once the grid has drawn its cells. */
+  const found = <E extends HTMLElement>(selector: string): Promise<E> =>
+    vi.waitFor(() => element<E>(selector));
 
   async function pick(label: string, name: string): Promise<void> {
-    const input = element<HTMLInputElement>(`input[aria-label="File for ${label}"]`);
+    const input = await found<HTMLInputElement>(`input[aria-label="File for ${label}"]`);
     Object.defineProperty(input, 'files', {
       value: [new File(['x'], name, { type: 'application/pdf' })],
       configurable: true,
@@ -71,12 +83,12 @@ describe('Documents tab', () => {
     await show({ ...onDefaultTabs, CaseDocument: [upload()] });
     await openTab('Documents');
 
-    const rows = rowTexts();
+    const rows = await rowTexts();
     expect(rows.map((row) => row[0])).toEqual(['Claim Form', 'Death Certificate']);
-    expect(rows[0]?.[1]).toBe('claim-form.pdf View Download');
-    expect(rows[0]?.[2]).toBe('Upload');
+    expect(rows[0]?.[1]).toBe('claim-form.pdf');
+    expect(rows[0]?.[2]).toBe('');
     expect(rows[1]?.[1]).toBe('—');
-    expect(rows[1]?.[2]).toBe('Upload death.pdf View Download');
+    expect(rows[1]?.[2]).toBe('death.pdf');
     expect(rows[1]?.[3]).toMatch(/^\d{2}\/11\/2026 \d{2}:\d{2}$/);
   });
 
@@ -105,7 +117,7 @@ describe('Documents tab', () => {
     expect(record.UploadedDate).toMatch(/Z$/);
     expect(file.name).toBe('form.pdf');
     expect(notify.success).toHaveBeenCalledWith('File uploaded successfully.');
-    expect(rowTexts()[0]?.[2]).toBe('Upload form.pdf View Download');
+    expect((await rowTexts())[0]?.[2]).toBe('form.pdf');
   });
 
   it('shows how much of the file is sent in its row while it uploads', async () => {
@@ -120,9 +132,9 @@ describe('Documents tab', () => {
     await openTab('Documents');
 
     await pick('Claim Form', 'form.pdf');
-    const bar = element<HTMLElement>('[role="progressbar"]');
+    const bar = await found<HTMLElement>('[role="progressbar"]');
     expect(bar.getAttribute('aria-valuenow')).toBe('40');
-    expect(rowTexts()[0]?.[2]).toMatch(/^Uploading form\.pdf\s*40%$/);
+    expect((await rowTexts())[0]?.[2]).toMatch(/^Uploading form\.pdf\s*40%$/);
 
     stored.next(null);
     stored.complete();
@@ -158,8 +170,8 @@ describe('Documents tab', () => {
     await show({ ...onDefaultTabs, CaseStatus: 'Closed' });
     await openTab('Documents');
 
-    expect(element<HTMLButtonElement>('button[aria-label="Upload Claim Form"]').disabled).toBe(
-      true,
-    );
+    expect(
+      (await found<HTMLButtonElement>('button[aria-label="Upload Claim Form"]')).disabled,
+    ).toBe(true);
   });
 });

@@ -7,6 +7,10 @@ import {
   signal,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
+import { AgGridAngular } from 'ag-grid-angular';
+import { type ColDef, type GetRowIdFunc, TextFilterModule } from 'ag-grid-community';
 import { firstValueFrom } from 'rxjs';
 import type { ClientDocumentLink } from '@api/clients/client-links.api';
 import { DocumentTypeApi } from '@api/config/document.api';
@@ -14,7 +18,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { FileViewer, storedFileName } from '@shared/files/file-viewer';
 import { formatDateTime } from '@shared/reference/date-time';
 import { ConfirmService } from '@shared/ui/confirm-dialog/confirm-dialog';
-import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
+import { APP_GRID_THEME, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
 import { CaseWorkspace } from '../../case-workspace';
 import {
   MessageDialog,
@@ -24,7 +28,12 @@ import {
 import { openCaseDialog } from '../../lifecycle/open-case-dialog';
 import { type DocumentRow, documentRows, uploadedFileName } from './document-rows';
 import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
-import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/upload-progress';
+import type { UploadState } from '@shared/ui/upload-progress/upload-progress';
+import {
+  type DocumentGridContext,
+  DocumentTemplateCell,
+  DocumentUploadCell,
+} from './document-cells';
 
 /**
  * v21 Documents tab: one row per document the client asks for, with the client's template and
@@ -32,52 +41,61 @@ import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/
  */
 @Component({
   selector: 'app-documents-tab',
-  imports: [LinkTable, LinkCell, SkeletonTable, UploadProgressBar],
+  imports: [AgGridAngular, MatIconModule, MatTooltip, SkeletonTable],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../case-tab.css',
   styles: `
-    .doc-progress {
-      min-width: 180px;
+    /* The Email icon sits just above the grid, not a whole section away. */
+    :host {
+      gap: 4px;
     }
     .doc-bar {
       display: flex;
       justify-content: flex-end;
     }
-    .doc-file {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-    .doc-action {
-      padding: 2px 4px;
+    /* v21: the envelope icon at the top right. */
+    .doc-email {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 32px;
+      padding: 0;
       border: none;
+      border-radius: 8px;
       background: none;
       color: var(--app-teal);
-      font: inherit;
-      text-decoration: underline;
       cursor: pointer;
     }
-    .doc-action:disabled {
-      color: #9ca3af;
-      cursor: default;
+    .doc-email mat-icon {
+      width: 20px;
+      height: 20px;
     }
-    .doc-action:focus-visible {
+    .doc-email:hover:not(:disabled) {
+      background: rgb(5 185 188 / 12%);
+    }
+    .doc-email:focus-visible {
       outline: 2px solid var(--app-teal);
     }
-    .doc-hidden {
-      display: none;
+    .doc-email:disabled {
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .doc-grid {
+      display: block;
+      width: 100%;
     }
   `,
   template: `
     <div class="doc-bar">
       <button
         type="button"
-        class="app-button"
+        class="doc-email"
+        aria-label="Email"
+        matTooltip="Email"
         [disabled]="workspace.readOnly() || state() !== 'ready' || rows().length === 0"
         (click)="email()"
       >
-        Email
+        <mat-icon svgIcon="envelope" />
       </button>
     </div>
     @switch (state()) {
@@ -88,82 +106,21 @@ import { type UploadState, UploadProgressBar } from '@shared/ui/upload-progress/
         <p role="alert">Failed to load the client's documents.</p>
       }
       @default {
-        <app-link-table
-          caption="Case documents"
-          [rows]="rows()"
-          [columns]="columns"
-          [rowKey]="key"
-          [nameOf]="name"
-        >
-          <ng-template appLinkCell="Template" let-row>
-            @if (row.template; as path) {
-              <span class="doc-file">
-                {{ fileName(path) }}
-                <button
-                  type="button"
-                  class="doc-action"
-                  [attr.aria-label]="'View ' + fileName(path)"
-                  (click)="viewer.preview(path)"
-                >
-                  View
-                </button>
-                <button
-                  type="button"
-                  class="doc-action"
-                  [attr.aria-label]="'Download ' + fileName(path)"
-                  (click)="viewer.download(path)"
-                >
-                  Download
-                </button>
-              </span>
-            } @else {
-              —
-            }
-          </ng-template>
-          <ng-template appLinkCell="Upload File" let-row>
-            @if (uploadFor(row); as state) {
-              <app-upload-progress class="doc-progress" [upload]="state" />
-            } @else {
-              <span class="doc-file">
-                <button
-                  type="button"
-                  class="doc-action"
-                  [attr.aria-label]="'Upload ' + row.name"
-                  [disabled]="workspace.readOnly() || busy()"
-                  (click)="picker.click()"
-                >
-                  Upload
-                </button>
-                <input
-                  #picker
-                  type="file"
-                  class="doc-hidden"
-                  [attr.aria-label]="'File for ' + row.name"
-                  (change)="choose(row, picker)"
-                />
-                @if (row.uploaded; as path) {
-                  {{ uploadedName(row) }}
-                  <button
-                    type="button"
-                    class="doc-action"
-                    [attr.aria-label]="'View ' + uploadedName(row)"
-                    (click)="viewer.preview(path)"
-                  >
-                    View
-                  </button>
-                  <button
-                    type="button"
-                    class="doc-action"
-                    [attr.aria-label]="'Download ' + uploadedName(row)"
-                    (click)="viewer.download(path)"
-                  >
-                    Download
-                  </button>
-                }
-              </span>
-            }
-          </ng-template>
-        </app-link-table>
+        <ag-grid-angular
+          class="doc-grid"
+          domLayout="autoHeight"
+          overlayNoRowsTemplate="No client documents found."
+          [modules]="gridModules"
+          [theme]="gridTheme"
+          [rowData]="gridRows()"
+          [columnDefs]="columns"
+          [defaultColDef]="defaultColDef"
+          [context]="gridContext"
+          [getRowId]="rowId"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50]"
+        />
       }
     }
   `,
@@ -177,7 +134,6 @@ export class DocumentsTab {
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
 
-  protected readonly fileName = storedFileName;
   protected readonly state = signal<'loading' | 'failed' | 'ready'>('loading');
   protected readonly busy = signal(false);
 
@@ -192,18 +148,57 @@ export class DocumentsTab {
     ),
   );
 
-  protected readonly columns: LinkColumn<DocumentRow>[] = [
-    { header: 'Document', text: (row) => row.name },
-    { header: 'Template' },
-    { header: 'Upload File' },
+  /** The rows as the grid takes them (a list it may hold on to). */
+  protected readonly gridRows = computed(() => [...this.rows()]);
+
+  // v21 grid: each column sorted and searched from its header menu.
+  protected readonly gridModules = [...LIST_GRID_MODULES, TextFilterModule];
+  protected readonly gridTheme = APP_GRID_THEME;
+  protected readonly defaultColDef: ColDef<DocumentRow> = {
+    flex: 1,
+    minWidth: 180,
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+  };
+  protected readonly columns: ColDef<DocumentRow>[] = [
+    { headerName: 'Document', field: 'name' },
     {
-      header: 'Uploaded Date',
-      text: (row) => (row.uploaded ? formatDateTime(row.upload?.UploadedDate) : ''),
-      align: 'center',
+      headerName: 'Template',
+      colId: 'template',
+      cellRenderer: DocumentTemplateCell,
+      // Sorted and searched by the template's file name.
+      valueGetter: ({ data }) => (data?.template ? storedFileName(data.template) : ''),
+    },
+    {
+      headerName: 'Upload File',
+      colId: 'upload',
+      cellRenderer: DocumentUploadCell,
+      valueGetter: ({ data }) => (data?.uploaded ? this.uploadedName(data) : ''),
+      // The hidden file field and its buttons take their own keys.
+      suppressKeyboardEvent: () => true,
+    },
+    {
+      headerName: 'Uploaded Date',
+      colId: 'uploadedDate',
+      valueGetter: ({ data }) => (data?.uploaded ? formatDateTime(data.upload?.UploadedDate) : ''),
+      // Newest first by the stored time, not the shown text.
+      comparator: (_a, _b, nodeA, nodeB) =>
+        (nodeA.data?.upload?.UploadedDate ?? '').localeCompare(
+          nodeB.data?.upload?.UploadedDate ?? '',
+        ),
     },
   ];
-  protected readonly key = (row: DocumentRow) => row.clientDocumentId;
-  protected readonly name = (row: DocumentRow) => row.name;
+  protected readonly rowId: GetRowIdFunc<DocumentRow> = ({ data }) => String(data.clientDocumentId);
+  protected readonly gridContext: DocumentGridContext = {
+    fileName: (path) => storedFileName(path),
+    uploadedName: (row) => this.uploadedName(row),
+    view: (path) => void this.viewer.preview(path),
+    download: (path) => void this.viewer.download(path),
+    choose: (row, input) => void this.choose(row, input),
+    uploadFor: (row) => this.uploadFor(row),
+    canUpload: () => !this.workspace.readOnly() && !this.busy(),
+  };
 
   constructor() {
     void this.load();

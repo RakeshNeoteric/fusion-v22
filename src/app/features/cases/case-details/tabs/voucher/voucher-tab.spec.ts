@@ -70,8 +70,12 @@ describe('Voucher/SMS tab', () => {
     vouchers.available.mockReturnValue(of(STOCK));
   });
 
+  /** AG Grid draws its cells on the next animation frame, so wait for the field. */
+  const field = (value: number) =>
+    vi.waitFor(() => element<HTMLInputElement>(`#vc-allocate-${value}`));
+
   async function allocate(value: number, count: string): Promise<void> {
-    const input = element<HTMLInputElement>(`#vc-allocate-${value}`);
+    const input = await field(value);
     input.value = count;
     input.dispatchEvent(new Event('input'));
     await settle();
@@ -81,14 +85,23 @@ describe('Voucher/SMS tab', () => {
     [...document.querySelectorAll<HTMLButtonElement>('app-voucher-tab button')].find(
       (button) => button.textContent?.trim() === 'Request Voucher(s)',
     );
-  const tableRows = (caption: string) =>
-    [...document.querySelectorAll('app-voucher-tab table')]
-      .find((table) => table.querySelector('caption')?.textContent?.trim() === caption)
-      ?.querySelectorAll('tbody tr') ?? [];
-  const cells = (caption: string) =>
-    [...tableRows(caption)].map((row) =>
-      [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
-    );
+  const GRIDS = {
+    'Available vouchers': 'vc-stock-grid',
+    'Case vouchers': 'vc-case-grid',
+    'Sent SMS': 'vc-sms-grid',
+  } as const;
+  /** A grid's rows and cells, in order (AG Grid draws on the next animation frame). */
+  async function cells(grid: keyof typeof GRIDS): Promise<(string | undefined)[][]> {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const order = (element: Element, name: string) => Number(element.getAttribute(name));
+    return [...document.querySelectorAll(`app-voucher-tab .${GRIDS[grid]} .ag-row`)]
+      .sort((a, b) => order(a, 'row-index') - order(b, 'row-index'))
+      .map((row) =>
+        [...row.querySelectorAll('.ag-cell')]
+          .sort((a, b) => order(a, 'aria-colindex') - order(b, 'aria-colindex'))
+          .map((cell) => cell.textContent?.trim()),
+      );
+  }
 
   it("shows the provider's stock, the limits and the case's vouchers, fresh from the backend", async () => {
     const details = onGroceries({ CaseVouchers: [caseVoucher(1, 250)] });
@@ -106,7 +119,7 @@ describe('Voucher/SMS tab', () => {
 
     expect(vouchers.available).toHaveBeenCalledWith('Grocery_Shoprite');
     expect(text()).toContain('available Grocery - Shoprite vouchers');
-    expect(cells('Available vouchers').map((row) => row.slice(0, 2))).toEqual([
+    expect((await cells('Available vouchers')).map((row) => row.slice(0, 2))).toEqual([
       ['250.00', '4'],
       ['500.00', '1'],
     ]);
@@ -115,7 +128,7 @@ describe('Voucher/SMS tab', () => {
       'Allocated R 250.00 of a maximum of R 1,000.00.',
     );
     expect(element('#vc-count').textContent?.trim()).toBe('1 of a maximum of 3 vouchers.');
-    expect(cells('Case vouchers')).toEqual([
+    expect(await cells('Case vouchers')).toEqual([
       ['502', 'SHP-2', '100.00', '30/06/2028', 'Rejected', 'Duplicate'],
       ['501', 'SHP-1', '250.00', '30/06/2028', 'Approved', ''],
     ]);
@@ -148,9 +161,9 @@ describe('Voucher/SMS tab', () => {
       { Value: 250, VoucherProvider: 'Grocery_Shoprite', Quantity: 2, UserId: 7, CaseDetailId: 4 },
     ]);
     expect(notify.success).toHaveBeenCalledWith('2 voucher(s) requested; awaiting approval.');
-    expect(cells('Available vouchers')[0]?.slice(0, 2)).toEqual(['250.00', '2']);
-    expect(element<HTMLInputElement>('#vc-allocate-250').value).toBe('');
-    expect(cells('Case vouchers')).toHaveLength(2);
+    expect((await cells('Available vouchers'))[0]?.slice(0, 2)).toEqual(['250.00', '2']);
+    expect((await field(250)).value).toBe('');
+    expect(await cells('Case vouchers')).toHaveLength(2);
   });
 
   it('says when fewer vouchers could be reserved than asked for', async () => {
@@ -194,6 +207,45 @@ describe('Voucher/SMS tab', () => {
     expect(requestButton()?.disabled).toBe(false);
   });
 
+  it('lists the SMS sent about the case, newest first, from its history', async () => {
+    await show(
+      onGroceries({
+        CaseHistory: [
+          {
+            CaseHistoryId: 31,
+            CaseDetailId: 4,
+            NoteType: 'SMS',
+            Note: 'Your voucher is on its way.',
+            CreatedDate: '2026-11-01T08:00:00Z',
+            CreatedByUserId: 7,
+          },
+          {
+            CaseHistoryId: 32,
+            CaseDetailId: 4,
+            NoteType: 'Admin',
+            Note: 'Not an SMS',
+            CreatedDate: '2026-11-02T08:00:00Z',
+            CreatedByUserId: 7,
+          },
+        ],
+      }),
+    );
+    await openTab('Voucher/SMS');
+
+    const rows = await cells('Sent SMS');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.slice(0, 3)).toEqual(['31', 'Your voucher is on its way.', '']);
+    expect(text()).toContain('Sent SMS Info');
+  });
+
+  it('says when the case has no vouchers or SMS yet', async () => {
+    await show(onGroceries());
+    await openTab('Voucher/SMS');
+    await cells('Case vouchers');
+    expect(text()).toContain('No Vouchers Available');
+    expect(text()).toContain('No SMS sent for this case');
+  });
+
   it('says when the service has no voucher provider', async () => {
     clients.get.mockReturnValue(of(groceries({ VoucherProvider: null })));
     await show(onGroceries());
@@ -207,7 +259,7 @@ describe('Voucher/SMS tab', () => {
     await show(onGroceries({ CaseStatus: 'Closed' }));
     await openTab('Voucher/SMS');
 
-    expect(element<HTMLInputElement>('#vc-allocate-250').disabled).toBe(true);
+    expect((await field(250)).disabled).toBe(true);
     expect(requestButton()?.disabled).toBe(true);
   });
 
@@ -221,6 +273,6 @@ describe('Voucher/SMS tab', () => {
       .find((button) => button.textContent?.trim() === 'Try again')
       ?.click();
     await settle();
-    expect(document.querySelector('#vc-allocate-250')).not.toBeNull();
+    expect(await field(250)).not.toBeNull();
   });
 });

@@ -8,13 +8,21 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormRecord, ReactiveFormsModule } from '@angular/forms';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+  type ColDef,
+  type GetRowIdFunc,
+  NumberFilterModule,
+  TextFilterModule,
+} from 'ag-grid-community';
 import { firstValueFrom } from 'rxjs';
 import { type AvailableVouchers, VoucherApi } from '@api/vouchers/voucher.api';
 import { NotificationService } from '@core/notifications/notification.service';
 import { SessionService } from '@core/session/session.service';
-import { displayDate } from '@shared/reference/date-time';
+import { UserDirectoryService } from '@core/session/user-directory.service';
+import { APP_GRID_THEME, LIST_GRID_MODULES } from '@shared/grid/grid-setup';
+import { displayDate, formatDateTime } from '@shared/reference/date-time';
 import { money } from '@shared/reference/money';
-import { type LinkColumn, LinkCell, LinkTable } from '@shared/ui/link-table/link-table';
 import { CaseWorkspace } from '../../case-workspace';
 import {
   type Allocation,
@@ -28,6 +36,9 @@ import {
   voucherSettings,
 } from './voucher-rules';
 import { SkeletonTable } from '@shared/ui/skeleton/skeleton-table';
+import { BusyButton } from '@shared/ui/busy/busy-button';
+import { type SentSmsRow, sentSmsRows } from './sent-sms-rows';
+import { type VoucherGridContext, VoucherAllocatedCell } from './voucher-cells';
 
 const NO_SETTINGS: VoucherSettings = { provider: null, maxAmount: null, maxCount: null };
 /** Never shown: every value in stock has a field. Keeps the template's binding typed. */
@@ -35,11 +46,12 @@ const NO_FIELD = new FormControl<number | null>({ value: null, disabled: true })
 
 /**
  * v21 Voucher/SMS tab: request vouchers from the service's provider, within the service's limits,
- * and follow the case's vouchers as they are approved or rejected.
+ * follow the case's vouchers as they are approved or rejected, and see the SMS sent about the
+ * case. Three v21 cards, each with a grid.
  */
 @Component({
   selector: 'app-voucher-tab',
-  imports: [ReactiveFormsModule, LinkTable, LinkCell, SkeletonTable],
+  imports: [ReactiveFormsModule, AgGridAngular, SkeletonTable, BusyButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './voucher-tab.html',
   styleUrls: ['../case-tab.css', './voucher-tab.css'],
@@ -49,6 +61,7 @@ export class VoucherTab {
   private readonly vouchers = inject(VoucherApi);
   private readonly session = inject(SessionService);
   private readonly notifications = inject(NotificationService);
+  private readonly users = inject(UserDirectoryService);
 
   protected readonly money = money;
   protected readonly providerLabel = providerLabel;
@@ -58,6 +71,8 @@ export class VoucherTab {
   protected readonly settings = signal<VoucherSettings>(NO_SETTINGS);
   /** The provider's available vouchers by value. */
   protected readonly stock = signal<readonly AvailableVouchers[]>([]);
+  /** The stock as the grid takes it (a list it may hold on to). */
+  protected readonly stockRows = computed(() => [...this.stock()]);
 
   /** Vouchers wanted per value, keyed by the value. */
   protected readonly allocations = new FormRecord<FormControl<number | null>>({});
@@ -99,23 +114,88 @@ export class VoucherTab {
       this.check().problems.length === 0,
   );
 
-  protected readonly stockColumns: LinkColumn<AvailableVouchers>[] = [
-    { header: 'Value (R)', text: (row) => money(row.value) },
-    { header: 'Available Voucher', text: (row) => String(row.count), align: 'center' },
-    { header: 'Allocated' },
+  /** v21 Sent SMS Info: the SMS sent about the case, from its history. */
+  protected readonly smsRows = computed(() =>
+    sentSmsRows(this.workspace.details()?.CaseHistory ?? [], (id) => this.users.displayName(id)),
+  );
+
+  // The three v21 grids: each column sorted and searched from its header menu.
+  protected readonly gridModules = [...LIST_GRID_MODULES, TextFilterModule, NumberFilterModule];
+  protected readonly gridTheme = APP_GRID_THEME;
+  protected readonly defaultColDef: ColDef = {
+    flex: 1,
+    minWidth: 130,
+    sortable: true,
+    resizable: true,
+    filter: 'agTextColumnFilter',
+  };
+  protected readonly gridContext: VoucherGridContext = { allocated: (row) => this.allocated(row) };
+
+  protected readonly stockColumns: ColDef<AvailableVouchers>[] = [
+    {
+      headerName: 'Value (R)',
+      field: 'value',
+      filter: 'agNumberColumnFilter',
+      valueFormatter: (params) => money(params.value),
+    },
+    { headerName: 'Available Voucher', field: 'count', filter: 'agNumberColumnFilter' },
+    {
+      headerName: 'Allocated',
+      colId: 'allocated',
+      cellRenderer: VoucherAllocatedCell,
+      sortable: false,
+      filter: false,
+      // The field takes its own keys (digits, arrows, Tab), not the grid.
+      suppressKeyboardEvent: () => true,
+    },
   ];
-  protected readonly voucherColumns: LinkColumn<CaseVoucherRow>[] = [
-    { header: 'Voucher Id', text: (row) => String(row.voucherId), align: 'center' },
-    { header: 'Voucher Code', text: (row) => row.code },
-    { header: 'Value (R)', text: (row) => money(row.value), align: 'center' },
-    { header: 'Expiry Date', text: (row) => displayDate(row.expiry), align: 'center' },
-    { header: 'Status', text: (row) => row.status, align: 'center' },
-    { header: 'Comments', text: (row) => row.comments },
+  protected readonly voucherColumns: ColDef<CaseVoucherRow>[] = [
+    { headerName: 'Voucher Id', field: 'voucherId', filter: 'agNumberColumnFilter' },
+    { headerName: 'Voucher Code', field: 'code' },
+    {
+      headerName: 'Value (R)',
+      field: 'value',
+      filter: 'agNumberColumnFilter',
+      valueFormatter: (params) => money(params.value),
+    },
+    {
+      headerName: 'Expiry Date',
+      field: 'expiry',
+      valueFormatter: (params) => displayDate(params.value),
+      filterValueGetter: (params) => displayDate(params.data?.expiry),
+    },
+    { headerName: 'Status', field: 'status' },
+    { headerName: 'Comments', field: 'comments' },
   ];
-  protected readonly stockKey = (row: AvailableVouchers) => row.value;
-  protected readonly stockName = (row: AvailableVouchers) => `R ${money(row.value)}`;
-  protected readonly voucherKey = (row: CaseVoucherRow) => row.caseVoucherId;
-  protected readonly voucherName = (row: CaseVoucherRow) => row.code;
+  protected readonly smsColumns: ColDef<SentSmsRow>[] = [
+    { headerName: 'Id', field: 'id', filter: 'agNumberColumnFilter', maxWidth: 130 },
+    {
+      headerName: 'Message',
+      field: 'message',
+      flex: 3,
+      minWidth: 260,
+      // Long messages are cut with "…" (v21); the whole text shows on hover.
+      cellRenderer: (params: { value: string | null | undefined }) => {
+        const text = document.createElement('span');
+        text.textContent = params.value ?? '';
+        text.title = params.value ?? '';
+        return text;
+      },
+    },
+    { headerName: 'Mobile Number', field: 'mobile' },
+    {
+      headerName: 'Sent Time',
+      field: 'sentAt',
+      valueFormatter: (params) => formatDateTime(params.value),
+      filterValueGetter: (params) => formatDateTime(params.data?.sentAt),
+      sort: 'desc',
+    },
+    { headerName: 'Sent By', field: 'sentBy' },
+  ];
+  protected readonly stockRowId: GetRowIdFunc<AvailableVouchers> = ({ data }) => String(data.value);
+  protected readonly voucherRowId: GetRowIdFunc<CaseVoucherRow> = ({ data }) =>
+    String(data.caseVoucherId);
+  protected readonly smsRowId: GetRowIdFunc<SentSmsRow> = ({ data }) => String(data.id);
 
   constructor() {
     // Nothing can be asked for on a case that cannot change.
@@ -137,6 +217,8 @@ export class VoucherTab {
       const [client] = await Promise.all([
         this.workspace.loadClient(),
         this.workspace.reloadVouchers(),
+        // Fresh, for Sent SMS Info: SMS are sent from elsewhere while the case is open.
+        this.workspace.reload('CaseHistory'),
       ]);
       const settings = voucherSettings(client, this.workspace.details()?.CaseClientServiceId ?? 0);
       this.settings.set(settings);

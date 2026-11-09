@@ -45,9 +45,10 @@ describe('Case access', () => {
       expect(element<HTMLButtonElement>('app-complaints-tab .app-button').disabled).toBe(true);
 
       await openTab('Documents');
-      expect(element<HTMLButtonElement>('button[aria-label="Upload Document"]').disabled).toBe(
-        true,
+      const upload = await vi.waitFor(() =>
+        element<HTMLButtonElement>('button[aria-label="Upload Document"]'),
       );
+      expect(upload.disabled).toBe(true);
       // Moving between tabs saves nothing.
       expect(api.update).not.toHaveBeenCalled();
     });
