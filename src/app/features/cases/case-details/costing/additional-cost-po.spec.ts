@@ -86,7 +86,8 @@ describe('Additional Cost PO document', () => {
     expect(texts.filter((text) => text === 'SERVICE PROVIDER INFORMATION')).toHaveLength(2);
     // The case box sits beside the first provider only.
     expect(texts.filter((text) => text === 'Client Name')).toHaveLength(1);
-    // v21's made-up designation number is not printed.
+    // The Designation No row is kept (blank until the data exists), without v21's made-up value.
+    expect(texts).toContain('Designation No');
     expect(texts).not.toContain('GMN23');
   });
 

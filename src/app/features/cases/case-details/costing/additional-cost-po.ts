@@ -64,7 +64,7 @@ function header(order: AdditionalCostOrder): Content {
   };
 }
 
-/** The provider's box; v21 also printed a made-up "Designation No" (GMN23), not kept. */
+/** The provider's box. Designation No is blank until the backend sends it. */
 function providerBox(cost: CaseAdditionalCostRecord): Content {
   return roundedBox(
     {
@@ -80,7 +80,11 @@ function providerBox(cost: CaseAdditionalCostRecord): Content {
           margin: [0, 4, 0, 0],
         },
         {
-          columns: [labelledValue('Telephone', displayStoredPhone(cost.Telephone))],
+          columns: [
+            labelledValue('Designation No', cost.DesignationNumber),
+            labelledValue('Telephone', displayStoredPhone(cost.Telephone)),
+          ],
+          columnGap: 12,
           margin: [0, 4, 0, 0],
         },
         { columns: [labelledValue('Email', cost.Email)], margin: [0, 4, 0, 0] },

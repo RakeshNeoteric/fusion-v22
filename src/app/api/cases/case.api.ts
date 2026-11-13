@@ -241,6 +241,8 @@ export interface CaseAdditionalCostRecord {
   readonly ServiceProviderAddress: string;
   readonly VATNumber: string;
   readonly CompanyRegNo: string;
+  /** Not sent by the backend yet; the PDF prints the label and leaves it blank until it is. */
+  readonly DesignationNumber?: string | null;
   readonly Email: string;
   /** International format, e.g. `+27 82 123 4567`, as v21 stored it. */
   readonly Telephone: string;
