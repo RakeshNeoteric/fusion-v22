@@ -121,6 +121,22 @@ describe('removal order documents', () => {
     expect(texts).not.toContain('COLLECTED FROM');
   });
 
+  it('external: no empty lines leaving gaps in the provider and client boxes', () => {
+    const base = order('external');
+    const doc = removalOrderPdf(
+      { ...base, provider: { ...base.provider, heading: '' } },
+      'Poppins',
+    );
+    const json = JSON.stringify(doc.content);
+    // No blank provider heading above Company Reg No.
+    expect(json).not.toContain('{"text":"","style":"valueBold"');
+    // No spacer line between Client Name and Case Controller.
+    expect(json).not.toContain('{"text":"","margin":[0,6,0,0]}');
+    expect(pdfTexts(doc.content)).toEqual(
+      expect.arrayContaining(['Company Reg No', 'Client Name', 'Case Controller']),
+    );
+  });
+
   it('instructions: the external order without its billing', () => {
     const texts = pdfTexts(removalOrderPdf(order('instructions'), 'Poppins').content);
     expect(texts).toEqual(

@@ -145,12 +145,21 @@ function serviceProvider(order: RemovalOrder, fill: string): Content {
   const { provider } = order;
   const left = 360;
   const height = 80;
+  // The name and address only when there is one: an empty line would leave a gap above the rows.
+  const heading: Content[] = provider.heading
+    ? [{ text: provider.heading, style: 'valueBold', margin: [0, 0, 0, 4] }]
+    : [];
+  // Spaced like the provider's rows (v21's empty spacer line left a large gap).
+  const clientName: Content = {
+    ...labelledValue('Client Name', order.clientName, 90),
+    margin: [0, 0, 0, 3],
+  };
   return titled('SERVICE PROVIDER INFORMATION', {
     columns: [
       panel(
         {
           stack: [
-            { text: provider.heading, style: 'valueBold', margin: [0, 0, 0, 4] },
+            ...heading,
             {
               columns: [
                 labelledValue('Company Reg No', provider.companyRegNo, 90),
@@ -176,11 +185,7 @@ function serviceProvider(order: RemovalOrder, fill: string): Content {
       ),
       panel(
         {
-          stack: [
-            labelledValue('Client Name', order.clientName, 90),
-            { text: '', margin: [0, 6, 0, 0] },
-            labelledValue('Case Controller', order.caseController, 90),
-          ],
+          stack: [clientName, labelledValue('Case Controller', order.caseController, 90)],
         },
         WIDTH - left - 4,
         height,
