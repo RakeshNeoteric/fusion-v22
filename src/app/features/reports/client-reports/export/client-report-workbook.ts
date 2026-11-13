@@ -8,6 +8,7 @@ import { fillSummarySheet } from './summary-sheet';
 
 const TAB = {
   summary: 'FF18A999',
+  callCentre: 'FFFF8C00',
   dashboard: 'FF18A999',
   vouchers: 'FF6366F1',
   table: 'FFFF8C00',
@@ -29,9 +30,9 @@ const REDEMPTION_HEADERS = [
 ];
 
 /**
- * v21 Client Report workbook: a summary, the dashboard's charts with their tables, a sheet per
- * report tab, and the redeemed vouchers. (v21's "Call Centre Stats" sheet had a title and
- * nothing else; it is left out.)
+ * v21 Client Report workbook: a summary, "Call Centre Stats", the dashboard's charts with their
+ * tables, a sheet per report tab, and the redeemed vouchers. "Call Centre Stats" has only its
+ * title for now (as in v21); it is kept for the call centre figures to come.
  */
 export function fillClientReportWorkbook(workbook: Workbook, report: ClientReportExport): void {
   const names = new SheetNames();
@@ -42,6 +43,9 @@ export function fillClientReportWorkbook(workbook: Workbook, report: ClientRepor
   summary.getRow(1).height = 60;
   const logo = report.logo ? workbook.addImage({ base64: report.logo, extension: 'png' }) : null;
   fillSummarySheet(summary, report, logo);
+
+  // v21: the title from A to Z, nothing else yet.
+  titleBar(addSheet(workbook, names, 'Call Centre Stats', TAB.callCentre), title, 26);
 
   const dashboards: [string, string, readonly DashboardCard[]][] =
     report.layout === 'nedgroup'

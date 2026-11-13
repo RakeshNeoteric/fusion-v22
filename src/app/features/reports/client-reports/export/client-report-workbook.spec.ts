@@ -66,12 +66,19 @@ function texts(sheet: Worksheet | undefined): string[] {
 }
 
 describe('Client Report workbook', () => {
-  it('summary, dashboard, a sheet per tab; redemptions only when there are some', () => {
-    expect(build(report()).worksheets.map((sheet) => sheet.name)).toEqual([
+  it('summary, call centre stats, dashboard, a sheet per tab; redemptions only when there are some', () => {
+    const workbook = build(report());
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
       'Summary',
+      'Call Centre Stats',
       'Dashboard',
       'FNB Life',
     ]);
+    // Kept for the call centre figures to come: for now only v21's title, A to Z, orange tab.
+    const callCentre = workbook.getWorksheet('Call Centre Stats');
+    expect(callCentre?.getCell('A1').value).toMatch(/^FNB Life\n/);
+    expect(callCentre?.getCell('Z1').isMerged).toBe(true);
+    expect(callCentre?.properties.tabColor).toEqual({ argb: 'FFFF8C00' });
     const withRedemptions = build(
       report({
         redemptions: [
@@ -137,8 +144,9 @@ describe('Client Report workbook', () => {
   it('Nedgroup: services and vouchers on sheets of their own, and the month summary', () => {
     const cards = nedgroupCards({ dashboard: DASHBOARD, service: reportService });
     const workbook = build(report({ clientName: 'Nedgroup Life', layout: 'nedgroup', cards }));
-    expect(workbook.worksheets.map((sheet) => sheet.name).slice(0, 3)).toEqual([
+    expect(workbook.worksheets.map((sheet) => sheet.name).slice(0, 4)).toEqual([
       'Summary',
+      'Call Centre Stats',
       'Service Utilisation',
       'Voucher Utilisation',
     ]);

@@ -47,7 +47,11 @@ describe('ClientReportExcel', () => {
 
   it('builds the workbook and downloads it', async () => {
     await expect(TestBed.inject(ClientReportExcel).download(REPORT)).resolves.toBe(true);
-    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(['Summary', 'Dashboard']);
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      'Summary',
+      'Call Centre Stats',
+      'Dashboard',
+    ]);
     expect(clicked).toHaveLength(1);
     expect(clicked[0]?.download).toMatch(/^Client-Report-Zulu Insure-\d{4}-\d\d-\d\d-.+\.xlsx$/);
     expect(error).not.toHaveBeenCalled();
